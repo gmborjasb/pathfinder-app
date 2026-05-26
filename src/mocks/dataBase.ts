@@ -1,0 +1,572 @@
+export interface BecaMock {
+  id: string;
+  title: string;
+  sponsor: string;
+  coverage: string;
+  requirement: string;
+  deadline: string;
+  level: "Pregrado" | "Idioma" | "Maestría" | "Técnico";
+  affinity: number;
+  icon: string;
+  sobre: string;
+  beneficios: string[];
+}
+
+export interface CharlaMock {
+  id: string;
+  title: string;
+  sponsor: string;
+  modality: string;
+  dateTime: string;
+  actionText: string;
+}
+
+export interface TallerMock {
+  id: string;
+  title: string;
+  sponsor: string;
+  statusFrequency: string;
+  focus: string;
+  actionText: string;
+}
+
+export interface CursoMock {
+  id: string;
+  title: string;
+  sponsor: string;
+  duration: string;
+  requirement: string;
+  status: string;
+}
+
+export const becasMockData: BecaMock[] = [
+  {
+    id: "BEC-01",
+    title: "Beca 18 - Convocatoria Ordinaria",
+    sponsor: "PRONABEC",
+    coverage: "100% Matrícula, Pensión, Laptop y Alimentación",
+    requirement: "SISFOH Pobre o Pobre Extremo, Nota mínima 15",
+    deadline: "Cierra en 45 días",
+    level: "Pregrado",
+    affinity: 95,
+    icon: "school",
+    sobre: "Beca 18 es el programa bandera del Estado Peruano para el acceso a la educación superior de jóvenes talentos con alto rendimiento escolar y escasos recursos económicos o en condición de vulnerabilidad.",
+    beneficios: ["100% de matrícula y pensiones académicas.", "Costo de examen de admisión.", "Laptop de última generación.", "Alimentación, movilidad local y alojamiento (si corresponde)."]
+  },
+  {
+    id: "BEC-02",
+    title: "Beca Excelencia Académica BCP",
+    sponsor: "Patronato BCP",
+    coverage: "100% Pensión, Matrícula y Estipendio Mensual",
+    requirement: "Tercio Superior en secundaria, ingreso a U. Aliada",
+    deadline: "Cierra en 60 días",
+    level: "Pregrado",
+    affinity: 92,
+    icon: "school",
+    sobre: "El Patronato BCP promueve la educación superior de calidad financiando estudios universitarios completos para los mejores alumnos del país en las universidades más prestigiosas del Perú.",
+    beneficios: ["Financiamiento completo de matrícula y pensiones.", "Estipendio mensual para gastos de manutención.", "Programa de mentoría y acompañamiento profesional.", "Curso de inglés e inserción laboral asegurada."]
+  },
+  {
+    id: "BEC-03",
+    title: "Beca Mujeres en Ciencia",
+    sponsor: "PRONABEC",
+    coverage: "100% Integral para carreras STEM",
+    requirement: "Mujeres en 5to de secundaria, Nota mínima 16",
+    deadline: "Cierra en 12 días",
+    level: "Pregrado",
+    affinity: 89,
+    icon: "science",
+    sobre: "Iniciativa del Estado Peruano destinada a reducir la brecha de género en carreras científicas y tecnológicas, apoyando a mujeres jóvenes con excelente desempeño académico.",
+    beneficios: ["Cobertura total de la carrera en universidades elegibles.", "Laptop y materiales de estudio.", "Asesoramiento psicopedagógico y tutorías.", "Asistencia de manutención y transporte."]
+  },
+  {
+    id: "BEC-04",
+    title: "Beca Talento PUCP",
+    sponsor: "Pontificia Universidad Católica",
+    coverage: "100% Exoneración de pensiones y matrícula",
+    requirement: "Egresados de colegios públicos, Tercio Superior",
+    deadline: "Cierra en 25 días",
+    level: "Pregrado",
+    affinity: 86,
+    icon: "school",
+    sobre: "La Pontificia Universidad Católica del Perú ofrece becas de exoneración total para alumnos destacados provenientes de colegios nacionales, garantizando una formación académica de primer nivel.",
+    beneficios: ["Exoneración total de derechos académicos de matrícula.", "Subvención para libros y materiales oficiales.", "Servicio de comedor gratuito.", "Acceso libre a actividades deportivas y talleres culturales."]
+  },
+  {
+    id: "BEC-05",
+    title: "Beca Potencia Tu Talento UTEC",
+    sponsor: "Universidad de Ingeniería y Tecnología",
+    coverage: "80% Cobertura de pensiones de estudio",
+    requirement: "Nota mínima 15 en 5to de secundaria, rendir examen",
+    deadline: "Cierra en 18 días",
+    level: "Pregrado",
+    affinity: 84,
+    icon: "engineering",
+    sobre: "UTEC impulsa el talento de los futuros ingenieros y tecnólogos del Perú financiando la mayor parte de sus estudios para cursar carreras con alta demanda global.",
+    beneficios: ["80% de descuento en escalas de pago y pensiones.", "Uso gratuito de laboratorios de última generación.", "Oportunidad de realizar proyectos de investigación pagados.", "Intercambio internacional preferente."]
+  },
+  {
+    id: "BEC-06",
+    title: "Beca Access Program",
+    sponsor: "Embajada de EE.UU. / ICPNA",
+    coverage: "100% Clases de inglés por 2 años y materiales",
+    requirement: "Escolares de 4to o 5to de secundaria de colegio nacional",
+    deadline: "Cierra en 25 días",
+    level: "Idioma",
+    affinity: 90,
+    icon: "language",
+    sobre: "El programa Access proporciona una base sólida de habilidades del idioma inglés a estudiantes talentosos de secundaria a través de clases intensivas extracurriculares.",
+    beneficios: ["100% de cobertura de clases de inglés por 2 años.", "Libros y materiales del curso incluidos.", "Campamentos de liderazgo y talleres culturales americanos.", "Certificación internacional de suficiencia en inglés."]
+  },
+  {
+    id: "BEC-07",
+    title: "Beca Continuidad de Estudios",
+    sponsor: "PRONABEC",
+    coverage: "Pago de pensiones por ciclo académico",
+    requirement: "Estudiantes universitarios con afectación económica",
+    deadline: "Cierra en 30 días",
+    level: "Pregrado",
+    affinity: 80,
+    icon: "school",
+    sobre: "Esta beca brinda apoyo financiero temporal a estudiantes destacados de universidades públicas y privadas para evitar la deserción universitaria debido a crisis económicas.",
+    beneficios: ["Pago de pensiones pendientes y vigentes por el año.", "Matrícula financiada.", "Subvención para alimentos y materiales escolares.", "Orientación psicopedagógica personalizada."]
+  },
+  {
+    id: "BEC-08",
+    title: "Beca Inclusión Técnico Profesional",
+    sponsor: "PRONABEC",
+    coverage: "100% Matrícula y herramientas de estudio",
+    requirement: "Personas con discapacidad, secundaria completa",
+    deadline: "Cierra en 50 días",
+    level: "Técnico",
+    affinity: 76,
+    icon: "handyman",
+    sobre: "Destinada a promover la inserción laboral y educativa de personas con discapacidad, financiando carreras técnicas cortas con alta tasa de empleabilidad.",
+    beneficios: ["Pago completo de matrícula y pensiones técnicas.", "Financiamiento de herramientas, uniformes y materiales.", "Estipendio mensual de movilidad y alimentación.", "Acompañamiento especializado en el centro de estudios."]
+  },
+  {
+    id: "BEC-09",
+    title: "Beca Excelencia de la Universidad del Pacífico",
+    sponsor: "Universidad del Pacífico",
+    coverage: "100% Cobertura de pensiones académicas",
+    requirement: "Pertenecer al Quinto Superior del colegio de origen",
+    deadline: "Cierra en 40 días",
+    level: "Pregrado",
+    affinity: 88,
+    icon: "payments",
+    sobre: "La Universidad del Pacífico premia a los estudiantes con un récord escolar impecable otorgándoles una beca total para cursar carreras de economía, finanzas y administración.",
+    beneficios: ["100% de descuento en pensiones de estudio.", "Exoneración de matrícula y derechos de examen.", "Asignación de tutor y plan curricular personalizado.", "Prioridad en convenios de doble titulación con Europa."]
+  },
+  {
+    id: "BEC-10",
+    title: "Beca Alianza Estratégica",
+    sponsor: "UNI / UNMSM / UNALM",
+    coverage: "Exoneración total de tasas de examen e ingreso",
+    requirement: "Primeros puestos del colegio de procedencia",
+    deadline: "Cierra en 14 días",
+    level: "Pregrado",
+    affinity: 85,
+    icon: "account_balance",
+    sobre: "Convenio estratégico entre las tres universidades públicas líderes en ciencia, ingeniería y agricultura del Perú para facilitar el ingreso de los mejores egresados de secundaria.",
+    beneficios: ["Inscripción gratuita al examen de admisión especial.", "Curso de nivelación gratuito previo al ciclo académico.", "Acceso directo a residencias estudiantiles si corresponde.", "Exoneración de tasas de carné e ingreso."]
+  },
+  {
+    id: "BEC-11",
+    title: "Beca Técnico Productiva Repsol",
+    sponsor: "Fundación Repsol / SENATI",
+    coverage: "100% Matrícula y materiales de seguridad",
+    requirement: "Residir en distritos de Lima Norte (Ventanilla/Ancón)",
+    deadline: "Cierra en 20 días",
+    level: "Técnico",
+    affinity: 72,
+    icon: "oil_barrel",
+    sobre: "Programa de responsabilidad social que capacita en carreras técnicas del sector industrial y de mantenimiento a jóvenes residentes en zonas vecinas a la refinería.",
+    beneficios: ["Pago total de la matrícula y pensiones en SENATI.", "Kit de herramientas y materiales de seguridad industrial.", "Oportunidad de realizar prácticas pre-profesionales en Repsol.", "Subsidio de alimentación en planta."]
+  },
+  {
+    id: "BEC-12",
+    title: "Beca Estímulo al Talento Arte",
+    sponsor: "Escuela Nacional de Bellas Artes",
+    coverage: "100% Exoneración de pagos de taller",
+    requirement: "Aprobar el examen de aptitud artística, nota mínima 14",
+    deadline: "Cierra en 35 días",
+    level: "Pregrado",
+    affinity: 75,
+    icon: "palette",
+    sobre: "Bellas Artes del Perú impulsa las artes plásticas y visuales exonerando de pagos académicos a jóvenes promesas con extraordinario talento expresivo.",
+    beneficios: ["Exoneración total de matrícula y derechos de taller.", "Materiales básicos de pintura, escultura y grabado incluidos.", "Participación prioritaria en exposiciones de la galería nacional.", "Tutoría de artistas plásticos consagrados."]
+  },
+  {
+    id: "BEC-13",
+    title: "Beca Líderes del Futuro",
+    sponsor: "Universidad de Lima",
+    coverage: "50% Cobertura de pensiones de pregrado",
+    requirement: "Nota mínima 16, acreditar participación en voluntariado",
+    deadline: "Cierra en 42 días",
+    level: "Pregrado",
+    affinity: 83,
+    icon: "groups",
+    sobre: "Dirigido a escolares que demuestren habilidades sobresalientes de liderazgo y compromiso social a través de proyectos comunitarios o actividades de voluntariado.",
+    beneficios: ["50% de cobertura en la pensión de estudios.", "Talleres exclusivos de desarrollo directivo y coaching.", "Financiamiento de proyectos sociales universitarios.", "Bolsa de trabajo preferencial en corporaciones aliadas."]
+  },
+  {
+    id: "BEC-14",
+    title: "Beca Deporte de Alta Competencia",
+    sponsor: "IPD / Universidades Asociadas",
+    coverage: "100% Beca de estudios universitarios",
+    requirement: "Deportista calificado acreditado, mantener promedio 13",
+    deadline: "Cierra en 55 días",
+    level: "Pregrado",
+    affinity: 78,
+    icon: "sports_soccer",
+    sobre: "Financia estudios universitarios completos a deportistas federados que representan al Perú, permitiéndoles balancear el entrenamiento intensivo con su carrera académica.",
+    beneficios: ["100% de descuento en pensiones y matrícula.", "Justificación de inasistencias por competencias oficiales.", "Uso de gimnasio y cuerpo médico deportivo de la universidad.", "Asesor nutricional y psicológico deportivo."]
+  },
+  {
+    id: "BEC-15",
+    title: "Beca Hijos de Docentes",
+    sponsor: "PRONABEC",
+    coverage: "100% Matrícula, pensiones y movilidad",
+    requirement: "Hijo de docente de la carrera pública magisterial",
+    deadline: "Cierra en 28 días",
+    level: "Pregrado",
+    affinity: 91,
+    icon: "group",
+    sobre: "Beca del Estado en reconocimiento a la labor de los profesores de la educación pública peruana, financiando estudios superiores completos para sus hijos destacados.",
+    beneficios: ["Pago total de la matrícula y pensiones en universidades aliadas.", "Laptop de última generación y útiles.", "Estipendio mensual de movilidad y útiles.", "Subsidio de titulación profesional."]
+  },
+  {
+    id: "BEC-16",
+    title: "Beca Comunidad Nativa Amazónica",
+    sponsor: "PRONABEC",
+    coverage: "100% Integral (Estudios y residencia)",
+    requirement: "Pertenecer a comunidad nativa acreditada por MINCU",
+    deadline: "Cierra en 65 días",
+    level: "Pregrado",
+    affinity: 87,
+    icon: "forest",
+    sobre: "Esta modalidad de beca especial promueve el acceso inclusivo a la educación de jóvenes pertenecientes a pueblos indígenas y comunidades amazónicas.",
+    beneficios: ["Pensión y matrícula cubierta al 100%.", "Hospedaje estudiantil financiado.", "Alimentación completa diaria.", "Programa de tutorías de inserción urbana y académica."]
+  },
+  {
+    id: "BEC-17",
+    title: "Beca VRAEM / Huallaga",
+    sponsor: "PRONABEC",
+    coverage: "100% Cobertura de estudios superiores",
+    requirement: "Residir en distritos focalizados del VRAEM",
+    deadline: "Cierra en 48 días",
+    level: "Pregrado",
+    affinity: 89,
+    icon: "map",
+    sobre: "Dirigida a jóvenes de zonas declaradas en estado de emergencia o con presencia de cultivos alternativos en las cuencas del VRAEM y Huallaga, impulsando su inserción profesional.",
+    beneficios: ["Pago completo de matrícula y pensiones.", "Movilidad local y estipendio de manutención.", "Laptop y software de ingeniería requerido.", "Acompañamiento tutorial continuo."]
+  },
+  {
+    id: "BEC-18",
+    title: "Beca Alianza del Pacífico",
+    sponsor: "Ministerio de Relaciones Exteriores",
+    coverage: "Intercambio estudiantil completo por un ciclo",
+    requirement: "Estudiante universitario de 5to ciclo, Tercio Superior",
+    deadline: "Cierra en 90 días",
+    level: "Pregrado",
+    affinity: 74,
+    icon: "public",
+    sobre: "Promueve la integración regional a través del intercambio de estudiantes de pregrado entre Perú, Chile, Colombia y México.",
+    beneficios: ["Pasajes aéreos internacionales completos.", "Seguro médico internacional de amplia cobertura.", "Estipendio mensual en el país de destino.", "Exoneración de tasas de matrícula en la universidad de acogida."]
+  },
+  {
+    id: "BEC-19",
+    title: "Beca Idiomas Alianza Francesa",
+    sponsor: "Asociación Cultural Peruano Francesa",
+    coverage: "100% Costo de módulos de francés hasta nivel B2",
+    requirement: "Nota mínima 15 en secundaria, colegio público",
+    deadline: "Cierra en 16 días",
+    level: "Idioma",
+    affinity: 82,
+    icon: "language",
+    sobre: "Financia el aprendizaje del idioma francés para estudiantes talentosos de escasos recursos, abriéndoles las puertas a futuras becas gubernamentales en Francia.",
+    beneficios: ["Módulos de enseñanza del idioma francés cubiertos al 100%.", "Libros oficiales y acceso a biblioteca virtual.", "Tasas de examen de certificación DELF exoneradas.", "Acceso preferente a eventos culturales de la Alianza."]
+  },
+  {
+    id: "BEC-20",
+    title: "Beca Talento Técnico",
+    sponsor: "TECSUP",
+    coverage: "70% Cobertura en carreras de tecnología",
+    requirement: "Nota mínima 14 en matemática y física en secundaria",
+    deadline: "Cierra en 22 días",
+    level: "Técnico",
+    affinity: 77,
+    icon: "bolt",
+    sobre: "Tecsup fomenta el desarrollo de habilidades técnicas en electricidad, mecatrónica y desarrollo de software financiando gran parte del costo académico de los mejores postulantes.",
+    beneficios: ["70% de subvención en pensiones mensuales.", "Prácticas intensivas en talleres con equipos industriales reales.", "Acceso a certificaciones corporativas oficiales.", "Acceso a la bolsa de trabajo líder en minería y energía."]
+  },
+  {
+    id: "BEC-21",
+    title: "Beca Vocación de Maestro",
+    sponsor: "PRONABEC",
+    coverage: "100% Pensiones, matrícula y titulación",
+    requirement: "Nota mínima 16 en secundaria, postular a Educación",
+    deadline: "Cierra en 15 días",
+    level: "Pregrado",
+    affinity: 90,
+    icon: "local_library",
+    sobre: "Subvenciona carreras de Educación en universidades de primer nivel con el fin de profesionalizar la pedagogía y formar a los futuros maestros peruanos de excelencia.",
+    beneficios: ["100% de matrícula, pensiones de estudio y costos de titulación.", "Subvención para libros especializados.", "Laptop y estipendio de manutención mensual.", "Pasantías internacionales subvencionadas de corta duración."]
+  },
+  {
+    id: "BEC-22",
+    title: "Beca Fe y Alegría",
+    sponsor: "Patronato Fe y Alegría / UARM",
+    coverage: "100% Cobertura en la Univ. Antonio Ruiz de Montoya",
+    requirement: "Egresado de redes de colegios Fe y Alegría",
+    deadline: "Cierra en 33 días",
+    level: "Pregrado",
+    affinity: 81,
+    icon: "diversity_1",
+    sobre: "Convenio especial para brindar educación superior humanista e integral a egresados destacados de los colegios de la red Fe y Alegría en la Universidad Jesuita de Lima.",
+    beneficios: ["Cobertura del 100% de la matrícula y pensiones académicas.", "Libros y material educativo cubiertos.", "Orientación personalizada y pastoral.", "Acompañamiento socioemocional integral."]
+  },
+  {
+    id: "BEC-23",
+    title: "Beca Bachillerato Internacional",
+    sponsor: "Universidad Cayetano Heredia",
+    coverage: "100% Cobertura en carreras de Salud",
+    requirement: "Haber culminado el programa de Bachillerato (IB)",
+    deadline: "Cierra en 19 días",
+    level: "Pregrado",
+    affinity: 88,
+    icon: "medical_services",
+    sobre: "UPCH exonera de costos de carrera y matrícula a egresados de secundaria que hayan aprobado satisfactoriamente los exigentes requisitos del Bachillerato Internacional.",
+    beneficios: ["100% de exoneración de derechos académicos.", "Prioridad de inserción en laboratorios de investigación médica.", "Convalidación automática de cursos afines del primer ciclo.", "Acceso preferencial a rotaciones clínicas internacionales."]
+  },
+  {
+    id: "BEC-24",
+    title: "Beca REA (Rendimiento Académico)",
+    sponsor: "Universidad Católica Santa María",
+    coverage: "50% Descuento en pensiones semestrales",
+    requirement: "Ocupar el primer puesto del semestre anterior",
+    deadline: "Cierra en 60 días",
+    level: "Pregrado",
+    affinity: 75,
+    icon: "rewarded_ads",
+    sobre: "Beca semestral renovable dirigida a estudiantes regulares que ocupan el cuadro de honor en sus respectivas escuelas profesionales de la UCSM en Arequipa.",
+    beneficios: ["50% de descuento en la cuota académica del semestre.", "Exoneración de carné e inscripción en talleres deportivos.", "Mención de honor en el registro de egresados destacados.", "Acceso directo a intercambios estudiantiles aliados."]
+  },
+  {
+    id: "BEC-25",
+    title: "Beca Fundación Interbank",
+    sponsor: "Grupo Interbank / IPAE",
+    coverage: "100% Estudios técnicos en Administración",
+    requirement: "Hijo de colaborador o cliente con perfil pyme",
+    deadline: "Cierra en 41 días",
+    level: "Técnico",
+    affinity: 79,
+    icon: "domain",
+    sobre: "Interbank apoya el desarrollo técnico de las familias de emprendedores financiando estudios de administración de negocios y marketing en IPAE.",
+    beneficios: ["100% del pago de matrícula y pensiones del instituto.", "Oportunidad de pasantía y empleo a tiempo parcial en el banco.", "Talleres exclusivos de finanzas e innovación digital.", "Acceso gratuito a la red de mentoría de negocios Interbank."]
+  },
+  {
+    id: "BEC-26",
+    title: "Beca Futuro Minero",
+    sponsor: "Sociedad Nacional de Minería / TECSUP",
+    coverage: "100% Matrícula y residencia (Carreras mineras)",
+    requirement: "Provenir de regiones con actividad minera directa",
+    deadline: "Cierra en 52 días",
+    level: "Técnico",
+    affinity: 84,
+    icon: "construction",
+    sobre: "Subvenciona la formación técnica en operaciones mineras y mantenimiento industrial de jóvenes residentes en zonas con influencia directa de operaciones extractivas.",
+    beneficios: ["Matrícula y pensiones pagadas al 100% en TECSUP.", "Residencia estudiantil en el campus cubierta.", "Alimentación completa y uniforme industrial homologado.", "Inserción laboral directa en empresas mineras afiliadas al concluir."]
+  },
+  {
+    id: "BEC-27",
+    title: "Beca Idiomas Británico",
+    sponsor: "Asociación Cultural Peruano Británica",
+    coverage: "100% Cobertura de módulos de inglés ciclo regular",
+    requirement: "Estudiante de secundaria con promedio general 17",
+    deadline: "Cierra en 11 días",
+    level: "Idioma",
+    affinity: 87,
+    icon: "language",
+    sobre: "El Británico otorga becas totales de inglés para alumnos peruanos sobresalientes, brindándoles herramientas lingüísticas avanzadas para su futuro académico internacional.",
+    beneficios: ["100% de exoneración en mensualidades de ciclo de inglés.", "Libros y accesos virtuales cubiertos.", "Derechos de examen para certificación FCE o CAE gratuitos.", "Invitación exclusiva a seminarios y eventos de cultura británica."]
+  },
+  {
+    id: "BEC-28",
+    title: "Beca Excelencia San Marcos",
+    sponsor: "Universidad Nacional Mayor de San Marcos",
+    coverage: "Canasta universitaria, comedor y exoneraciones",
+    requirement: "Primer puesto general en el examen de admisión",
+    deadline: "Cierra en 8 días",
+    level: "Pregrado",
+    affinity: 92,
+    icon: "school",
+    sobre: "La Decana de América otorga el máximo reconocimiento estudiantil al primer puesto general de su riguroso proceso de examen de admisión anual.",
+    beneficios: ["Exoneración total de todos los trámites académicos administrativos.", "Alimentación gratuita diaria en el comedor universitario (desayuno/almuerzo/cena).", "Canasta estudiantil mensual de víveres.", "Uso de residencia estudiantil preferente y carné libre."]
+  },
+  {
+    id: "BEC-29",
+    title: "Beca Pronabec Casos Especiales",
+    sponsor: "PRONABEC",
+    coverage: "100% Integral (Estudios y salud)",
+    requirement: "Población afectada por la violencia (REDEVID)",
+    deadline: "Cierra en 70 días",
+    level: "Pregrado",
+    affinity: 83,
+    icon: "local_hospital",
+    sobre: "Esta beca especial busca reparar brechas sociales financiando estudios superiores completos para jóvenes registrados como víctimas o familiares de las víctimas de la violencia social en el Perú.",
+    beneficios: ["Pago total de la pensión escolar y matrícula.", "Estipendio mensual integral de manutención y libros.", "Seguro médico integral cubierto por el SIS.", "Mentorías de nivelación y desarrollo socioemocional."]
+  },
+  {
+    id: "BEC-30",
+    title: "Beca Corriente Alterna Arte Exterior",
+    sponsor: "Escuela de Arte Corriente Alterna",
+    coverage: "80% Cobertura en la carrera de Artes Visuales",
+    requirement: "Presentación de portafolio y entrevista personal",
+    deadline: "Cierra en 26 días",
+    level: "Pregrado",
+    affinity: 73,
+    icon: "palette",
+    sobre: "Escuela de arte líder del Perú financia la mayor parte de la carrera de Artes Visuales a jóvenes con gran visión expresiva, técnica y creatividad conceptual.",
+    beneficios: ["80% de descuento en pensiones mensuales de la carrera.", "Acceso libre a laboratorios digitales, talleres de pintura y hornos de cerámica.", "Exposición anual del portafolio del becario.", "Tutoría de curadores de arte profesionales."]
+  },
+  {
+    id: "BEC-31",
+    title: "Beca Programa Líderes MUNI",
+    sponsor: "Municipalidad Metropolitana de Lima",
+    coverage: "50% Cobertura en institutos aliados de Lima",
+    requirement: "Residir en Lima Metropolitana, participar en talleres Muni",
+    deadline: "Cierra en 13 días",
+    level: "Técnico",
+    affinity: 81,
+    icon: "apartment",
+    sobre: "La Municipalidad de Lima incentiva la profesionalización técnica de jóvenes en distritos vulnerables otorgándoles media beca en reconocidos institutos locales.",
+    beneficios: ["50% de subvención en pensiones en Cibertec, Certus u otros institutos.", "Exoneración del pago del examen de admisión.", "Participación en la red juvenil de líderes municipales.", "Talleres semanales gratuitos de empleabilidad."]
+  },
+  {
+    id: "BEC-32",
+    title: "Beca de Estímulo USMP",
+    sponsor: "Universidad de San Martín de Porres",
+    coverage: "25% al 50% de descuento en pensiones",
+    requirement: "Mantener promedio ponderado mayor o igual a 16",
+    deadline: "Cierra en 44 días",
+    level: "Pregrado",
+    affinity: 78,
+    icon: "rewarded_ads",
+    sobre: "Recompensa el esfuerzo de los estudiantes destacados de la USMP otorgándoles descuentos semestrales escalonados basados en sus altas calificaciones.",
+    beneficios: ["Descuento del 25% al 50% de pensión dependiendo del puesto en el cuadro de honor.", "Acceso libre a la red de bibliotecas virtuales académicas.", "Exoneración de aranceles de carné universitario.", "Pre-calificación directa para bolsas de intercambio estudiantil."]
+  },
+  {
+    id: "BEC-33",
+    title: "Beca Convenio Andrés Bello",
+    sponsor: "Ministerio de Educación",
+    coverage: "Exoneración de costos académicos de ingreso",
+    requirement: "Estudiantes procedentes de países del convenio",
+    deadline: "Cierra en 85 días",
+    level: "Pregrado",
+    affinity: 70,
+    icon: "language",
+    sobre: "Promueve la integración educativa y científica entre los países andinos firmantes del convenio, exonerando de costos académicos de postulación e ingreso.",
+    beneficios: ["Exoneración del pago de derechos de inscripción al examen.", "Exoneración de tasas de matrícula inicial.", "Reconocimiento y convalidación simplificada de certificados escolares.", "Servicio médico básico cubierto en el campus."]
+  },
+  {
+    id: "BEC-34",
+    title: "Beca Talento Femenino en Tecnología",
+    sponsor: "Laboratoria / Alianzas Corporativas",
+    coverage: "100% Cobertura del bootcamp de programación",
+    requirement: "Mujeres mayores de 18 años o cursando 5to de sec.",
+    deadline: "Cierra en 31 días",
+    level: "Técnico",
+    affinity: 86,
+    icon: "code",
+    sobre: "Laboratoria brinda educación tecnológica inmersiva de clase mundial a mujeres, preparándolas para una exitosa inserción laboral como programadoras web junior.",
+    beneficios: ["Bootcamp intensivo de programación y desarrollo de habilidades interpersonales cubierto al 100%.", "Conexión directa con más de 1,000 empresas de tecnología contratantes.", "Mentorías técnicas individuales por programadores seniors.", "Modelo de pago diferido (no pagas si no consigues empleo)."]
+  },
+  {
+    id: "BEC-35",
+    title: "Beca de Movilidad Nacional",
+    sponsor: "Red Peruana de Universidades (RPU)",
+    coverage: "Financiamiento de pasajes y hospedaje por un ciclo",
+    requirement: "Pertenecer al tercio superior de una universidad RPU",
+    deadline: "Cierra en 58 días",
+    level: "Pregrado",
+    affinity: 75,
+    icon: "train",
+    sobre: "Facilita la experiencia de intercambio entre estudiantes universitarios dentro del país, permitiéndoles cursar un ciclo académico en otra región con financiamiento estatal.",
+    beneficios: ["Pasajes terrestres o aéreos nacionales de ida y vuelta.", "Subsidio mensual para pago de hospedaje y alimentación.", "Convalidación directa e integral de asignaturas al ciclo regular.", "Uso de todas las instalaciones de la universidad de destino."]
+  }
+];
+
+export const charlasMockData: CharlaMock[] = [
+  { id: "CHA-01", title: "Orientación Vocacional: Ciencia de Datos vs. Ingeniería", sponsor: "UTEC", modality: "Google Meet", dateTime: "Jueves 28, 16:00 h", actionText: "Separar Cupo" },
+  { id: "CHA-02", title: "Todo sobre la postulación a Beca 18 etapa selección", sponsor: "PRONABEC", modality: "Facebook Live", dateTime: "Mañana, 18:30 h", actionText: "Recordatorio" },
+  { id: "CHA-03", title: "Carreras del futuro con alta demanda laboral en el Perú", sponsor: "Ministerio de Trabajo", modality: "Zoom", dateTime: "Viernes 29, 15:00 h", actionText: "Inscribirme" },
+  { id: "CHA-04", title: "Conoce los beneficios de la Beca Excelencia Académica BCP", sponsor: "Patronato BCP", modality: "YouTube", dateTime: "Sábado 30, 11:00 h", actionText: "Ver detalles" },
+  { id: "CHA-05", title: "Guía paso a paso para el Examen de Admisión San Marcos", sponsor: "UNMSM", modality: "Presencial (Auditorio)", dateTime: "Lunes 01, 10:00 h", actionText: "Reservar Asiento" },
+  { id: "CHA-06", title: "Carreras de Diseño y Arte: Mercado laboral actual", sponsor: "Toulouse Lautrec", modality: "Zoom", dateTime: "Martes 02, 17:00 h", actionText: "Separar Cupo" },
+  { id: "CHA-07", title: "Cómo financiar tus estudios en la Universidad del Pacífico", sponsor: "Universidad del Pacífico", modality: "Google Meet", dateTime: "Miércoles 03, 16:00 h", actionText: "Inscribirme" },
+  { id: "CHA-08", title: "Estudiar y trabajar: Conoce las carreras técnicas de SENATI", sponsor: "SENATI", modality: "Presencial (Sede Independencia)", dateTime: "Jueves 04, 09:00 h", actionText: "Reservar Asiento" },
+  { id: "CHA-09", title: "Mitos y verdades sobre la carrera de Medicina Humana", sponsor: "UPCH", modality: "Zoom", dateTime: "Viernes 05, 18:00 h", actionText: "Separar Cupo" },
+  { id: "CHA-10", title: "Introducción a las carreras de Gestión y Alta Dirección", sponsor: "PUCP", modality: "Google Meet", dateTime: "Sábado 06, 15:00 h", actionText: "Inscribirme" },
+  { id: "CHA-11", title: "Oportunidades de becas parciales para universidades privadas", sponsor: "Municipalidad de Ate", modality: "Presencial (Palacio Municipal)", dateTime: "Lunes 08, 11:00 h", actionText: "Reservar Asiento" },
+  { id: "CHA-12", title: "Requisitos y beneficios de las becas del Británico", sponsor: "Asociación Peruano Británica", modality: "Zoom", dateTime: "Martes 09, 16:30 h", actionText: "Separar Cupo" },
+  { id: "CHA-13", title: "Charla Vocacional: ¿Por qué estudiar Ingeniería Civil?", sponsor: "UNI", modality: "YouTube", dateTime: "Miércoles 10, 15:00 h", actionText: "Ver detalles" },
+  { id: "CHA-14", title: "Todo sobre la acreditación de idiomas ante el PRONABEC", sponsor: "ICPNA", modality: "Google Meet", dateTime: "Jueves 11, 17:00 h", actionText: "Inscribirme" },
+  { id: "CHA-15", title: "Beneficios de estudiar una carrera técnica de alta tecnología", sponsor: "TECSUP", modality: "Zoom", dateTime: "Viernes 12, 16:00 h", actionText: "Separar Cupo" },
+  { id: "CHA-16", title: "Cómo redactar el perfil personal para la postulación universitaria", sponsor: "Universidad de Lima", modality: "Google Meet", dateTime: "Sábado 13, 10:30 h", actionText: "Inscribirme" },
+  { id: "CHA-17", title: "Carreras STEM: Oportunidades para mujeres en tecnología", sponsor: "Red de Científicas Peruanas", modality: "Zoom", dateTime: "Lunes 15, 18:00 h", actionText: "Separar Cupo" },
+  { id: "CHA-18", title: "Conoce el campus y laboratorios de la Universidad de Piura", sponsor: "UDEP", modality: "Presencial (Sede Miraflores)", dateTime: "Martes 16, 14:30 h", actionText: "Reservar Asiento" },
+  { id: "CHA-19", title: "Consejos psicológicos para manejar la ansiedad del examen", sponsor: "Centro de Salud Mental Minsa", modality: "Zoom", dateTime: "Miércoles 17, 17:00 h", actionText: "Separar Cupo" },
+  { id: "CHA-20", title: "Charla Informativa: Beca Hijos de Docentes convocatoria actual", sponsor: "PRONABEC", modality: "Microsoft Teams", dateTime: "Jueves 18, 15:30 h", actionText: "Inscribirme" },
+  { id: "CHA-21", title: "Emprendimiento e Innovación desde las aulas universitarias", sponsor: "Universidad San Ignacio de Loyola", modality: "Google Meet", dateTime: "Viernes 19, 16:00 h", actionText: "Separar Cupo" },
+  { id: "CHA-22", title: "Convenios internacionales y programas de doble titulación", sponsor: "UPC", modality: "Zoom", dateTime: "Sábado 20, 11:00 h", actionText: "Inscribirme" },
+  { id: "CHA-23", title: "Estudiar Agronomía y Ciencias Forestales en el Perú", sponsor: "UNALM", modality: "YouTube", dateTime: "Lunes 22, 12:00 h", actionText: "Ver detalles" },
+  { id: "CHA-24", title: "Charlas de becas de estudios en Europa (Erasmus+)", sponsor: "Delegación de la Unión Europea", modality: "Presencial (San Isidro)", dateTime: "Martes 23, 10:00 h", actionText: "Reservar Asiento" },
+  { id: "CHA-25", title: "Cómo postular con éxito a las becas de la Municipalidad de Lima", sponsor: "MUNI LIMA", modality: "Google Meet", dateTime: "Miércoles 24, 15:00 h", actionText: "Inscribirme" }
+];
+
+export const talleresMockData: TallerMock[] = [
+  { id: "TAL-01", title: "Cómo armar tu ensayo de motivación para Beca 18", sponsor: "Pathfinder", statusFrequency: "Hoy, 17:00 h", focus: "Redacción y estructura de cartas", actionText: "Unirse al Taller" },
+  { id: "TAL-02", title: "Simulación de entrevista personal del Patronato BCP", sponsor: "Asesores Universitarios", statusFrequency: "Sábado, 10:00 h", focus: "Práctica de oratoria y preguntas clave", actionText: "Separar Vacante" },
+  { id: "TAL-03", title: "Llenado correcto de la ficha socioeconómica SISFOH", sponsor: "Municipalidad de Ate", statusFrequency: "Mañana, 15:00 h", focus: "Trámite documentario presencial", actionText: "Ver detalles" },
+  { id: "TAL-04", title: "Uso de la plataforma digital Minedu para certificados", sponsor: "Especialistas TIC", statusFrequency: "Jueves, 16:00 h", focus: "Descarga de documentos firmados", actionText: "Unirse al Taller" },
+  { id: "TAL-05", title: "Taller de Razonamiento Matemático para Admisión", sponsor: "Academia Aduni", statusFrequency: "Interdiario, 08:00 h", focus: "Resolución de problemas tipo examen", actionText: "Inscribirme" },
+  { id: "TAL-06", title: "Comprensión lectora y análisis de textos académicos", sponsor: "Cepre-PUCP", statusFrequency: "Sábados, 09:00 h", focus: "Estrategias para pruebas de aptitud", actionText: "Separar Vacante" },
+  { id: "TAL-07", title: "Formulación de currículum vitae básico para escolares", sponsor: "Ministerio de Trabajo", statusFrequency: "Martes, 14:00 h", focus: "Estructuración de logros académicos", actionText: "Ver detalles" },
+  { id: "TAL-08", title: "Preparación de portafolio para carreras de Arquitectura", sponsor: "Facultad de Arquitectura UNI", statusFrequency: "Miércoles, 17:00 h", focus: "Selección y presentación de dibujos", actionText: "Inscribirme" },
+  { id: "TAL-09", title: "Taller de ensayos argumentativos en inglés para becas", sponsor: "ICPNA", statusFrequency: "Jueves, 18:00 h", focus: "Estructura formal de redacción", actionText: "Separar Vacante" },
+  { id: "TAL-10", title: "Cómo solicitar cartas de recomendación efectivas", sponsor: "Orientadores Educativos", statusFrequency: "Viernes, 15:30 h", focus: "Plantillas de comunicación con directores", actionText: "Unirse al Taller" },
+  { id: "TAL-11", title: "Finanzas personales básicas para futuros universitarios", sponsor: "Fundación Romero", statusFrequency: "Curso grabado", focus: "Gestión de estipendios y presupuestos", actionText: "Iniciar Clase" },
+  { id: "TAL-12", title: "Introducción al Pensamiento Lógico y Algorítmico", sponsor: "UTEC", statusFrequency: "Sábado, 14:00 h", focus: "Fundamento para ingenierías", actionText: "Separar Vacante" },
+  { id: "TAL-13", title: "Taller práctico de física: Cinemática y Dinámica", sponsor: "Academia Vallejo", statusFrequency: "Lunes, 16:00 h", focus: "Ejercicios avanzados para ingeniería", actionText: "Inscribirme" },
+  { id: "TAL-14", title: "Técnicas de estudio eficientes y mapas mentales", sponsor: "Centro Psicopedagógico", statusFrequency: "Martes, 17:00 h", focus: "Optimización del tiempo de aprendizaje", actionText: "Unirse al Taller" },
+  { id: "TAL-15", title: "Búsqueda avanzada de fuentes confiables de información", sponsor: "Biblioteca Nacional", statusFrequency: "Miércoles, 11:00 h", focus: "Uso de Google Académico y repositorios", actionText: "Ver detalles" },
+  { id: "TAL-16", title: "Taller práctico de química: Estequiometría paso a paso", sponsor: "Cepre-UNMSM", statusFrequency: "Jueves, 15:00 h", focus: "Problemas de nivel de admisión", actionText: "Inscribirme" },
+  { id: "TAL-17", title: "Herramientas de Excel básico para control de proyectos", sponsor: "Fundación Telefónica", statusFrequency: "Curso grabado", focus: "Creación de tablas y uso de fórmulas", actionText: "Iniciar Clase" },
+  { id: "TAL-18", title: "Expresión corporal y manejo de nervios en público", sponsor: "Escuela de Teatro de Lima", statusFrequency: "Viernes, 16:30 h", focus: "Control de lenguaje corporal en jurados", actionText: "Separar Vacante" },
+  { id: "TAL-19", title: "Cómo legalizar y apostillar documentos educativos", sponsor: "Relaciones Exteriores", statusFrequency: "Sábado, 12:00 h", focus: "Trámite para becas internacionales", actionText: "Ver detalles" },
+  { id: "TAL-20", title: "Taller de Razonamiento Verbal: Analogías y Precisión", sponsor: "Centro Pre UNI", statusFrequency: "Lunes, 14:00 h", focus: "Métodos de descarte en opciones múltiples", actionText: "Inscribirme" },
+  { id: "TAL-21", title: "Creación de portafolios digitales en Behance y Notion", sponsor: "Toulouse Lautrec", statusFrequency: "Martes, 18:00 h", focus: "Organización de proyectos visuales", actionText: "Separar Vacante" },
+  { id: "TAL-22", title: "Llenado del formulario electrónico de PRONABEC", sponsor: "Asesoría Pathfinder", statusFrequency: "Miércoles, 16:00 h", focus: "Revisión de casillas del SIBEC", actionText: "Unirse al Taller" },
+  { id: "TAL-23", title: "Taller de Historia del Perú: Temas clave de examen", sponsor: "Historiadores UNMSM", statusFrequency: "Jueves, 17:00 h", focus: "Resumen analítico de la República", actionText: "Inscribirme" },
+  { id: "TAL-24", title: "Fundamentos de diseño gráfico básico con Canva", sponsor: "Municipalidad de Lima", statusFrequency: "Viernes, 15:00 h", focus: "Presentación de proyectos escolares", actionText: "Ver detalles" },
+  { id: "TAL-25", title: "Taller de Geometría y Trigonometría del examen de admisión", sponsor: "Profesores UNI", statusFrequency: "Sábado, 08:30 h", focus: "Resolución de triángulos y sólidos", actionText: "Inscribirme" }
+];
+
+export const cursosMockData: CursoMock[] = [
+  { id: "CUR-01", title: "Fundamentos de Programación Web Front-End", sponsor: "Laboratorio de Software UTEC", duration: "6 semanas", requirement: "Estudiante de 5to de secundaria o egresado", status: "Cierra en 10 días" },
+  { id: "CUR-02", title: "Inglés Técnico Acelerado para Ciencias", sponsor: "Centro de Idiomas UNI", duration: "4 semanas", requirement: "Conocimiento básico de inglés elemental", status: "Inscripciones abiertas" },
+  { id: "CUR-03", title: "Introducción al Diseño Digital y Modelado 3D", sponsor: "SENATI", duration: "8 semanas", requirement: "Acceso a computadora con Windows 10", status: "Cierra en 5 días" },
+  { id: "CUR-04", title: "Habilidades Digitales para Entornos Universitarios", sponsor: "Fundación Telefónica", duration: "3 semanas", requirement: "Sin requisitos previos (100% online)", status: "Curso permanente" },
+  { id: "CUR-05", title: "Liderazgo y Trabajo en Equipo en el Siglo XXI", sponsor: "Campus Romero", duration: "2 semanas", requirement: "Cuenta de correo electrónico activa", status: "Curso permanente" },
+  { id: "CUR-06", title: "Redacción Académica y Normas APA", sponsor: "Biblioteca PUCP", duration: "3 semanas", requirement: "Cursando el último año de secundaria", status: "Cierra en 12 días" },
+  { id: "CUR-07", title: "Fundamentos de Analítica de Datos con Python", sponsor: "Tecsup", duration: "4 semanas", requirement: "Conocimientos básicos de álgebra escolar", status: "Inscripciones abiertas" },
+  { id: "CUR-08", title: "Introducción al Marketing Digital y Redes Sociales", sponsor: "Municipalidad de Lima", duration: "5 semanas", requirement: "Residir en Lima Metropolitana, mayor de 15 años", status: "Cierra en 3 días" },
+  { id: "CUR-09", title: "Principios de Contabilidad para Microempresas", sponsor: "Cámara de Comercio de Lima", duration: "4 semanas", requirement: "Manejo básico de operaciones matemáticas", status: "Cierra en 15 días" },
+  { id: "CUR-10", title: "Gestión de Proyectos Escolares con Metodologías Ágiles", sponsor: "Innova Schools (Abierto)", duration: "3 semanas", requirement: "Estudiantes de secundaria de cualquier red", status: "Inscripciones abiertas" },
+  { id: "CUR-11", title: "Programación Básica de Videojuegos en Scratch", sponsor: "Instituto de Informática San Marcos", duration: "6 semanas", requirement: "No requiere experiencia previa en código", status: "Cierra en 8 días" },
+  { id: "CUR-12", title: "Introducción a la Biología Celular y Ciencias de la Salud", sponsor: "Cepre Cayetano Heredia", duration: "4 semanas", requirement: "Estudiantes orientados a carreras médicas", status: "Cierra en 20 días" },
+  { id: "CUR-13", title: "Oratoria Líder: Comunicación de Impacto", sponsor: "Escuela de Oratoria de Lima", duration: "4 semanas", requirement: "Disponibilidad para sesiones los sábados", status: "Inscripciones abiertas" },
+  { id: "CUR-14", title: "Fundamentos de Redes y Conectividad (CCNA Básico)", sponsor: "CISCO Networking Academy Perú", duration: "8 semanas", requirement: "Acceso a internet y computadora de escritorio", status: "Cierra en 14 días" },
+  { id: "CUR-15", title: "Introducción a la Economía y Realidad Nacional", sponsor: "Universidad del Pacífico", duration: "3 semanas", requirement: "Haber aprobado el curso escolar de Ciencias Sociales", status: "Cierra en 18 días" }
+];

@@ -257,7 +257,7 @@ export function Sidebar() {
           >
             <button
               onClick={() => { setShowFootMenu(false); navigate("/perfil"); }}
-              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 13px", fontSize: 12, cursor: "pointer", color: "#64748b", borderBottom: "1px solid #e2e8f0", background: "none", border: "none", borderBottom: "1px solid #e2e8f0", textAlign: "left" } as React.CSSProperties}
+              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 13px", fontSize: 12, cursor: "pointer", color: "#64748b", background: "none", border: "none", borderBottom: "1px solid #e2e8f0", textAlign: "left" } as React.CSSProperties}
             >
               <span className="material-symbols-outlined" style={{ fontSize: 14 }}>person</span>
               Ver mi perfil

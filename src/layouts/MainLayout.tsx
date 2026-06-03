@@ -9,7 +9,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="bg-background font-body-base text-on-background min-h-screen flex flex-col">
       {/* Main Outer Wrapper */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto">
+      <div className="flex-1 flex max-w-[1440px] w-full mx-auto">
         <Sidebar />
 
         {/* Main Content Area */}

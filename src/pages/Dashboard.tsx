@@ -1,11 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
-import { pipelineSteps, documents, matches } from "../mocks/dashboard";
-import { charlasMockData, talleresMockData, becasMockData } from "../mocks/dataBase";
+import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "../lib/supabaseClient";
 
 const Dashboard: React.FC = () => {
-  // Simple countdown interaction
-  const [timeLeft, setTimeLeft] = useState(48 * 3600 + 10 * 60 + 15);
+  const { user, profile } = useAuth();
+  const [timeLeft, setTimeLeft] = useState(47 * 3600 + 12 * 60 + 8);
   const [activeTab, setActiveTab] = useState<"charlas" | "talleres">("charlas");
+  
+  const [becas, setBecas] = useState<any[]>([]);
+  const [charlas, setCharlas] = useState<any[]>([]);
+  const [talleres, setTalleres] = useState<any[]>([]);
+  const [dbDocs, setDbDocs] = useState<any[]>([]);
+  const [postulation, setPostulation] = useState<any>(null);
+
   const [reservations, setReservations] = useState<string[]>(() => {
     const storedRes = localStorage.getItem("pathfinder_reservations");
     if (storedRes) {
@@ -35,9 +42,67 @@ const Dashboard: React.FC = () => {
     return [];
   });
 
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder")) {
+          return;
+        }
+
+        const [becasRes, charlasRes, talleresRes] = await Promise.all([
+          supabase.from("becas").select("*").order("id", { ascending: true }),
+          supabase.from("charlas").select("*").order("id", { ascending: true }),
+          supabase.from("talleres").select("*").order("id", { ascending: true })
+        ]);
+
+        if (becasRes.data) setBecas(becasRes.data);
+        if (charlasRes.data) setCharlas(charlasRes.data);
+        if (talleresRes.data) setTalleres(talleresRes.data);
+
+        if (user) {
+          const { data: post } = await supabase
+            .from("postulaciones")
+            .select("*")
+            .eq("usuario_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (post) {
+            setPostulation(post);
+            const { data: docs } = await supabase
+              .from("documentos")
+              .select("*")
+              .eq("postulacion_id", post.id);
+
+            if (docs) {
+              setDbDocs(docs);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error loading dashboard data from Supabase:", err);
+      }
+    };
+
+    loadDashboardData();
+  }, [user]);
+
   const savedBecas = savedBecaIds
-    .map((id) => becasMockData.find((b) => b.id === id))
-    .filter((b): b is typeof becasMockData[0] => !!b);
+    .map((id) => becas.find((b) => b.id === id))
+    .filter((b) => !!b)
+    .map((row) => ({
+      id: row.id,
+      title: row.titulo,
+      sponsor: row.sponsor,
+      coverage: row.cobertura,
+      requirement: row.requisitos,
+      deadline: row.fecha_cierre,
+      level: row.nivel,
+      affinity: row.afinidad || 85,
+      icon: row.icono || "school"
+    }));
+
   const savedBecasCount = savedBecaIds.length;
 
   const handleScroll = () => {
@@ -63,24 +128,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-
-  
-  // Dynamic user data
-  const [profileName] = useState<string>(() => {
-    const storedProfile = localStorage.getItem("pathfinder_profile");
-    if (storedProfile) {
-      try {
-        const parsed = JSON.parse(storedProfile);
-        if (parsed.nombres) {
-          // Take first name
-          return parsed.nombres.split(" ")[0];
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    return "Camila";
-  });
+  const profileName = profile?.nombres ? profile.nombres.split(" ")[0] : "Camila";
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -109,507 +157,649 @@ const Dashboard: React.FC = () => {
   const minutes = Math.floor((timeLeft % 3600) / 60);
   const seconds = timeLeft % 60;
 
+  // Formatting helpers
+  const truncateToWordBoundary = (str: string, maxLength: number) => {
+    if (!str || str.length <= maxLength) return str;
+    const sub = str.slice(0, maxLength);
+    const lastSpace = sub.lastIndexOf(" ");
+    if (lastSpace === -1) return sub + "...";
+    return sub.slice(0, lastSpace) + "...";
+  };
+
+  const formatShortDate = (dateStr: string) => {
+    if (!dateStr) return "—";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toLocaleDateString("es-PE", {
+      day: "numeric",
+      month: "short",
+    }).replace(".", "");
+  };
+
+  const formatLongDate = (dateStr: string) => {
+    if (!dateStr) return "pronto";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toLocaleDateString("es-PE", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const getDeadlineTextColorStyle = (dateStr: string) => {
+    if (!dateStr) return { color: "var(--slate)" };
+    const days = Math.floor((new Date(dateStr).getTime() - Date.now()) / 86400000);
+    if (days <= 7) return { color: "var(--red)", fontWeight: "var(--fw-medium)" };
+    if (days <= 30) return { color: "var(--amber)", fontWeight: "var(--fw-medium)" };
+    return { color: "var(--green)", fontWeight: "var(--fw-medium)" };
+  };
+
+  const getEventWeight = (dateTimeStr: string) => {
+    const str = (dateTimeStr || "").toLowerCase();
+    if (str.includes("hoy") || str.includes("ahora")) return 1;
+    if (str.includes("mañana")) return 2;
+    if (str.includes("en 2 días")) return 3;
+    if (str.includes("en 3 días")) return 4;
+    if (str.includes("lunes")) return 10;
+    if (str.includes("martes")) return 11;
+    if (str.includes("miércoles")) return 12;
+    if (str.includes("jueves")) return 13;
+    if (str.includes("viernes")) return 14;
+    if (str.includes("sábado")) return 15;
+    if (str.includes("domingo")) return 16;
+    return 100;
+  };
+
+  const getDashboardDocs = () => {
+    const baseDocs = [
+      { id: 1, name: "Certificado de Estudios", origin: "Trámite Minedu", actionType: "download" },
+      { id: 2, name: "Constancia de Primeros Puestos", origin: "Colegio Secundario", actionType: "download" },
+      { id: 3, name: "Declaración Jurada de Ingresos", origin: "Formato Pronabec", actionType: "upload_signature" },
+      { id: 4, name: "Certificado de Inglés", origin: "Británico / ICPNA", actionType: "upload_certificate" }
+    ];
+
+    return baseDocs.map((doc) => {
+      const dbDoc = dbDocs.find((d) => d.nombre_documento === doc.name);
+      if (dbDoc) {
+        return {
+          ...doc,
+          status: dbDoc.estado === "Rechazado" ? "error" : "valid",
+          statusText: dbDoc.estado === "Rechazado" ? "Rechazado" : "Validado",
+          actionType: "download",
+          archivo_url: dbDoc.archivo_url
+        };
+      }
+      return {
+        ...doc,
+        status: doc.id === 3 ? "warning" : doc.id === 4 ? "pending" : "valid",
+        statusText: doc.id === 1 
+          ? "Validado" 
+          : doc.id === 2 
+            ? "Validado"
+            : doc.id === 3 
+              ? "Falta firma" 
+              : "Pendiente",
+      };
+    });
+  };
+
+  const getPipelineSteps = (paso: number) => {
+    return [
+      { id: 1, label: "Preparación", icon: "edit_document", status: paso >= 1 ? (paso === 1 ? "active" : "completed") : "pending" },
+      { id: 2, label: "Enviada", icon: "send", status: paso >= 2 ? (paso === 2 ? "active" : "completed") : "pending" },
+      { id: 3, label: "Evaluación", icon: "fact_check", status: paso >= 3 ? (paso === 3 ? "active" : "completed") : "pending" },
+      { id: 4, label: "Resultados", icon: "emoji_events", status: paso >= 4 ? (paso === 4 ? "active" : "completed") : "pending" },
+    ];
+  };
+
+  const getMatches = () => {
+    const sorted = [...becas]
+      .filter((b) => b.id !== "BEC-01")
+      .sort((a, b) => (b.afinidad || 85) - (a.afinidad || 85))
+      .slice(0, 3);
+
+    return sorted.map((row) => ({
+      id: row.id,
+      name: row.titulo,
+      matchPercentage: row.afinidad || 85,
+      coverage: row.cobertura.includes("100%") ? "100%" : row.cobertura.includes("80%") ? "80%" : "50%",
+      requirementIcon: row.icono || "school",
+      requirementLabel: row.requisitos ? (row.requisitos.split(",")[0] || "Requisito mínimo") : "Requisito mínimo"
+    }));
+  };
+
+  const currentCharlas = charlas
+    .map((c) => ({
+      id: c.id,
+      title: c.titulo,
+      sponsor: c.sponsor,
+      modality: c.modalidad,
+      dateTime: c.fecha_hora,
+      actionText: c.texto_accion
+    }))
+    .sort((a, b) => getEventWeight(a.dateTime) - getEventWeight(b.dateTime));
+
+  const currentTalleres = talleres
+    .map((t) => ({
+      id: t.id,
+      title: t.titulo,
+      sponsor: t.sponsor,
+      statusFrequency: t.frecuencia_estado,
+      focus: t.enfoque,
+      actionText: t.texto_accion
+    }))
+    .sort((a, b) => getEventWeight(a.statusFrequency) - getEventWeight(b.statusFrequency));
+
+  const activePaso = postulation ? postulation.paso_pipeline : null;
+  const progressPercent = activePaso ? Math.round(((activePaso - 1) / 3) * 100) : 0;
+  const activeBeca = postulation ? becas.find(b => b.id === postulation.beca_id) : null;
+  const activeBecaTitle = activeBeca ? activeBeca.titulo : "Beca 18";
+
+  const beca18 = becas.find(b => b.id === "BEC-01");
+  const beca18DeadlineText = beca18?.fecha_cierre ? `el ${formatLongDate(beca18.fecha_cierre)}` : "pronto";
+
+  // Check if there is any document with status "Rechazado"
+  const hasRejectedDoc = dbDocs.some(d => d.estado === "Rechazado");
+
   return (
-    <div className="grid grid-cols-12 gap-8 relative">
-      {/* Cabecera Contextual */}
-      <div className="col-span-12 mb-lg">
-        <div className="flex flex-col gap-sm">
-          <h1 className="font-display-lg text-display-lg text-on-surface tracking-tight leading-tight font-extrabold text-[28px] md:text-display-lg">
-            ¡Hola, {profileName}! 👋
-          </h1>
-          <p className="text-headline-md text-muted-slate text-sm md:text-headline-md">
-            Aquí tienes el estado de tu camino a la universidad.
-          </p>
-          <div className="mt-md flex flex-col gap-md">
-            {/* Goal Indicator */}
-            <div className="flex flex-col gap-xs max-w-md">
-              <div className="flex justify-between items-center text-body-sm">
-                <span className="font-body-bold text-on-surface font-semibold text-xs md:text-sm">
-                  Tu meta global actual: Ingresar a la Universidad
-                </span>
-                <span className="text-primary font-body-bold font-bold">50%</span>
-              </div>
-              <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-                <div className="bg-primary h-full w-1/2"></div>
-              </div>
+    <div className="root">
+      {/* Header and Welcome Section */}
+      <div>
+        <p className="t-lg">Hola, {profileName}</p>
+        <p className="t-sm muted" style={{ marginTop: "3px" }}>Aquí tienes el estado de tu camino a la universidad.</p>
+        
+        {postulation && (
+          <div style={{ maxWidth: "300px", marginTop: "10px" }}>
+            <div className="row" style={{ marginBottom: "5px" }}>
+              <span className="t-xs muted">
+                Progreso en {activeBecaTitle} · Paso {activePaso} de 4
+              </span>
+              <span className="t-xs bold" style={{ color: "var(--navy-2)" }}>{progressPercent}%</span>
+            </div>
+            <div className="prog-track">
+              <div className="prog-fill" style={{ width: `${progressPercent}%` }}></div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Columna Principal */}
-      <div className="col-span-12 lg:col-span-8 space-y-10 min-w-0">
-        {/* Pipeline de Postulación */}
-        <section className="bg-surface rounded-2xl p-lg shadow-sm border border-border-subtle">
-          <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-sm mb-xl">
-            <div>
-              <h2 className="font-headline-md text-headline-md font-bold text-base md:text-headline-md leading-none">
-                Pipeline de Postulación
-              </h2>
-              <p className="text-body-sm text-muted-slate mt-1">
-                Proceso actual para{" "}
-                <span className="text-primary font-body-bold font-semibold">Beca 18</span>
-              </p>
-            </div>
-            <div className="text-left sm:text-right">
-              <span className="text-[11px] font-bold text-secondary-container bg-on-secondary-container/10 px-2.5 py-1 rounded-full uppercase">
-                Estado: Papeles Listos
-              </span>
-            </div>
-          </div>
+      <div className="dashboard-grid">
+        <div className="dashboard-col">
 
-          <div className="relative flex justify-between items-center w-full px-xs md:px-lg py-4">
-            {/* Background Line */}
-            <div className="absolute top-1/2 left-0 w-full h-1 bg-surface-container-high -translate-y-1/2 -z-0"></div>
-            <div className="absolute top-1/2 left-0 w-1/3 h-1 bg-primary -translate-y-1/2 -z-0"></div>
-
-            {/* Nodes */}
-            {pipelineSteps.map((step) => (
-              <div
-                key={step.id}
-                className={`relative z-10 flex flex-col items-center gap-sm ${step.status === "pending" ? "opacity-45" : ""}`}
-              >
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center ${step.status === "completed" || step.status === "current" ? "bg-primary text-white shadow-md" : "bg-surface-container-high text-muted-slate"} ${step.status === "current" ? "pulse-active relative ring-4 ring-primary/10" : ""}`}
-                >
-                  <span
-                    className={`material-symbols-outlined text-[18px]`}
-                  >
-                    {step.icon}
-                  </span>
-                </div>
-                <span
-                  className={`text-[9px] md:text-[10px] ${step.status === "pending" ? "font-body-base text-muted-slate" : "font-body-bold text-primary font-semibold"} text-center leading-tight`}
-                >
-                  {step.label}
-                </span>
+          {/* Pipeline de Postulación */}
+          <div className="card">
+            <div className="row" style={{ marginBottom: "14px" }}>
+              <div>
+                <p className="t-base bold">Pipeline de postulación</p>
+                <p className="t-xs muted" style={{ marginTop: "2px" }}>
+                  Proceso actual para <span className="bold" style={{ color: "var(--navy-2)" }}>{activeBecaTitle}</span>
+                </p>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Mochila de Documentos */}
-        <section className="bg-surface rounded-2xl shadow-sm border border-border-subtle overflow-hidden">
-          <div className="p-lg border-b border-border-subtle flex justify-between items-center bg-surface-bright">
-            <div className="flex items-center gap-sm">
-              <span className="material-symbols-outlined text-primary font-fill text-xl">
-                backpack
-              </span>
-              <h2 className="font-headline-md text-headline-md font-bold text-base">
-                Mochila de Documentos
-              </h2>
+              {postulation ? (
+                <span className="badge b-amber">
+                  {postulation.estado_general.charAt(0).toUpperCase() + postulation.estado_general.slice(1).toLowerCase()}
+                </span>
+              ) : (
+                <span className="badge b-slate">Sin postulación</span>
+              )}
             </div>
-            <a href="/documentos" className="text-body-sm text-primary font-body-bold hover:underline font-bold">
-              Gestionar todo
-            </a>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-surface-container-low">
-                  <th className="px-lg py-3 text-label-caps text-muted-slate font-bold text-xs uppercase tracking-wider">
-                    Documento
-                  </th>
-                  <th className="px-lg py-3 text-label-caps text-muted-slate font-bold text-xs uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-lg py-3 text-label-caps text-muted-slate font-bold text-xs uppercase tracking-wider text-right">
-                    Acción
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-subtle">
-                {documents.map((doc) => {
-                  let rowClass = "hover:bg-surface-container-lowest transition-colors";
-                  let statusColorClass = "text-tertiary-container";
-                  let statusIcon = "check_circle";
 
-                  if (doc.status === "warning") {
-                    rowClass += " bg-secondary-container/5";
-                    statusColorClass = "text-on-secondary-container";
-                    statusIcon = "warning";
-                  } else if (doc.status === "error") {
-                    rowClass += " bg-error-container/10";
-                    statusColorClass = "text-error";
-                    statusIcon = "error";
-                  }
+            {!postulation ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "16px 0", textAlign: "center" }}>
+                <span className="material-symbols-outlined muted" style={{ fontSize: "28px", marginBottom: "8px" }}>assignment_late</span>
+                <p className="t-sm bold">Sin postulaciones activas</p>
+                <p className="t-xs muted" style={{ marginTop: "4px", maxWidth: "260px" }}>
+                  Aún no has iniciado una postulación. Explora becas y guarda tus favoritas para comenzar.
+                </p>
+                <a href="/buscar" className="t-link" style={{ marginTop: "10px", fontSize: "11px" }}>
+                  Explorar becas ahora →
+                </a>
+              </div>
+            ) : (
+              <div className="pipe-wrap">
+                <div className="pipe-bg"></div>
+                <div 
+                  className="pipe-fill" 
+                  style={{ 
+                    width: activePaso === 1 ? "8%" : activePaso === 2 ? "40%" : activePaso === 3 ? "72%" : "100%" 
+                  }}
+                ></div>
+                
+                {getPipelineSteps(activePaso).map((step) => {
+                  let stepClass = "sc-pend";
+                  if (step.status === "completed") stepClass = "sc-done";
+                  else if (step.status === "active") stepClass = "sc-active";
 
                   return (
-                    <tr key={doc.id} className={rowClass}>
-                      <td className="px-lg py-4">
-                        <p className="text-body-sm font-body-bold text-on-surface font-semibold text-sm">
-                          {doc.name}
-                        </p>
-                        <p className="text-[11px] text-muted-slate mt-0.5">
-                          {doc.origin}
-                        </p>
-                      </td>
-                      <td className="px-lg py-4">
-                        <span
-                          className={`inline-flex items-center gap-1 font-body-bold text-xs ${statusColorClass}`}
-                        >
-                          <span className="material-symbols-outlined text-[16px]">
-                            {statusIcon}
-                          </span>
-                          {doc.statusText}
+                    <div key={step.id} className="step">
+                      <div className={`sc ${stepClass}`}>
+                        <span className="material-symbols-outlined text-[16px]">
+                          {step.status === "completed" ? "check" : step.icon}
                         </span>
-                      </td>
-                      <td className="px-lg py-4 text-right">
-                        {doc.actionType === "download" && (
-                          <button className="material-symbols-outlined text-muted-slate hover:text-primary cursor-pointer p-1 rounded hover:bg-slate-100 transition-colors">
-                            download
-                          </button>
-                        )}
-                        {doc.actionType === "upload_signature" && (
-                          <button className="text-primary font-body-bold text-xs underline font-bold cursor-pointer">
-                            Subir firma
-                          </button>
-                        )}
-                        {doc.actionType === "upload_certificate" && (
-                          <button className="bg-error-red text-white text-[10px] px-2.5 py-1 rounded-lg font-body-bold font-bold hover:scale-105 active:scale-95 transition-transform cursor-pointer">
-                            Sube tu certificado
-                          </button>
-                        )}
-                      </td>
-                    </tr>
+                      </div>
+                      <span 
+                        className={`t-xs ${step.status === "pending" ? "muted2" : "bold"}`} 
+                        style={{ color: step.status !== "pending" ? "var(--navy-2)" : undefined, textAlign: "center" }}
+                      >
+                        {step.label}
+                      </span>
+                      {step.status === "active" && <span className="pill-now">Actual</span>}
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            )}
           </div>
-        </section>
 
-        {/* Charlas y Talleres switcher (Dynamic loading of Category 2 and Category 3) */}
-        <section className="space-y-md">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-sm border-b border-border-subtle pb-2">
-            <div className="flex items-center gap-sm">
-              <span className="material-symbols-outlined text-primary text-xl">
-                live_tv
-              </span>
-              <h3 className="text-headline-md text-on-surface font-bold text-base md:text-lg">
-                Charlas e Inducciones en Vivo
-              </h3>
+          {/* Alerta de Documento Rechazado */}
+          {hasRejectedDoc && (
+            <div className="card b-red" style={{ border: "1px solid var(--red)", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+              <span className="material-symbols-outlined text-lg" style={{ color: "var(--red)", marginTop: "1px" }}>priority_high</span>
+              <div>
+                <p className="t-sm bold" style={{ color: "var(--red)" }}>Atención inmediata</p>
+                <p className="t-xs" style={{ color: "var(--red)", marginTop: "2px", lineHeight: "1.4" }}>
+                  Tienes un documento rechazado en tu mochila que requiere tu acción para no perder elegibilidad.
+                </p>
+                <a href="/documentos" className="t-link font-bold" style={{ color: "var(--red)", textDecoration: "underline", display: "inline-block", marginTop: "6px" }}>
+                  Reemplazar ahora →
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* Mochila de Documentos */}
+          <div className="card" style={{ padding: "0", overflow: "hidden" }}>
+            <div className="row" style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)" }}>
+              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                <span className="material-symbols-outlined icon-hdr">backpack</span>
+                <span className="t-base bold">Mochila de documentos</span>
+              </div>
+              <a href="/documentos" className="t-link">Gestionar todo</a>
+            </div>
+            <div style={{ padding: "0 16px" }}>
+              <table className="tbl">
+                <colgroup>
+                  <col style={{ width: "36%" }} />
+                  <col style={{ width: "38%" }} />
+                  <col style={{ width: "26%" }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Documento</th>
+                    <th>Estado</th>
+                    <th style={{ textAlign: "right" }}>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getDashboardDocs().map((doc) => {
+                    let statusClass = "s-ok";
+                    let statusIcon = "check_circle";
+
+                    if (doc.status === "warning") {
+                      statusClass = "s-warn";
+                      statusIcon = "warning";
+                    } else if (doc.status === "error" || doc.status === "pending") {
+                      statusClass = "s-err";
+                      statusIcon = "cancel";
+                    }
+
+                    return (
+                      <tr key={doc.id}>
+                        <td>
+                          <p className="t-sm bold trunc" title={doc.name}>{doc.name}</p>
+                          <p className="t-xs muted2">{doc.origin}</p>
+                        </td>
+                        <td>
+                          <span className={statusClass}>
+                            <span className="material-symbols-outlined text-[14px]">{statusIcon}</span>
+                            {doc.statusText}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          {doc.actionType === "download" ? (
+                            <button 
+                              className="btn-ico" 
+                              aria-label="Descargar"
+                              onClick={() => {
+                                if ((doc as any).archivo_url) {
+                                  window.open((doc as any).archivo_url, "_blank");
+                                } else {
+                                  setNotificationMsg(`Descargando copia local de: "${doc.name}"...`);
+                                  setShowNotification(true);
+                                  setTimeout(() => setShowNotification(false), 3000);
+                                }
+                              }}
+                            >
+                              <span className="material-symbols-outlined text-[16px]">download</span>
+                            </button>
+                          ) : (
+                            <a href="/documentos" style={{ textDecoration: "none" }}>
+                              <button className="btn-sub">Subir →</button>
+                            </a>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Charlas e Inducciones en Vivo */}
+          <div className="card">
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
+              <span className="material-symbols-outlined icon-hdr">live_tv</span>
+              <span className="t-base bold">Charlas e inducciones en vivo</span>
             </div>
             
-            {/* Dynamic tabs for all 50 items */}
-            <div className="flex p-0.5 bg-surface-container-low rounded-lg shrink-0 w-fit self-start">
-              <button
+            <div className="tabs">
+              <button 
                 onClick={() => {
                   setActiveTab("charlas");
                   setActiveDot(0);
                   if (sliderRef.current) sliderRef.current.scrollLeft = 0;
                 }}
-                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "charlas"
-                    ? "bg-white text-primary shadow"
-                    : "text-muted-slate hover:bg-slate-200"
-                }`}
+                className={`tab ${activeTab === "charlas" ? "on" : ""}`}
               >
-                Charlas Informativas (25)
+                Charlas informativas ({currentCharlas.length})
               </button>
-              <button
+              <button 
                 onClick={() => {
                   setActiveTab("talleres");
                   setActiveDot(0);
                   if (sliderRef.current) sliderRef.current.scrollLeft = 0;
                 }}
-                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "talleres"
-                    ? "bg-white text-primary shadow"
-                    : "text-muted-slate hover:bg-slate-200"
-                }`}
+                className={`tab ${activeTab === "talleres" ? "on" : ""}`}
               >
-                Talleres Prácticos (25)
+                Talleres prácticos ({currentTalleres.length})
               </button>
             </div>
-          </div>
 
-          {/* Horizontal scroll layout containing all items with dots indicators */}
-          <div className="space-y-md min-w-0 w-full overflow-hidden">
-            <div
-              ref={sliderRef}
-              onScroll={handleScroll}
-              className="flex gap-lg overflow-x-auto snap-x snap-mandatory scroll-smooth pb-md pr-1 py-1 custom-scrollbar w-full min-w-0"
-            >
-              {activeTab === "charlas"
-                ? charlasMockData.map((charla) => {
+            {/* Slider Container */}
+            <div className="space-y-md min-w-0 w-full overflow-hidden">
+              <div
+                ref={sliderRef}
+                onScroll={handleScroll}
+                className="flex gap-md overflow-x-auto snap-x snap-mandatory scroll-smooth pb-md pr-1 py-1 custom-scrollbar w-full min-w-0"
+              >
+                {activeTab === "charlas" ? (
+                  currentCharlas.map((charla) => {
                     const isReserved = reservations.includes(charla.id);
-                    const isLive = charla.dateTime.includes("Mañana") || charla.dateTime.includes("Hoy");
+                    const isLive = (charla.dateTime || "").toLowerCase().includes("hoy") || (charla.dateTime || "").toLowerCase().includes("mañana") || (charla.dateTime || "").toLowerCase().includes("en vivo");
 
                     return (
                       <div
                         key={charla.id}
-                        className="snap-start shrink-0 w-[88%] sm:w-[48%] lg:w-[31.5%] bg-surface border border-border-subtle rounded-2xl p-md lg:p-lg shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                        className="snap-start shrink-0 w-[88%] sm:w-[48%] bg-surface border border-border-subtle rounded-2xl p-md lg:p-lg shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                        style={{ border: "1px solid var(--border)", borderRadius: "var(--r-md)", padding: "12px", minHeight: "140px" }}
                       >
                         <div>
-                          <div className="flex justify-between items-start mb-md">
-                            <span
-                              className={`${isLive ? "bg-error-red/10 text-error-red" : "bg-primary/10 text-primary"} text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1 ${isLive ? "animate-pulse" : ""}`}
-                            >
-                              {isLive && <span className="w-1.5 h-1.5 bg-error-red rounded-full"></span>}
-                              {charla.modality}
-                            </span>
-                            <span className="material-symbols-outlined text-muted-slate text-[20px]">
+                          <div className="row" style={{ marginBottom: "8px" }}>
+                            {isLive ? (
+                              <span className="badge b-red">
+                                <span className="live-dot" aria-label="En vivo" role="img"></span>
+                                {charla.modality}
+                              </span>
+                            ) : (
+                              <span className="badge b-blue">{charla.modality}</span>
+                            )}
+                            <span className="material-symbols-outlined text-[18px]" style={{ color: "var(--slate-2)" }}>
                               {isLive ? "videocam" : "calendar_today"}
                             </span>
                           </div>
-                          <h4 className="text-body-bold text-on-surface mb-xs leading-snug font-bold text-sm">
-                            {charla.title}
-                          </h4>
-                          <p className="text-[11px] text-muted-slate mb-xl flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px]">schedule</span>
-                            {charla.dateTime} | <span className="font-semibold">{charla.sponsor}</span>
+                          <p className="t-sm bold" style={{ lineHeight: "1.45" }}>
+                            {truncateToWordBoundary(charla.title, 60)}
+                          </p>
+                          <p className="t-xs muted2" style={{ marginTop: "4px" }}>
+                            {charla.dateTime} · {charla.sponsor}
                           </p>
                         </div>
 
-                        <button
-                          onClick={() => handleReserve(charla.id, charla.title)}
-                          className={`w-full font-body-bold font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-xs mt-6 ${
-                            isReserved
-                              ? "bg-tertiary-fixed text-tertiary border border-tertiary/30 shadow-sm"
-                              : "border-2 border-primary text-primary hover:bg-primary/5"
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[18px]">
-                            {isReserved ? "check_circle" : "event_available"}
-                          </span>
-                          {isReserved ? "¡Cupo Reservado!" : charla.actionText}
-                        </button>
+                        {isReserved ? (
+                          <div className="reserved">
+                            <span className="material-symbols-outlined text-sm">check_circle</span>
+                            Cupo reservado
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleReserve(charla.id, charla.title)}
+                            className="btn-sub"
+                            style={{ width: "100%", marginTop: "10px", padding: "6px" }}
+                          >
+                            {charla.actionText || "Reservar →"}
+                          </button>
+                        )}
                       </div>
                     );
                   })
-                : talleresMockData.map((taller) => {
+                ) : (
+                  currentTalleres.map((taller) => {
                     const isReserved = reservations.includes(taller.id);
-                    const isLive = taller.statusFrequency.includes("Hoy") || taller.statusFrequency.includes("Mañana");
+                    const isLive = (taller.statusFrequency || "").toLowerCase().includes("hoy") || (taller.statusFrequency || "").toLowerCase().includes("mañana") || (taller.statusFrequency || "").toLowerCase().includes("en vivo");
 
                     return (
                       <div
                         key={taller.id}
-                        className="snap-start shrink-0 w-[88%] sm:w-[48%] lg:w-[31.5%] bg-surface border border-border-subtle rounded-2xl p-md lg:p-lg shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                        className="snap-start shrink-0 w-[88%] sm:w-[48%] bg-surface border border-border-subtle rounded-2xl p-md lg:p-lg shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                        style={{ border: "1px solid var(--border)", borderRadius: "var(--r-md)", padding: "12px", minHeight: "140px" }}
                       >
                         <div>
-                          <div className="flex justify-between items-start mb-md">
-                            <span
-                              className={`${isLive ? "bg-error-red/10 text-error-red" : "bg-primary/10 text-primary"} text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1 ${isLive ? "animate-pulse" : ""}`}
-                            >
-                              {isLive && <span className="w-1.5 h-1.5 bg-error-red rounded-full"></span>}
-                              {taller.focus}
-                            </span>
-                            <span className="material-symbols-outlined text-muted-slate text-[20px]">
+                          <div className="row" style={{ marginBottom: "8px" }}>
+                            {isLive ? (
+                              <span className="badge b-red">
+                                <span className="live-dot" aria-label="En vivo" role="img"></span>
+                                {taller.focus}
+                              </span>
+                            ) : (
+                              <span className="badge b-blue">{taller.focus}</span>
+                            )}
+                            <span className="material-symbols-outlined text-[18px]" style={{ color: "var(--slate-2)" }}>
                               engineering
                             </span>
                           </div>
-                          <h4 className="text-body-bold text-on-surface mb-xs leading-snug font-bold text-sm">
-                            {taller.title}
-                          </h4>
-                          <p className="text-[11px] text-muted-slate mb-xl flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                            {taller.statusFrequency} | <span className="font-semibold">{taller.sponsor}</span>
+                          <p className="t-sm bold" style={{ lineHeight: "1.45" }}>
+                            {truncateToWordBoundary(taller.title, 60)}
+                          </p>
+                          <p className="t-xs muted2" style={{ marginTop: "4px" }}>
+                            {taller.statusFrequency} · {taller.sponsor}
                           </p>
                         </div>
 
-                        <button
-                          onClick={() => handleReserve(taller.id, taller.title)}
-                          className={`w-full font-body-bold font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-xs mt-6 ${
-                            isReserved
-                              ? "bg-tertiary-fixed text-tertiary border border-tertiary/30 shadow-sm"
-                              : "border-2 border-primary text-primary hover:bg-primary/5"
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[18px]">
-                            {isReserved ? "check_circle" : "check"}
-                          </span>
-                          {isReserved ? "¡Inscrito!" : taller.actionText}
-                        </button>
+                        {isReserved ? (
+                          <div className="reserved">
+                            <span className="material-symbols-outlined text-sm">check_circle</span>
+                            Inscrito
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleReserve(taller.id, taller.title)}
+                            className="btn-sub"
+                            style={{ width: "100%", marginTop: "10px", padding: "6px" }}
+                          >
+                            {taller.actionText || "Inscribirse →"}
+                          </button>
+                        )}
                       </div>
                     );
-                  })}
-            </div>
+                  })
+                )}
+              </div>
 
-            {/* Slider Pagination Dots */}
-            <div className="flex justify-center items-center gap-xs pt-xs">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <button
-                  key={i}
-                  onClick={() => scrollToDot(i)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
-                    activeDot === i
-                      ? "bg-primary w-6"
-                      : "bg-outline-variant hover:bg-muted-slate"
-                  }`}
-                  aria-label={`Ir al grupo ${i + 1}`}
-                />
-              ))}
+              {/* Slider Pagination Dots */}
+              <div className="flex justify-center items-center gap-xs pt-xs" style={{ display: "flex", gap: "4px", justifyContent: "center", marginTop: "8px" }}>
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <button
+                    key={i}
+                    onClick={() => scrollToDot(i)}
+                    className="transition-all cursor-pointer"
+                    style={{
+                      width: activeDot === i ? "16px" : "6px",
+                      height: "6px",
+                      borderRadius: "99px",
+                      border: "none",
+                      backgroundColor: activeDot === i ? "var(--navy-2)" : "var(--slate-2)",
+                    }}
+                    aria-label={`Ir al grupo ${i + 1}`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-        </section>
-      </div>
 
-      {/* Columna Lateral */}
-      <div className="col-span-12 lg:col-span-4 space-y-10">
-        {/* Panel de Urgencia "Reloj de Arena" */}
-        <section className="bg-inverse-surface text-white rounded-2xl p-lg shadow-xl relative overflow-hidden">
-          <div className="absolute -right-4 -top-4 w-32 h-32 bg-secondary-container/10 rounded-full blur-3xl"></div>
-          <div className="flex items-center gap-sm mb-md">
-            <span className="material-symbols-outlined text-secondary-container fill-current">
-              hourglass_bottom
-            </span>
-            <h2 className="text-secondary-container font-headline-md text-headline-md tracking-widest text-base font-bold">
-              ¡PRÓXIMO CIERRE!
-            </h2>
-          </div>
-          <div className="mb-lg">
-            <p className="text-[36px] md:text-[40px] font-stat-lg leading-none mb-2 font-bold font-display-lg text-white">
+        </div>
+
+        {/* Sidebar Column */}
+        <div className="dashboard-col">
+
+          {/* Próximo Cierre Hourglass Card */}
+          <div className="card-dark">
+            <p className="t-label" style={{ color: "#93c5fd", marginBottom: "6px" }}>Próximo cierre</p>
+            <p style={{ fontSize: "28px", fontWeight: "var(--fw-medium)", color: "var(--white)", lineHeight: "1", marginBottom: "5px" }}>
               {hours}h {minutes}m {seconds}s
             </p>
-            <p className="text-xs text-outline-variant leading-relaxed">
-              La Beca 18 (Convocatoria 2026) cierra sus inscripciones electrónicas pronto. No pierdas tu lugar.
+            <p style={{ fontSize: "var(--fs-xs)", color: "#93c5fd", lineHeight: "1.6", marginBottom: "14px" }}>
+              Beca 18 cierra sus inscripciones {beca18DeadlineText}. No pierdas tu lugar.
             </p>
-          </div>
-          <a
-            href="/documentos"
-            className="w-full bg-secondary-container text-on-secondary-container font-body-bold py-3.5 rounded-xl flex items-center justify-center gap-md hover:scale-[1.02] active:scale-95 transition-all text-center font-bold text-sm"
-          >
-            Subir papel faltante
-            <span className="material-symbols-outlined text-md">upload_file</span>
-          </a>
-        </section>
-
-        {/* Feed de Matches */}
-        <section className="space-y-md">
-          <div className="flex justify-between items-center">
-            <h3 className="text-label-caps text-muted-slate font-bold text-[11px] tracking-wider">
-              Tus opciones reales de ganar
-            </h3>
-            <span className="material-symbols-outlined text-muted-slate text-[18px] cursor-help">
-              info
-            </span>
-          </div>
-
-          {matches.map((match) => {
-            const matchOpacity = match.matchPercentage > 80 ? "" : "opacity-80";
-            const matchBadgeClass =
-              match.matchPercentage > 80
-                ? "bg-tertiary-container/10 text-tertiary-container"
-                : "bg-secondary-container/10 text-on-secondary-container";
-
-            return (
-              <a
-                href="/buscar"
-                key={match.id}
-                className={`bg-surface border border-border-subtle rounded-xl p-md shadow-sm hover:shadow-md transition-shadow group cursor-pointer block ${matchOpacity}`}
-              >
-                <div className="flex justify-between items-start mb-sm gap-sm">
-                  <h4 className="text-body-sm font-body-bold text-on-surface group-hover:text-primary font-semibold text-sm transition-colors">
-                    {match.name}
-                  </h4>
-                  <span
-                    className={`${matchBadgeClass} text-[9px] px-2 py-0.5 rounded-full font-bold shrink-0`}
-                  >
-                    {match.matchPercentage}% Match
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-xs text-[11px]">
-                  <div className="flex items-center gap-1 text-muted-slate truncate">
-                    <span className="material-symbols-outlined text-[14px]">
-                      payments
-                    </span>
-                    Cobertura: {match.coverage}
-                  </div>
-                  <div className="flex items-center gap-1 text-muted-slate truncate">
-                    <span className="material-symbols-outlined text-[14px]">
-                      {match.requirementIcon}
-                    </span>
-                    {match.requirementLabel}
-                  </div>
-                </div>
-              </a>
-            );
-          })}
-
-          <a
-            href="/buscar"
-            className="w-full py-2.5 text-body-sm text-primary font-body-bold border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors font-bold text-center block"
-          >
-            Ver todos los matches
-          </a>
-        </section>
-
-        {/* Tus Becas Guardadas ❤️ */}
-        <section className="bg-surface border border-border-subtle rounded-2xl p-lg shadow-sm space-y-md">
-          <div className="flex justify-between items-center pb-2 border-b border-border-subtle">
-            <div className="flex items-center gap-sm">
-              <span className="material-symbols-outlined text-muted-slate text-xl">
-                favorite
-              </span>
-              <h3 className="font-body-bold text-on-surface font-bold text-sm">
-                Tus Becas Guardadas
-              </h3>
-            </div>
-            <a
-              href="/buscar"
-              onClick={() => {
-                localStorage.setItem("pathfinder_search_tab", "guardadas");
+            <a 
+              href="/documentos"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                background: "var(--white)",
+                color: "var(--navy-2)",
+                fontSize: "var(--fs-sm)",
+                fontWeight: "var(--fw-medium)",
+                padding: "9px 12px",
+                borderRadius: "var(--r-sm)",
+                textDecoration: "none",
+                cursor: "pointer"
               }}
-              className="text-xs text-primary font-bold hover:underline"
             >
-              Ver todas ({savedBecasCount})
+              <span className="material-symbols-outlined text-[16px]">upload</span>
+              Subir papel faltante
             </a>
           </div>
 
-          {savedBecas.length === 0 ? (
-            <div className="text-center py-6 animate-fade-in">
-              <p className="text-xs text-muted-slate leading-relaxed">
-                No tienes becas guardadas. Explora oportunidades y agrégalas a tus favoritos para verlas aquí.
-              </p>
-              <a
+          {/* Match Feed */}
+          <div>
+            <div className="row" style={{ marginBottom: "10px" }}>
+              <span className="t-label">Tus opciones de ganar</span>
+              <span className="material-symbols-outlined text-[16px]" style={{ color: "var(--slate-2)", cursor: "help" }} title="Afinidad de perfil con los requisitos de la beca">info</span>
+            </div>
+            
+            {getMatches().map((match) => {
+              const matchBadgeClass = match.matchPercentage >= 85 ? "b-green" : "b-blue";
+
+              return (
+                <a
+                  href="/buscar"
+                  key={match.id}
+                  className="match-item block"
+                  style={{ textDecoration: "none", color: "inherit", display: "block" }}
+                >
+                  <div className="row" style={{ marginBottom: "3px" }}>
+                    <p className="t-sm bold trunc" style={{ maxWidth: "140px" }} title={match.name}>
+                      {truncateToWordBoundary(match.name, 30)}
+                    </p>
+                    <span className={`badge ${matchBadgeClass}`} style={{ flexShrink: 0, marginLeft: "6px" }}>
+                      {match.matchPercentage}%
+                    </span>
+                  </div>
+                  <p className="t-xs muted2 trunc">
+                    Cobertura {match.coverage} · {truncateToWordBoundary(match.requirementLabel, 20)}
+                  </p>
+                </a>
+              );
+            })}
+
+            <a href="/buscar" style={{ textDecoration: "none" }}>
+              <button style={{ width: "100%", padding: "7px", border: "1px solid var(--border)", borderRadius: "var(--r-sm)", background: "transparent", color: "var(--navy-2)", fontSize: "var(--fs-xs)", fontWeight: "var(--fw-medium)", cursor: "pointer" }}>
+                Ver todos los matches
+              </button>
+            </a>
+          </div>
+
+          {/* Becas Guardadas */}
+          <div className="card">
+            <div className="row" style={{ paddingBottom: "10px", borderBottom: "1px solid var(--border)", marginBottom: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "var(--slate)" }}>favorite</span>
+                <span className="t-sm bold">Becas guardadas</span>
+              </div>
+              <a 
                 href="/buscar"
-                className="mt-3 inline-block px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-bold text-[10px] rounded-lg"
+                onClick={() => {
+                  localStorage.setItem("pathfinder_search_tab", "guardadas");
+                }}
+                className="t-link"
               >
-                Explorar Becas
+                Ver todas ({savedBecasCount})
               </a>
             </div>
-          ) : (
-            <div className="space-y-sm animate-fade-in">
-              {savedBecas.slice(0, 3).map((beca) => (
+
+            {savedBecas.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "12px 0" }}>
+                <p className="t-xs muted" style={{ lineHeight: "1.6" }}>No tienes becas guardadas. Explora oportunidades y agrégalas a tus favoritos.</p>
+                <a href="/buscar" className="t-link" style={{ fontSize: "10px", marginTop: "6px", display: "inline-block" }}>Explorar Becas</a>
+              </div>
+            ) : (
+              savedBecas.slice(0, 3).map((beca) => (
                 <a
                   href="/buscar"
                   key={beca.id}
                   onClick={() => {
                     localStorage.setItem("pathfinder_search_tab", "guardadas");
                   }}
-                  className="flex items-center gap-3 p-md rounded-xl bg-surface border border-slate-100 hover:border-primary/20 hover:bg-primary/5 transition-all group"
+                  className="saved-item"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">
-                      {beca.icon || "school"}
+                  <div className="icon-sq">
+                    <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                      {beca.icon === "science" ? "microscope" : beca.icon === "school" ? "school" : beca.icon}
                     </span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-body-bold font-bold text-xs text-slate-800 group-hover:text-primary transition-colors truncate">
-                      {beca.title}
-                    </h4>
-                    <p className="text-[10px] text-muted-slate truncate leading-normal">
-                      {beca.sponsor} • <span className="text-error font-semibold">{beca.deadline}</span>
+                  <div style={{ minWidth: "0", flex: 1 }}>
+                    <p className="t-sm bold trunc" title={beca.title}>{beca.title}</p>
+                    <p className="t-xs" style={{ marginTop: "1px", color: "var(--slate-2)" }}>
+                      {beca.sponsor} · <span style={getDeadlineTextColorStyle(beca.deadline)}>{formatShortDate(beca.deadline)}</span>
                     </p>
                   </div>
-                  <span className="material-symbols-outlined text-muted-slate text-xs group-hover:translate-x-0.5 transition-transform">
-                    arrow_forward
-                  </span>
+                  <span className="material-symbols-outlined" style={{ fontSize: "12px", color: "var(--slate-2)", flexShrink: 0 }}>arrow_forward</span>
                 </a>
-              ))}
-            </div>
-          )}
-        </section>
+              ))
+            )}
+          </div>
+
+        </div>
       </div>
 
-      {/* Floating Success Toast Alert Notification */}
+      {/* Toast Notification */}
       {showNotification && (
-        <div className="fixed top-20 right-6 z-[99] bg-primary text-white p-lg rounded-2xl shadow-2xl flex items-center gap-md border border-white/20 animate-pulse">
-          <span className="material-symbols-outlined text-[24px]">verified</span>
+        <div 
+          className="fixed top-20 right-6 z-[99] bg-primary text-white p-lg rounded-2xl shadow-2xl flex items-center gap-md border border-white/20 animate-in slide-in-from-right-4 duration-300"
+          style={{
+            position: "fixed",
+            top: "80px",
+            right: "24px",
+            zIndex: 99,
+            backgroundColor: "var(--navy)",
+            color: "var(--white)",
+            padding: "12px 16px",
+            borderRadius: "var(--r-md)",
+            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            border: "1px solid rgba(255,255,255,0.1)"
+          }}
+        >
+          <span className="material-symbols-outlined text-[20px]" style={{ color: "var(--green)" }}>verified</span>
           <div>
-            <p className="font-body-bold font-bold text-sm">Reserva de Actividad</p>
-            <p className="text-xs opacity-90">{notificationMsg}</p>
+            <p className="t-sm bold" style={{ color: "var(--white)" }}>Reserva de Actividad</p>
+            <p className="t-xs" style={{ color: "rgba(255,255,255,0.9)", marginTop: "2px" }}>{notificationMsg}</p>
           </div>
         </div>
       )}

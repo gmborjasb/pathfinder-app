@@ -1,45 +1,12 @@
-export interface BecaMock {
-  id: string;
-  title: string;
-  sponsor: string;
-  coverage: string;
-  requirement: string;
-  deadline: string;
-  level: "Pregrado" | "Idioma" | "Maestría" | "Técnico";
-  affinity: number;
-  icon: string;
-  sobre: string;
-  beneficios: string[];
-}
 
-export interface CharlaMock {
-  id: string;
-  title: string;
-  sponsor: string;
-  modality: string;
-  dateTime: string;
-  actionText: string;
-}
 
-export interface TallerMock {
-  id: string;
-  title: string;
-  sponsor: string;
-  statusFrequency: string;
-  focus: string;
-  actionText: string;
-}
 
-export interface CursoMock {
-  id: string;
-  title: string;
-  sponsor: string;
-  duration: string;
-  requirement: string;
-  status: string;
-}
 
-export const becasMockData: BecaMock[] = [
+
+
+
+
+exports.becasMockData = [
   {
     id: "BEC-01",
     title: "Beca 18 - Convocatoria Ordinaria",
@@ -497,7 +464,7 @@ export const becasMockData: BecaMock[] = [
   }
 ];
 
-export const charlasMockData: CharlaMock[] = [
+exports.charlasMockData = [
   { id: "CHA-01", title: "Orientación Vocacional: Ciencia de Datos vs. Ingeniería", sponsor: "UTEC", modality: "Google Meet", dateTime: "Jueves 28, 16:00 h", actionText: "Separar Cupo" },
   { id: "CHA-02", title: "Todo sobre la postulación a Beca 18 etapa selección", sponsor: "PRONABEC", modality: "Facebook Live", dateTime: "Mañana, 18:30 h", actionText: "Recordatorio" },
   { id: "CHA-03", title: "Carreras del futuro con alta demanda laboral en el Perú", sponsor: "Ministerio de Trabajo", modality: "Zoom", dateTime: "Viernes 29, 15:00 h", actionText: "Inscribirme" },
@@ -525,7 +492,7 @@ export const charlasMockData: CharlaMock[] = [
   { id: "CHA-25", title: "Cómo postular con éxito a las becas de la Municipalidad de Lima", sponsor: "MUNI LIMA", modality: "Google Meet", dateTime: "Miércoles 24, 15:00 h", actionText: "Inscribirme" }
 ];
 
-export const talleresMockData: TallerMock[] = [
+exports.talleresMockData = [
   { id: "TAL-01", title: "Cómo armar tu ensayo de motivación para Beca 18", sponsor: "Pathfinder", statusFrequency: "Hoy, 17:00 h", focus: "Redacción y estructura de cartas", actionText: "Unirse al Taller" },
   { id: "TAL-02", title: "Simulación de entrevista personal del Patronato BCP", sponsor: "Asesores Universitarios", statusFrequency: "Sábado, 10:00 h", focus: "Práctica de oratoria y preguntas clave", actionText: "Separar Vacante" },
   { id: "TAL-03", title: "Llenado correcto de la ficha socioeconómica SISFOH", sponsor: "Municipalidad de Ate", statusFrequency: "Mañana, 15:00 h", focus: "Trámite documentario presencial", actionText: "Ver detalles" },
@@ -553,7 +520,7 @@ export const talleresMockData: TallerMock[] = [
   { id: "TAL-25", title: "Taller de Geometría y Trigonometría del examen de admisión", sponsor: "Profesores UNI", statusFrequency: "Sábado, 08:30 h", focus: "Resolución de triángulos y sólidos", actionText: "Inscribirme" }
 ];
 
-export const cursosMockData: CursoMock[] = [
+exports.cursosMockData = [
   { id: "CUR-01", title: "Fundamentos de Programación Web Front-End", sponsor: "Laboratorio de Software UTEC", duration: "6 semanas", requirement: "Estudiante de 5to de secundaria o egresado", status: "Cierra en 10 días" },
   { id: "CUR-02", title: "Inglés Técnico Acelerado para Ciencias", sponsor: "Centro de Idiomas UNI", duration: "4 semanas", requirement: "Conocimiento básico de inglés elemental", status: "Inscripciones abiertas" },
   { id: "CUR-03", title: "Introducción al Diseño Digital y Modelado 3D", sponsor: "SENATI", duration: "8 semanas", requirement: "Acceso a computadora con Windows 10", status: "Cierra en 5 días" },

@@ -1,9 +1,13 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../contexts/AuthContext";
 
 export function Sidebar() {
   const navigate = useNavigate();
-  const [profileName, setProfileName] = useState("Camila Fernanda López Ruiz");
+  const { user } = useAuth();
+  const [profileName, setProfileName] = useState("Estudiante Pathfinder");
+  const [postulacionesCount, setPostulacionesCount] = useState<number | null>(null);
 
   useEffect(() => {
     const loadProfile = () => {
@@ -21,17 +25,38 @@ export function Sidebar() {
     };
 
     loadProfile();
-    
+
     // Listen to changes to storage
     window.addEventListener("storage", loadProfile);
     // Custom event to update from same window
     window.addEventListener("profileUpdated", loadProfile);
-    
+
     return () => {
       window.removeEventListener("storage", loadProfile);
       window.removeEventListener("profileUpdated", loadProfile);
     };
   }, []);
+
+  // Load real postulaciones count from Supabase
+  useEffect(() => {
+    const loadCount = async () => {
+      if (!user || !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder")) return;
+      try {
+        // Get valid beca_ids first to exclude ghosts
+        const { data: becasData } = await supabase.from("becas").select("id");
+        const validIds = (becasData || []).map((b: any) => b.id);
+        const { count } = await supabase
+          .from("postulaciones")
+          .select("id", { count: "exact", head: true })
+          .eq("usuario_id", user.id)
+          .in("beca_id", validIds.length > 0 ? validIds : [""]);
+        setPostulacionesCount(count ?? 0);
+      } catch (err) {
+        console.error("Error loading postulaciones count:", err);
+      }
+    };
+    loadCount();
+  }, [user]);
   return (
     <aside className="fixed left-0 h-full w-64 hidden lg:flex flex-col bg-surface border-r border-border-subtle py-lg gap-sm top-0">
       <div className="px-md mb-lg">
@@ -82,9 +107,11 @@ export function Sidebar() {
         >
           <span className="material-symbols-outlined">assignment</span>
           <span className="flex-1">Mis Postulaciones</span>
-          <span className="bg-surface-variant text-on-surface-variant text-[10px] font-bold px-2 py-0.5 rounded-full">
-            2
-          </span>
+          {postulacionesCount !== null && postulacionesCount > 0 && (
+            <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {postulacionesCount}
+            </span>
+          )}
         </NavLink>
 
         <NavLink

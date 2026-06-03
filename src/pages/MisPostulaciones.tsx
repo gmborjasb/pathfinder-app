@@ -578,25 +578,31 @@ export default function MisPostulaciones() {
         </div>
 
         {/* IA Banner */}
-        <div className="card-dark flex flex-col gap-3 text-white relative overflow-hidden mt-6 select-none" style={{ background: "var(--navy)" }}>
-          <div className="absolute -right-8 -bottom-8 opacity-10">
+        <div className="card flex flex-col gap-3 relative overflow-hidden mt-6 select-none border-none text-white" style={{ backgroundColor: "#0F2554" }}>
+          <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
             <span className="material-symbols-outlined text-[100px] text-white">smart_toy</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-[8px] bg-white/20 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-[8px] bg-white/10 flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-lg text-white">smart_toy</span>
             </div>
             <div>
-              <span className="badge b-blue" style={{ background: "rgba(255,255,255,0.2)", color: "white" }}>
+              <span className="badge" style={{ backgroundColor: "rgba(255, 255, 255, 0.2)", color: "white" }}>
                 {selectedAppDetail.iaBanner.badge}
               </span>
-              <h4 className="t-xs bold text-white mt-0.5">{selectedAppDetail.iaBanner.title}</h4>
+              <h4 className="bold mt-0.5" style={{ color: "white", fontWeight: "bold", fontSize: "11px" }}>{selectedAppDetail.iaBanner.title}</h4>
             </div>
           </div>
-          <p className="t-xs leading-snug text-white/90">{selectedAppDetail.iaBanner.description}</p>
+          <p style={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "10px", lineHeight: "1.4" }}>{selectedAppDetail.iaBanner.description}</p>
           <button
             onClick={() => navigate("/asesor")}
-            className="w-full bg-white text-navy py-2 rounded-[8px] t-xs bold flex items-center justify-center gap-1 hover:bg-[#e8eef8] border-none cursor-pointer mt-2"
+            className="w-full py-2 rounded-[8px] bold flex items-center justify-center gap-1 hover:opacity-90 border-none cursor-pointer mt-2 transition-all shadow-sm"
+            style={{
+              backgroundColor: "#ffdf94", // Yellow from palette
+              color: "#0F2554",           // Navy text
+              fontWeight: "bold",
+              fontSize: "11px",
+            }}
           >
             {selectedAppDetail.iaBanner.buttonText}
             <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -605,75 +611,76 @@ export default function MisPostulaciones() {
       </section>
 
       {/* ── Column 2: Main workspace (6 cols) ────────────────────────────────── */}
-      <section className="col-span-12 lg:col-span-6 flex flex-col gap-6 min-w-0 bg-white p-6 rounded-[16px] border border-[#e2e8f0] shadow-sm h-fit">
+      <section className="col-span-12 lg:col-span-6 flex flex-col gap-6 min-w-0 h-fit">
 
-        {/* Header */}
-        <div className="flex items-end justify-between mb-4 gap-md border-b border-[#e2e8f0] pb-3">
-          <div className="min-w-0">
-            <span className="t-label">Postulación en curso</span>
-            {/* FIX #2: título con tooltip para ver nombre completo */}
-            <h2
-              className="t-lg bold mt-1 trunc"
-              title={selectedAppDetail.title}
-            >
-              {selectedAppDetail.title}
-            </h2>
+        {/* STANDALONE PIPELINE CARD - Matches the design template */}
+        <div className="card p-6 flex flex-col gap-4 bg-white shadow-sm border border-[#e2e8f0]" style={{ borderRadius: "var(--r-lg)" }}>
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h3 className="t-md bold text-navy" style={{ fontSize: "15px" }}>Pipeline de postulación</h3>
+              <p className="t-xs mt-1" style={{ color: "var(--slate)" }}>
+                Proceso actual para <span className="bold text-navy-2 pr-10">{selectedAppDetail.fullTitle}</span>
+              </p>
+            </div>
+            <span className="badge b-amber" style={{ fontSize: "11px", padding: "4px 12px" }}>
+              {toSentenceCase(selectedAppDetail.status)}
+            </span>
           </div>
-          <div className="badge b-green">
-            <span className="material-symbols-outlined text-sm">verified</span>
-            Perfil verificado
-          </div>
-        </div>
 
+          <div className="relative py-4 mt-2">
+            {/* Horizontal progress lines - Vertically center-aligned to circles */}
+            <div className="absolute top-[36px] left-[5%] right-[5%] h-[2px] bg-[#f1f5f9] -translate-y-1/2 z-0 rounded-[99px]" />
+            <div className={`absolute top-[36px] left-[5%] ${selectedAppDetail.connectorWidth} h-[2px] bg-[#1a3a7c] -translate-y-1/2 z-0 transition-all duration-700 rounded-[99px]`} />
 
-        {/* FIX #3: Pipeline con paso activo visualmente diferenciado */}
-        <div className="relative py-2 mb-4">
-          <div className="absolute top-1/2 left-[5%] right-[5%] h-1 bg-[#f1f5f9] -translate-y-1/2 z-0 rounded-[99px]" />
-          <div className={`absolute top-1/2 left-[5%] ${selectedAppDetail.connectorWidth} h-1 bg-[#1a3a7c] -translate-y-1/2 z-0 transition-all duration-700 rounded-[99px]`} />
-
-          <div className="relative z-10 flex justify-between px-xs">
-            {selectedAppDetail.pipeline.map((step, idx) => (
-              <div key={idx} className="flex flex-col items-center gap-1">
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-md relative z-10 ring-4 ring-white ${
-                  step.status === "completed"
-                    ? "bg-[#1a3a7c] text-white"
-                    : step.status === "active"
-                      ? "bg-white border-2 border-[#1a3a7c] text-[#1a3a7c] shadow-lg"
-                      : "bg-[#f1f5f9] text-slate-2"
-                }`}>
-                  <span
-                    className="material-symbols-outlined text-[16px]"
-                    style={step.status === "completed" ? { fontVariationSettings: '"FILL" 1' } : {}}
-                  >
-                    {step.status === "completed" ? "check" : step.icon}
+            <div className="relative z-10 flex justify-between px-xs">
+              {selectedAppDetail.pipeline.map((step, idx) => (
+                <div key={idx} className="flex flex-col items-center gap-2" style={{ width: "22%" }}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-md relative z-10 ring-4 ring-white ${
+                    step.status === "completed"
+                      ? "bg-[#1a3a7c] text-white"
+                      : step.status === "active"
+                        ? "bg-white border-2 border-[#1a3a7c] text-[#1a3a7c] shadow-lg ring-4 ring-[#e8eef8]"
+                        : "bg-[#f1f5f9] text-[#94a3b8]"
+                  }`}>
+                    <span
+                      className="material-symbols-outlined text-[18px]"
+                      style={step.status === "completed" ? { fontVariationSettings: '"FILL" 1' } : {}}
+                    >
+                      {step.icon}
+                    </span>
+                  </div>
+                  <span className={`t-xs bold text-center leading-tight ${
+                    step.status === "active" ? "text-[#1a3a7c]" :
+                    step.status === "completed" ? "text-[#1a3a7c]" : "text-[#94a3b8]"
+                  }`}>
+                    {step.label}
                   </span>
+                  {step.status === "active" && (
+                    <span className="badge b-blue mt-0.5">
+                      Actual
+                    </span>
+                  )}
                 </div>
-                <span className={`t-xs bold ${
-                  step.status === "active" ? "text-[#1a3a7c]" :
-                  step.status === "completed" ? "text-[#1a3a7c]" : "text-[#94a3b8]"
-                }`}>
-                  {step.label}
-                </span>
-                {step.status === "active" && (
-                  <span className="badge b-blue mt-1">
-                    Actual
-                  </span>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* FIX #5: Contexto de beca en checklist */}
-        <div className="space-y-md">
-          <h3 className="t-md bold flex items-center gap-sm">
-            <span className="material-symbols-outlined">checklist</span>
-            Lista de control (metas)
-          </h3>
-          <p className="t-xs -mt-2 mb-1">
-            Documentos requeridos para:{" "}
-            <span className="bold">{selectedAppDetail.fullTitle}</span>
-          </p>
+        {/* STANDALONE CHECKLIST CARD */}
+        <div className="card p-6 flex flex-col gap-4 bg-white shadow-sm border border-[#e2e8f0]" style={{ borderRadius: "var(--r-lg)" }}>
+          {/* Header */}
+          <div className="flex items-end justify-between mb-2 gap-md border-b border-[#e2e8f0] pb-3">
+            <div className="min-w-0">
+              <h3 className="t-md bold text-navy" style={{ fontSize: "15px" }}>Lista de control (metas)</h3>
+              <p className="t-xs mt-1" style={{ color: "var(--slate)" }}>
+                Documentos requeridos para: <span className="bold text-navy-2 pr-10">{selectedAppDetail.fullTitle}</span>
+              </p>
+            </div>
+            <div className="badge b-green shrink-0">
+              <span className="material-symbols-outlined text-sm">verified</span>
+              Perfil verificado
+            </div>
+          </div>
 
           <div className="flex flex-col gap-sm">
             {[
@@ -698,10 +705,10 @@ export default function MisPostulaciones() {
             ].map(({ label, status, keywords, docName }) => (
               <label
                 key={label}
-                className="card p-3 flex items-start gap-3 justify-between group hover:border-[#1a3a7c]/20 transition-all cursor-pointer"
-                style={{ borderRadius: "var(--r-md)" }}
+                className="card p-3 flex items-start gap-3 justify-between group hover:border-[#1a3a7c]/20 transition-all cursor-pointer bg-white"
+                style={{ borderRadius: "var(--r-md)", border: "1px solid var(--border)" }}
               >
-                <div className="flex items-start gap-3 flex-1 min-w-0">
+                <div className="flex items-start gap-3 flex-1 min-w-0 bg-transparent">
                   <input
                     type="checkbox"
                     className="peer sr-only"
@@ -726,10 +733,10 @@ export default function MisPostulaciones() {
                     </div>
                   )}
 
-                  <div className="min-w-0">
-                    <h4 className="t-sm bold">{label}</h4>
+                  <div className="min-w-0 bg-transparent">
+                    <h4 className="t-sm bold text-navy">{label}</h4>
                     {status === "faltante" ? (
-                      <p className="t-xs mt-0.5">
+                      <p className="t-xs mt-0.5" style={{ color: "var(--slate)" }}>
                         Aún no subido — usa el botón para agregarlo
                       </p>
                     ) : (
@@ -798,8 +805,13 @@ export default function MisPostulaciones() {
                     )}
                   </div>
 
-                  <div className={`t-xs bold ${date.completed ? "line-through text-slate-2" : ""}`}>
-                    {date.month}/{date.day}: {date.title}
+                  <div className={`t-xs ${date.completed ? "line-through text-slate-2" : ""}`}>
+                    <strong style={{ fontWeight: "bold", color: "var(--navy)" }}>
+                      {date.month}/{date.day}
+                    </strong>
+                    <span style={{ color: "var(--navy-2)", marginLeft: "4px" }}>
+                      : {date.title}
+                    </span>
                   </div>
                   <p className="t-xs mt-0.5 leading-tight">
                     {date.subtitle}

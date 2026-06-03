@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabaseClient";
 
@@ -9,59 +10,120 @@ interface Message {
   timestamp: Date;
 }
 
+interface BecaCtx {
+  titulo: string;
+  sponsor: string;
+  fecha_cierre: string | null;
+}
+
 let globalLocalFallback = false;
 
 export default function Asesor() {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  
+
   const [sessions, setSessions] = useState<any[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
   const [useLocalFallback, setUseLocalFallback] = useState(false);
-  
+
+  // Rename state
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [ollamaUrl, setOllamaUrl] = useState(() => {
     return localStorage.getItem("pathfinder_ollama_url") || "";
   });
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Auto scroll to bottom
+  // Context data from BD
+  const [becaCtx, setBecaCtx] = useState<BecaCtx | null>(null);
+  const [docsRechazados, setDocsRechazados] = useState(0);
+  const [diasRestantes, setDiasRestantes] = useState<number | null>(null);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Close three-dot menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    if (openMenuId) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [openMenuId]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Close dropdown on click outside
+  // ── Fetch context data from Supabase ─────────────────────────────────────
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowHistoryDropdown(false);
+    const fetchContext = async () => {
+      const isMock = !import.meta.env.VITE_SUPABASE_URL ||
+        import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
+      if (isMock || !user) return;
+
+      try {
+        const becaId = localStorage.getItem("pathfinder_active_meta");
+        if (!becaId) return;
+
+        const { data: beca } = await supabase
+          .from("becas")
+          .select("titulo, sponsor, fecha_cierre")
+          .eq("id", becaId)
+          .maybeSingle();
+
+        if (beca) {
+          setBecaCtx(beca);
+          if (beca.fecha_cierre) {
+            const dias = Math.floor(
+              (new Date(beca.fecha_cierre).getTime() - Date.now()) / 86400000
+            );
+            setDiasRestantes(dias);
+          }
+
+          const { data: post } = await supabase
+            .from("postulaciones")
+            .select("id")
+            .eq("usuario_id", user.id)
+            .eq("beca_id", becaId)
+            .maybeSingle();
+
+          if (post) {
+            const { data: docs } = await supabase
+              .from("documentos")
+              .select("estado")
+              .eq("postulacion_id", post.id)
+              .eq("estado", "Rechazado");
+            setDocsRechazados(docs?.length ?? 0);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching asesor context:", err);
       }
     };
-    if (showHistoryDropdown) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showHistoryDropdown]);
 
-  // Helper to generate the default welcome message
+    fetchContext();
+  }, [user]);
+
+  // ── Session helpers ───────────────────────────────────────────────────────
   const getWelcomeMessage = () => {
     const name = profile?.nombres ? profile.nombres.split(" ")[0] : "Marcelo";
     return {
       id: "welcome-" + Date.now(),
       sender: "ai" as const,
-      text: `¡Hola ${name}! ¿En qué puedo ayudarte hoy? Tu asistente académico personalizado está listo para guiarte en tu camino a la universidad y tu postulación a la Beca 18.`,
+      text: `Hola ${name}. Soy tu asesor de postulación${becaCtx ? ` para la ${becaCtx.titulo}` : ""}.\n\n¿En qué puedo ayudarte hoy?`,
       timestamp: new Date(),
     };
   };
 
-  // Local storage sessions loader (fail-safe fallback)
   const loadLocalSessions = () => {
     const defaultWelcome = getWelcomeMessage();
     const local = localStorage.getItem("pathfinder_chat_sessions");
@@ -75,7 +137,7 @@ export default function Asesor() {
               ? s.mensajes.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }))
               : [defaultWelcome],
             created_at: new Date(s.created_at),
-            updated_at: new Date(s.updated_at)
+            updated_at: new Date(s.updated_at),
           }));
           setSessions(mapped);
           if (!currentSessionId) {
@@ -91,29 +153,28 @@ export default function Asesor() {
         console.error("Error parsing local sessions", e);
       }
     }
-    
-    const newSessionId = "session-" + Date.now();
+    const newId = "session-" + Date.now();
     const defaultSessions = [{
-      id: newSessionId,
+      id: newId,
       usuario_id: user?.id || "anonymous",
       titulo: "Conversación Nueva",
       mensajes: [defaultWelcome],
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     }];
     setSessions(defaultSessions);
-    setCurrentSessionId(newSessionId);
+    setCurrentSessionId(newId);
     setMessages([defaultWelcome]);
     localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(defaultSessions));
   };
 
-  // Load chat sessions from Supabase/localStorage
   const loadChatSessions = async () => {
     globalLocalFallback = false;
     const defaultWelcome = getWelcomeMessage();
-    const isMockMode = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
+    const isMock = !import.meta.env.VITE_SUPABASE_URL ||
+      import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
 
-    if (isMockMode || !user) {
+    if (isMock || !user) {
       globalLocalFallback = true;
       setUseLocalFallback(true);
       loadLocalSessions();
@@ -127,17 +188,7 @@ export default function Asesor() {
         .eq("usuario_id", user.id)
         .order("updated_at", { ascending: false });
 
-      if (error) {
-        console.error("Error loading chat sessions from Supabase, falling back to local storage:", error);
-        globalLocalFallback = true;
-        setUseLocalFallback(true);
-        loadLocalSessions();
-        return;
-      }
-
-      // Check if data is missing the 'id' or 'titulo' column (legacy single-session schema)
-      if (data && data.length > 0 && (data[0].id === undefined || data[0].titulo === undefined)) {
-        console.warn("Legacy Supabase chat_sesiones schema detected. Falling back to local storage for multi-session support.");
+      if (error || (data && data.length > 0 && data[0].id === undefined)) {
         globalLocalFallback = true;
         setUseLocalFallback(true);
         loadLocalSessions();
@@ -151,293 +202,173 @@ export default function Asesor() {
             ? s.mensajes.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }))
             : [defaultWelcome],
           created_at: new Date(s.created_at),
-          updated_at: new Date(s.updated_at)
+          updated_at: new Date(s.updated_at),
         }));
         setSessions(mapped);
-        
         if (!currentSessionId) {
           setCurrentSessionId(mapped[0].id);
           setMessages(mapped[0].mensajes);
         } else {
           const active = mapped.find((s: any) => s.id === currentSessionId);
-          if (active) {
-            setMessages(active.mensajes);
-          } else {
-            setCurrentSessionId(mapped[0].id);
-            setMessages(mapped[0].mensajes);
-          }
+          setCurrentSessionId(active ? active.id : mapped[0].id);
+          setMessages(active ? active.mensajes : mapped[0].mensajes);
         }
       } else {
-        const newSessionId = crypto.randomUUID ? crypto.randomUUID() : "session-" + Date.now();
+        const newId = crypto.randomUUID ? crypto.randomUUID() : "session-" + Date.now();
         const { data: inserted, error: insertErr } = await supabase
           .from("chat_sesiones")
-          .insert({
-            id: newSessionId,
-            usuario_id: user.id,
-            titulo: "Conversación Nueva",
-            mensajes: [defaultWelcome]
-          })
+          .insert({ id: newId, usuario_id: user.id, titulo: "Conversación Nueva", mensajes: [defaultWelcome] })
           .select("*")
           .single();
-
-        if (insertErr) {
-          console.error("Error creating default session in Supabase, falling back to local storage:", insertErr);
-          globalLocalFallback = true;
-          setUseLocalFallback(true);
-          loadLocalSessions();
-          return;
-        }
-
-        const newSession = {
-          ...inserted,
-          mensajes: [defaultWelcome],
-          created_at: new Date(inserted.created_at),
-          updated_at: new Date(inserted.updated_at)
-        };
+        if (insertErr) { globalLocalFallback = true; setUseLocalFallback(true); loadLocalSessions(); return; }
+        const newSession = { ...inserted, mensajes: [defaultWelcome], created_at: new Date(inserted.created_at), updated_at: new Date(inserted.updated_at) };
         setSessions([newSession]);
         setCurrentSessionId(inserted.id);
         setMessages([defaultWelcome]);
       }
-    } catch (err) {
-      console.error("Unexpected error loading chat sessions, falling back to local storage:", err);
+    } catch {
       globalLocalFallback = true;
       setUseLocalFallback(true);
       loadLocalSessions();
     }
   };
 
-  useEffect(() => {
-    loadChatSessions();
-  }, [user, profile]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
+  useEffect(() => { loadChatSessions(); }, [user, profile]);
+  useEffect(() => { scrollToBottom(); }, [messages, isTyping]);
 
   const createNewSession = async () => {
     const defaultWelcome = getWelcomeMessage();
-    const isMockMode = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
-    const newSessionId = crypto.randomUUID ? crypto.randomUUID() : "session-" + Date.now();
+    const isMock = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
+    const newId = crypto.randomUUID ? crypto.randomUUID() : "session-" + Date.now();
 
-    if (isMockMode || !user || useLocalFallback || globalLocalFallback) {
-      const newSession = {
-        id: newSessionId,
-        usuario_id: user?.id || "anonymous",
-        titulo: "Conversación Nueva",
-        mensajes: [defaultWelcome],
-        created_at: new Date(),
-        updated_at: new Date()
-      };
+    if (isMock || !user || useLocalFallback || globalLocalFallback) {
+      const newSession = { id: newId, usuario_id: user?.id || "anonymous", titulo: "Conversación Nueva", mensajes: [defaultWelcome], created_at: new Date(), updated_at: new Date() };
       const updated = [newSession, ...sessions];
       setSessions(updated);
-      setCurrentSessionId(newSessionId);
+      setCurrentSessionId(newId);
       setMessages([defaultWelcome]);
       localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated));
       return;
     }
-
     try {
       const { data, error } = await supabase
         .from("chat_sesiones")
-        .insert({
-          id: newSessionId,
-          usuario_id: user.id,
-          titulo: "Conversación Nueva",
-          mensajes: [defaultWelcome]
-        })
-        .select("*")
-        .single();
-
-      if (error) {
-        console.error("Error creating new session in Supabase, switching to local storage fallback:", error);
-        globalLocalFallback = true;
-        setUseLocalFallback(true);
-        const newSession = {
-          id: newSessionId,
-          usuario_id: user.id,
-          titulo: "Conversación Nueva",
-          mensajes: [defaultWelcome],
-          created_at: new Date(),
-          updated_at: new Date()
-        };
-        const updated = [newSession, ...sessions];
-        setSessions(updated);
-        setCurrentSessionId(newSessionId);
-        setMessages([defaultWelcome]);
-        localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated));
-        return;
-      }
-
-      const newSession = {
-        ...data,
-        mensajes: [defaultWelcome],
-        created_at: new Date(data.created_at),
-        updated_at: new Date(data.updated_at)
-      };
-
+        .insert({ id: newId, usuario_id: user.id, titulo: "Conversación Nueva", mensajes: [defaultWelcome] })
+        .select("*").single();
+      if (error) { globalLocalFallback = true; setUseLocalFallback(true); return; }
+      const newSession = { ...data, mensajes: [defaultWelcome], created_at: new Date(data.created_at), updated_at: new Date(data.updated_at) };
       setSessions([newSession, ...sessions]);
       setCurrentSessionId(data.id);
       setMessages([defaultWelcome]);
-    } catch (err) {
-      console.error("Unexpected error creating new session:", err);
-    }
+    } catch { console.error("Error creating session"); }
   };
 
   const deleteSession = async (idToDelete: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const isMockMode = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
-    const updatedSessions = sessions.filter((s) => s.id !== idToDelete);
+    const isMock = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
+    const updated = sessions.filter((s) => s.id !== idToDelete);
 
-    if (isMockMode || !user || useLocalFallback || globalLocalFallback) {
-      setSessions(updatedSessions);
-      localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updatedSessions));
+    const afterDelete = () => {
+      setSessions(updated);
       if (currentSessionId === idToDelete) {
-        if (updatedSessions.length > 0) {
-          setCurrentSessionId(updatedSessions[0].id);
-          setMessages(updatedSessions[0].mensajes);
-        } else {
-          setTimeout(() => createNewSession(), 100);
-        }
+        if (updated.length > 0) { setCurrentSessionId(updated[0].id); setMessages(updated[0].mensajes); }
+        else setTimeout(() => createNewSession(), 100);
       }
+    };
+
+    if (isMock || !user || useLocalFallback || globalLocalFallback) {
+      afterDelete();
+      localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated));
       return;
     }
-
     try {
-      const { error } = await supabase
-        .from("chat_sesiones")
-        .delete()
-        .eq("id", idToDelete);
-
-      if (error) {
-        console.error("Error deleting session in Supabase, switching to local storage fallback:", error);
-        globalLocalFallback = true;
-        setUseLocalFallback(true);
-        setSessions(updatedSessions);
-        localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updatedSessions));
-        if (currentSessionId === idToDelete) {
-          if (updatedSessions.length > 0) {
-            setCurrentSessionId(updatedSessions[0].id);
-            setMessages(updatedSessions[0].mensajes);
-          } else {
-            setTimeout(() => createNewSession(), 100);
-          }
-        }
-        return;
-      }
-
-      setSessions(updatedSessions);
-      if (currentSessionId === idToDelete) {
-        if (updatedSessions.length > 0) {
-          setCurrentSessionId(updatedSessions[0].id);
-          setMessages(updatedSessions[0].mensajes);
-        } else {
-          setTimeout(() => createNewSession(), 100);
-        }
-      }
-    } catch (err) {
-      console.error("Unexpected error deleting session:", err);
-    }
+      await supabase.from("chat_sesiones").delete().eq("id", idToDelete);
+      afterDelete();
+    } catch { console.error("Error deleting session"); }
   };
 
   const selectSession = (id: string) => {
     const active = sessions.find((s) => s.id === id);
-    if (active) {
-      setCurrentSessionId(id);
-      setMessages(active.mensajes);
+    if (active) { setCurrentSessionId(id); setMessages(active.mensajes); }
+  };
+
+  const renameSession = async (id: string, newTitle: string) => {
+    const trimmed = newTitle.trim();
+    if (!trimmed) return;
+    const updated = sessions.map((s) =>
+      s.id === id ? { ...s, titulo: trimmed, updated_at: new Date() } : s
+    );
+    setSessions(updated);
+    setRenamingId(null);
+
+    const isMock = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
+    if (isMock || !user || useLocalFallback || globalLocalFallback) {
+      localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated));
+      return;
     }
-    setShowHistoryDropdown(false);
+    try {
+      await supabase.from("chat_sesiones").update({ titulo: trimmed }).eq("id", id);
+    } catch {
+      localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated));
+    }
   };
 
   const saveChatSession = async (updatedMessages: Message[]) => {
     if (!currentSessionId) return;
-
     const activeSession = sessions.find((s) => s.id === currentSessionId);
     let newTitle = activeSession?.titulo || "Conversación Nueva";
-
     if (newTitle === "Conversación Nueva") {
-      const firstUserMsg = updatedMessages.find((m) => m.sender === "user");
-      if (firstUserMsg) {
-        const words = firstUserMsg.text.split(" ");
-        newTitle = words.slice(0, 4).join(" ");
-        if (firstUserMsg.text.length > newTitle.length) {
-          newTitle += "...";
-        }
+      const firstUser = updatedMessages.find((m) => m.sender === "user");
+      if (firstUser) {
+        const words = firstUser.text.split(" ");
+        newTitle = words.slice(0, 5).join(" ");
+        if (words.length > 5) newTitle += "...";
       }
     }
-
-    const updated = sessions.map((s) => {
-      if (s.id === currentSessionId) {
-        return {
-          ...s,
-          titulo: newTitle,
-          mensajes: updatedMessages,
-          updated_at: new Date()
-        };
-      }
-      return s;
-    });
+    const updated = sessions.map((s) =>
+      s.id === currentSessionId ? { ...s, titulo: newTitle, mensajes: updatedMessages, updated_at: new Date() } : s
+    );
     setSessions(updated);
 
-    const isMockMode = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
-    if (isMockMode || !user || useLocalFallback || globalLocalFallback) {
+    const isMock = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
+    if (isMock || !user || useLocalFallback || globalLocalFallback) {
       localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated));
       return;
     }
-
     try {
-      const { error } = await supabase
-        .from("chat_sesiones")
-        .update({
-          titulo: newTitle,
-          mensajes: updatedMessages,
-          updated_at: new Date().toISOString()
-        })
+      const { error } = await supabase.from("chat_sesiones")
+        .update({ titulo: newTitle, mensajes: updatedMessages, updated_at: new Date().toISOString() })
         .eq("id", currentSessionId);
-
-      if (error) {
-        console.error("Error updating chat session messages in Supabase, switching to local storage fallback:", error);
-        globalLocalFallback = true;
-        setUseLocalFallback(true);
-        localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated));
-      }
-    } catch (err) {
-      console.error("Unexpected error saving messages:", err);
-      globalLocalFallback = true;
-      setUseLocalFallback(true);
+      if (error) { globalLocalFallback = true; setUseLocalFallback(true); localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated)); }
+    } catch {
+      globalLocalFallback = true; setUseLocalFallback(true);
       localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated));
     }
   };
 
+  // ── AI response ───────────────────────────────────────────────────────────
   const simulateAiResponseFallback = (userText: string, currentMessages: Message[]) => {
     setIsTyping(true);
-    
-    // Simulate thinking delay
     setTimeout(() => {
       const name = profile?.nombres ? profile.nombres.split(" ")[0] : "Marcelo";
-      const textLower = userText.toLowerCase().trim();
+      const t = userText.toLowerCase().trim();
       let aiText = "";
 
-      if (textLower.includes("carta") || textLower.includes("motivacion") || textLower.includes("motivación") || textLower.includes("ensayo")) {
-        aiText = `¡Por supuesto, ${name}! Una buena carta de motivación es clave para destacar. Por favor, copia y pega el borrador que tengas aquí. Analizaré su estructura, tono y me aseguraré de que resalte tus fortalezas académicas, liderazgo y por qué mereces la Beca 18. Si aún no la has empezado, dime y te daré una estructura paso a paso. 📝✨`;
-      } else if (textLower.includes("entrevista") || textLower.includes("practicar") || textLower.includes("preguntas") || textLower.includes("simulacro")) {
-        aiText = `¡Excelente iniciativa, ${name}! La preparación es fundamental. Hagamos un simulacro interactivo. Yo seré el evaluador de la beca y tú el postulante. Te haré preguntas una por una. ¿Lista/o? Empecemos con la primera:\n\n*¿Cómo piensas utilizar los conocimientos de tu carrera profesional para contribuir al desarrollo de tu comunidad una vez termines tus estudios?*\n\nTómate tu tiempo y respóndeme aquí. 🎓💪`;
-      } else if (textLower.includes("requisito") || textLower.includes("documento") || textLower.includes("sinfoh") || textLower.includes("mochila") || textLower.includes("papel")) {
-        aiText = `Hola ${name}, los requisitos principales para Beca 18 de PRONABEC son: \n1. Ser peruana/o de nacimiento. 🇵🇪\n2. Estar cursando o haber egresado del 5° de secundaria con alto rendimiento académico (tercio superior). 📚\n3. Clasificación de pobreza o pobreza extrema en el SISFOH (para la modalidad ordinaria). 🏠\n4. Constancia de ingreso a una universidad o instituto elegible.\n\n¿Tienes dudas específicas con respecto a alguno de estos puntos o la acreditación en tu mochila de documentos?`;
-      } else if (textLower.includes("carrera") || textLower.includes("vocacion") || textLower.includes("vocación") || textLower.includes("estudiar")) {
-        aiText = `¡Qué gran paso, ${name}! Con tu promedio actual de 18.5 GPA, tienes un perfil académico sobresaliente para postular a cualquier carrera universitaria. 🎓✨ Cuéntame un poco más: ¿cuáles son tus materias escolares favoritas y qué actividades te apasionan hacer en tu tiempo libre? Así podremos perfilar algunas opciones ideales para ti. 🚀`;
+      if (t.includes("carta") || t.includes("motivacion") || t.includes("motivación") || t.includes("ensayo")) {
+        aiText = `Por supuesto, ${name}. Una buena carta de motivación es uno de los factores más importantes en la evaluación.\n\nCopia y pega tu borrador aquí. Revisaré su estructura, tono y me aseguraré de que resalte tus fortalezas académicas y por qué mereces la beca.\n\nSi aún no la has empezado, puedo darte una estructura paso a paso.`;
+      } else if (t.includes("entrevista") || t.includes("practicar") || t.includes("preguntas") || t.includes("simulacro")) {
+        aiText = `Excelente iniciativa, ${name}. La preparación es fundamental.\n\nHagamos un simulacro interactivo: yo seré el evaluador y tú el postulante. Te haré preguntas una por una.\n\n¿Estás listo/a? Empecemos con la primera:\n\n"¿Cómo piensas utilizar los conocimientos de tu carrera para contribuir al desarrollo de tu comunidad?"`;
+      } else if (t.includes("requisito") || t.includes("documento") || t.includes("sisfoh") || t.includes("mochila")) {
+        aiText = `Los requisitos principales para Beca 18 de PRONABEC son:\n\n1. Ser peruano/a de nacimiento.\n2. Estar cursando o haber egresado del 5° de secundaria en el tercio superior.\n3. Clasificación de pobreza o pobreza extrema en el SISFOH (modalidad ordinaria).\n4. Constancia de ingreso a una universidad o instituto elegible.\n\n¿Tienes dudas sobre alguno de estos puntos?`;
+      } else if (t.includes("carrera") || t.includes("vocacion") || t.includes("vocación") || t.includes("estudiar")) {
+        aiText = `Con tu perfil académico actual tienes un buen punto de partida para evaluar opciones universitarias.\n\nCuéntame cuáles son tus materias favoritas y qué actividades te apasionan. Con eso puedo ayudarte a identificar las carreras que mejor se alinean con tu perfil.`;
       } else {
-        // Dynamic fallback that acknowledges what the user typed
-        aiText = `¡Entendido, ${name}! He recibido tu mensaje: "${userText}". Estoy aquí para guiarte en tu postulación a la Beca 18. Como nos encontramos a solo 5 días del cierre de la convocatoria, te sugiero priorizar las tareas clave. ¿Te gustaría que revisemos tu carta de motivación o que verifiquemos los documentos de tu mochila? 🚀`;
+        aiText = `Entendido, ${name}. Estoy aquí para guiarte en tu postulación${becaCtx ? ` a la ${becaCtx.titulo}` : ""}.\n\n¿Te gustaría que revisemos tu carta de motivación, practiquemos una entrevista, o que verifiquemos los documentos de tu mochila?`;
       }
 
       const nextMessages: Message[] = [
         ...currentMessages,
-        {
-          id: `ai-${Date.now()}`,
-          sender: "ai",
-          text: aiText,
-          timestamp: new Date(),
-        },
+        { id: `ai-${Date.now()}`, sender: "ai", text: aiText, timestamp: new Date() },
       ];
       setMessages(nextMessages);
       setIsTyping(false);
@@ -447,319 +378,329 @@ export default function Asesor() {
 
   const fetchOllamaResponse = async (userText: string, currentMessages: Message[]) => {
     setIsTyping(true);
-
     const savedUrl = localStorage.getItem("pathfinder_ollama_url") || "";
-    if (!savedUrl) {
-      simulateAiResponseFallback(userText, currentMessages);
-      return;
-    }
+    if (!savedUrl) { simulateAiResponseFallback(userText, currentMessages); return; }
 
-    // Clean URL to make sure it ends with /api/chat if it doesn't already
     let endpoint = savedUrl.trim();
-    if (!endpoint.endsWith("/api/chat") && !endpoint.endsWith("/api/chat/")) {
-      endpoint = endpoint.replace(/\/$/, "") + "/api/chat";
-    }
+    if (!endpoint.endsWith("/api/chat")) endpoint = endpoint.replace(/\/$/, "") + "/api/chat";
 
     const name = profile?.nombres ? profile.nombres.split(" ")[0] : "Marcelo";
     const ollamaMessages = [
       {
         role: "system",
-        content: `Eres Motibot, un mentor virtual y asistente motivacional diseñado exclusivamente para apoyar a la estudiante "${name}" en su postulación académica y de becas (especialmente Beca 18 de PRONABEC). Tu propósito es ser un guía inspirador que la ayude a mantener el enfoque, superar obstáculos y recordar por qué sus metas son importantes.
-
-Datos de ${name}:
-- Promedio académico: 18.5 GPA (sobresaliente, tercio superior) 📚.
-- Meta global: Ingresar a la Universidad 🎓.
-- Convocatoria prioritaria: Beca 18 (Convocatoria 2026) 🚀.
-- Estado actual de documentos: Faltan firmar las declaraciones juradas de sus padres y subir su certificado de inglés.
-
-Reglas obligatorias de comportamiento:
-1. Tono y Lenguaje: Usa un lenguaje cercano, empático y muy alentador 💪. No hables de forma rígida, sino como un mentor joven y sabio que entiende las presiones escolares ✨.
-2. Uso de Emojis: ¡Es obligatorio! Usa emojis que transmitan energía positiva y estudio (🚀, 📚, ✨, 💪, 🎓) en cada mensaje para que sea atractivo visualmente.
-3. Enfoque en Metas: Siempre recuérdale su capacidad y dale pequeños consejos prácticos o frases motivadoras para su postulación a Beca 18.
-4. Restricción de Contenido: No respondas preguntas fuera de estudios, motivación, gestión de tiempo o bienestar estudiantil. Redirige amablemente hacia sus metas.
-5. Identidad: Actúa siempre como Motibot, el compañero de Pathfinder que nunca deja que se rinda.`,
+        content: `Eres un asesor de postulaciones académicas para la plataforma Pathfinder. Tu función es guiar al estudiante "${name}" en su proceso de postulación a becas peruanas${becaCtx ? `, especialmente ${becaCtx.titulo}` : ""}. Usa un tono amigable pero profesional. No uses emojis. Responde siempre en español.`,
       },
       ...currentMessages.map((msg) => ({
         role: (msg.sender === "user" ? "user" : "assistant") as "user" | "assistant",
         content: msg.text,
       })),
-      {
-        role: "user",
-        content: userText,
-      },
+      { role: "user" as const, content: userText },
     ];
 
     try {
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama3.2:3b", // Align with the model from the user's Colab
-          messages: ollamaMessages,
-          stream: false,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "llama3.2:3b", messages: ollamaMessages, stream: false }),
       });
-
-      if (!response.ok) {
-        throw new Error("Ollama server returned an error");
-      }
-
+      if (!response.ok) throw new Error("Ollama error");
       const data = await response.json();
-      const aiText = data.message?.content || "No pude obtener una respuesta de mi núcleo local.";
-
+      const aiText = data.message?.content || "No pude obtener una respuesta.";
       const nextMessages: Message[] = [
         ...currentMessages,
-        {
-          id: `ai-${Date.now()}`,
-          sender: "ai",
-          text: aiText,
-          timestamp: new Date(),
-        },
+        { id: `ai-${Date.now()}`, sender: "ai", text: aiText, timestamp: new Date() },
       ];
-
       setMessages(nextMessages);
       setIsTyping(false);
       saveChatSession(nextMessages);
-    } catch (error) {
-      console.warn("Ollama remote server not available, falling back to mock response.", error);
+    } catch {
       simulateAiResponseFallback(userText, currentMessages);
     }
   };
 
   const handleSend = (text: string) => {
     if (!text.trim()) return;
-
-    const newUserMessage: Message = {
-      id: `user-${Date.now()}`,
-      sender: "user",
-      text,
-      timestamp: new Date(),
-    };
-
-    // Save user message and clear input
-    const updatedMessages = [...messages, newUserMessage];
-    setMessages(updatedMessages);
+    const newMsg: Message = { id: `user-${Date.now()}`, sender: "user", text, timestamp: new Date() };
+    const updated = [...messages, newMsg];
+    setMessages(updated);
     setInputValue("");
-    saveChatSession(updatedMessages);
-
-    // Intentar responder usando la URL de Ollama o caer en la simulación dinámica
-    fetchOllamaResponse(text, updatedMessages);
+    saveChatSession(updated);
+    fetchOllamaResponse(text, updated);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend(inputValue);
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(inputValue); }
   };
 
   const quickActions = [
-    {
-      title: "Revisar mi carta de motivación",
-      desc: "Mejora el impacto y la gramática de tus ensayos.",
-      icon: "description",
-    },
-    {
-      title: "Practicar para mi entrevista personal",
-      desc: "Simula preguntas reales de becas y universidades.",
-      icon: "record_voice_over",
-    },
-    {
-      title: "Entender un requisito o documento",
-      desc: "Resuelve tus dudas sobre trámites legales o académicos.",
-      icon: "help_center",
-    },
-    {
-      title: "Explorar opciones de carreras",
-      desc: "Descubre qué estudiar basado en tu perfil actual.",
-      icon: "explore",
-    }
+    { title: "Revisar mi carta de motivación", icon: "description" },
+    { title: "Practicar para mi entrevista", icon: "record_voice_over" },
+    { title: "Entender un requisito o documento", icon: "help_center" },
+    { title: "Explorar opciones de carreras", icon: "explore" },
   ];
 
+  // ── Derived values ────────────────────────────────────────────────────────
+  const gpa = profile?.perfil_detalles?.notas?.gpa;
+  const firstName = profile?.nombres ? profile.nombres.split(" ")[0] : "Marcelo";
+  const showUrgencia = docsRechazados > 0 || (diasRestantes !== null && diasRestantes <= 10 && diasRestantes >= 0);
+
+  const relativeDate = (date: Date) => {
+    const diff = Math.floor((Date.now() - date.getTime()) / 86400000);
+    if (diff === 0) return "Hoy";
+    if (diff === 1) return "Ayer";
+    return `Hace ${diff} días`;
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-140px)] min-h-[550px] overflow-hidden">
-      {/* Left Panel: Contexto Activo */}
-      <aside className="w-full lg:w-72 bg-[#f1f5f9] border border-[#e2e8f0] p-4 rounded-[16px] flex flex-col gap-4 shrink-0 overflow-y-auto no-scrollbar">
-        <div>
-          <h2 className="t-label text-[#0F2554] mb-2">
-            Tu Contexto Activo
-          </h2>
-          <div className="flex flex-col gap-2">
-            {/* Context Card 1 */}
-            <div className="bg-white p-3 rounded-[12px] border border-[#e2e8f0] shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-2">
-                <div className="p-2 bg-[#e8eef8] rounded-[8px] text-[#1a3a7c] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[18px] font-fill">school</span>
-                </div>
-                <div>
-                  <p className="t-xs bold">Meta</p>
-                  <p className="t-sm bold text-[#0F2554] leading-tight">
-                    Ingresar a la Universidad
-                  </p>
-                </div>
-              </div>
+    <div className="flex gap-3 h-[calc(100vh-120px)] min-h-[560px] overflow-hidden">
+
+      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
+      <aside style={{ width: 220, display: "flex", flexDirection: "column", gap: 8, flexShrink: 0 }}>
+
+        {/* Contexto activo */}
+        <div className="card" style={{ padding: "12px" }}>
+          <p className="lbl" style={{ marginBottom: 8 }}>Tu contexto activo</p>
+
+          {/* Beca */}
+          <div className="ctx-row">
+            <div className="ctx-icon">
+              <span className="material-symbols-outlined" style={{ fontSize: 13 }}>school</span>
             </div>
-            {/* Context Card 2 */}
-            <div className="bg-white p-3 rounded-[12px] border border-[#e2e8f0] shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-2">
-                <div className="p-2 bg-[#fef3c7] rounded-[8px] text-[#92400e] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
-                </div>
-                <div>
-                  <p className="t-xs bold">Pipeline</p>
-                  <p className="t-sm bold text-[#92400e] leading-tight">
-                    Beca 18
-                  </p>
-                </div>
-              </div>
+            <div style={{ minWidth: 0 }}>
+              <p className="ctx-label">Beca objetivo</p>
+              <p className="ctx-val" style={{ color: "var(--navy)" }}>
+                {becaCtx?.titulo || localStorage.getItem("pathfinder_active_meta") ? (becaCtx?.titulo || "Cargando...") : "Sin beca activa"}
+              </p>
             </div>
-            {/* Context Card 3 */}
-            <div className="bg-white p-3 rounded-[12px] border border-[#e2e8f0] shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-2">
-                <div className="p-2 bg-[#dcfce7] rounded-[8px] text-[#166534] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[18px]">trending_up</span>
-                </div>
-                <div>
-                  <p className="t-xs bold">Promedio</p>
-                  <p className="t-sm bold text-[#166534] leading-tight">
-                    18.5 GPA
-                  </p>
-                </div>
-              </div>
+          </div>
+
+          {/* Promedio */}
+          <div className="ctx-row">
+            <div className="ctx-icon" style={{ background: "var(--green-bg)", color: "var(--green)" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 13 }}>trending_up</span>
+            </div>
+            <div>
+              <p className="ctx-label">Promedio</p>
+              <p className="ctx-val" style={{ color: "var(--green)" }}>
+                {gpa ? `${gpa} GPA` : "Sin registrar"}
+              </p>
+            </div>
+          </div>
+
+          {/* Cierre */}
+          <div className="ctx-row">
+            <div className="ctx-icon" style={
+              diasRestantes !== null && diasRestantes <= 10
+                ? { background: "var(--amber-bg)", color: "var(--amber)" }
+                : {}
+            }>
+              <span className="material-symbols-outlined" style={{ fontSize: 13 }}>alarm</span>
+            </div>
+            <div>
+              <p className="ctx-label">Cierre</p>
+              <p className="ctx-val" style={{
+                color: diasRestantes === null ? "var(--slate)" :
+                  diasRestantes <= 7 ? "var(--red)" :
+                  diasRestantes <= 30 ? "var(--amber)" : "var(--green)"
+              }}>
+                {diasRestantes === null ? "Sin fecha" :
+                  diasRestantes < 0 ? "Cerrada" :
+                  diasRestantes === 0 ? "Hoy" :
+                  `En ${diasRestantes} días`}
+              </p>
+            </div>
+          </div>
+
+          {/* Documentos */}
+          <div className="ctx-row" style={{ marginBottom: 0 }}>
+            <div className="ctx-icon" style={
+              docsRechazados > 0
+                ? { background: "var(--red-bg)", color: "var(--red)" }
+                : { background: "var(--green-bg)", color: "var(--green)" }
+            }>
+              <span className="material-symbols-outlined" style={{ fontSize: 13 }}>
+                {docsRechazados > 0 ? "file_present" : "check_circle"}
+              </span>
+            </div>
+            <div>
+              <p className="ctx-label">Documentos</p>
+              <p className="ctx-val" style={{ color: docsRechazados > 0 ? "var(--red)" : "var(--green)" }}>
+                {docsRechazados > 0 ? `${docsRechazados} rechazado${docsRechazados > 1 ? "s" : ""}` : "Al día"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Suggestion Mini Card */}
-        <div className="mt-auto bg-[#0F2554] p-4 rounded-[16px] text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 opacity-10 transform scale-150 pointer-events-none">
-            <span className="material-symbols-outlined text-6xl">lightbulb</span>
+        {/* Historial de conversaciones */}
+        <div className="card" style={{ padding: "12px", flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <p className="lbl" style={{ marginBottom: 8 }}>Conversaciones</p>
+
+          <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 3 }}>
+            {sessions.map((s) => {
+              const isActive = s.id === currentSessionId;
+              const isRenaming = renamingId === s.id;
+              const isMenuOpen = openMenuId === s.id;
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => { if (!isRenaming) selectSession(s.id); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6, padding: "7px 8px",
+                    borderRadius: 8, cursor: isRenaming ? "default" : "pointer",
+                    background: isActive ? "#e8eef8" : "transparent",
+                    border: isActive ? "1px solid var(--border)" : "1px solid transparent",
+                    position: "relative",
+                  }}
+                >
+                  <div style={{
+                    width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+                    background: isActive ? "var(--navy)" : "var(--slate-2)",
+                  }} />
+
+                  {/* Título o input de renombrado */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {isRenaming ? (
+                      <input
+                        autoFocus
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") renameSession(s.id, renameValue);
+                          if (e.key === "Escape") setRenamingId(null);
+                        }}
+                        onBlur={() => renameSession(s.id, renameValue)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: "100%", fontSize: 10, color: "var(--navy)", border: "1px solid var(--navy)",
+                          borderRadius: 5, padding: "2px 5px", background: "var(--white)", outline: "none",
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <p style={{ fontSize: 10, color: "var(--navy)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {s.titulo}
+                        </p>
+                        <p style={{ fontSize: 9, color: "var(--slate-2)", marginTop: 1 }}>
+                          {relativeDate(s.updated_at instanceof Date ? s.updated_at : new Date(s.updated_at))}
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Botón tres puntos */}
+                  {!isRenaming && (
+                    <div ref={isMenuOpen ? menuRef : null} style={{ position: "relative", flexShrink: 0 }}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : s.id); }}
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: "1px 2px", color: "var(--slate-2)", display: "flex", alignItems: "center", borderRadius: 4 }}
+                        title="Opciones"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>more_vert</span>
+                      </button>
+
+                      {isMenuOpen && (
+                        <div style={{
+                          position: "absolute", right: 0, top: "calc(100% + 2px)", zIndex: 50,
+                          background: "var(--white)", border: "1px solid var(--border)", borderRadius: 10,
+                          boxShadow: "0 4px 16px rgba(0,0,0,0.10)", overflow: "hidden", minWidth: 130,
+                        }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRenameValue(s.titulo);
+                              setRenamingId(s.id);
+                              setOpenMenuId(null);
+                            }}
+                            style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", padding: "8px 12px", fontSize: 11, fontWeight: 500, color: "var(--navy)", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>edit</span>
+                            Renombrar
+                          </button>
+                          <button
+                            onClick={(e) => { setOpenMenuId(null); deleteSession(s.id, e); }}
+                            style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", padding: "8px 12px", fontSize: 11, fontWeight: 500, color: "var(--red)", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>delete</span>
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <p className="t-sm bold text-white mb-1">Tip de IA:</p>
-          <p className="t-xs text-white/90 leading-relaxed">
-            Faltan 5 días para el cierre de la convocatoria de Beca 18. ¿Quieres revisar tu ensayo hoy?
-          </p>
-          <button 
-            onClick={() => handleSend("Revisar mi ensayo hoy")}
-            className="mt-3 w-full bg-white text-[#0F2554] py-1.5 rounded-[8px] t-xs bold hover:bg-[#e8eef8] hover:scale-105 active:scale-95 transition-all border-none cursor-pointer"
+
+          <button
+            onClick={createNewSession}
+            style={{
+              marginTop: 8, width: "100%", display: "flex", alignItems: "center", justifyContent: "center",
+              gap: 5, padding: "7px", border: "1.5px dashed var(--border)", borderRadius: 9,
+              fontSize: 11, fontWeight: 500, color: "var(--navy)", background: "transparent", cursor: "pointer",
+            }}
           >
-            Priorizar Ensayo
+            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>add</span>
+            Nueva conversación
           </button>
         </div>
       </aside>
 
-      {/* Right Area: Chat Window */}
-      <section className="flex-1 bg-white border border-[#e2e8f0] rounded-[16px] flex flex-col overflow-hidden relative">
-        {/* Chat Header */}
-        <header className="sticky top-0 w-full h-14 border-b border-[#e2e8f0] flex items-center justify-between px-4 bg-white/90 backdrop-blur z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-[#166534] rounded-full animate-pulse"></div>
-            <p className="t-base bold text-[#0F2554]">Asesor IA Pathfinder</p>
-          </div>
-          <div ref={dropdownRef} className="flex items-center gap-2 relative">
-            <button 
-              onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
-              className={`p-2 text-[#64748b] hover:bg-[#f1f5f9] rounded-full transition-colors bg-transparent border-none cursor-pointer ${showHistoryDropdown ? "bg-[#e8eef8] text-[#1a3a7c]" : ""}`}
-              title="Historial de Chats"
-            >
-              <span className="material-symbols-outlined text-[18px]">history</span>
-            </button>
+      {/* ── Chat area ────────────────────────────────────────────────────── */}
+      <section className="card" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: 0 }}>
 
-            {/* Dropdown de Historial de Chats */}
-            {showHistoryDropdown && (
-              <div className="absolute right-0 top-12 w-72 bg-white border border-[#e2e8f0] rounded-[16px] shadow-xl z-20 overflow-hidden">
-                <div className="p-3 border-b border-[#e2e8f0] bg-[#f1f5f9] flex justify-between items-center">
-                  <span className="t-label text-[#0F2554]">Tus Chats</span>
-                  <button 
-                    onClick={createNewSession}
-                    className="flex items-center gap-1 t-xs bold text-[#1a3a7c] hover:underline bg-transparent border-none cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[14px]">add</span>
-                    Crear nuevo chat
-                  </button>
-                </div>
-                <div className="max-h-64 overflow-y-auto no-scrollbar divide-y divide-[#e2e8f0]">
-                  {sessions.length === 0 ? (
-                    <div className="p-3 text-center t-xs">
-                      No tienes chats activos.
-                    </div>
-                  ) : (
-                    sessions.map((s) => (
-                      <div 
-                        key={s.id}
-                        onClick={() => selectSession(s.id)}
-                        className={`flex items-center justify-between p-3 hover:bg-[#f1f5f9] cursor-pointer transition-colors border-none bg-transparent ${s.id === currentSessionId ? "bg-[#e8eef8] bold text-[#1a3a7c]" : "text-[#0F2554]"}`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <span className="material-symbols-outlined text-[16px] text-[#64748b] shrink-0">
-                            chat_bubble
-                          </span>
-                          <span className="t-xs text-[#0F2554] truncate">{s.titulo}</span>
-                        </div>
-                        <button 
-                          onClick={(e) => deleteSession(s.id, e)}
-                          className="text-[#64748b] hover:text-[#991b1b] transition-colors p-1 flex items-center justify-center shrink-0 bg-transparent border-none cursor-pointer"
-                          title="Eliminar chat"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">delete</span>
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-
-            <button 
-              onClick={() => setShowSettingsModal(true)}
-              className="p-2 text-[#64748b] hover:bg-[#f1f5f9] rounded-full transition-colors bg-transparent border-none cursor-pointer"
-              title="Configuración del Asesor"
-            >
-              <span className="material-symbols-outlined text-[18px]">settings</span>
-            </button>
+        {/* Header */}
+        <header style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "10px 16px", borderBottom: "1px solid var(--border)", flexShrink: 0,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />
+            <div>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "var(--navy)" }}>Asesor IA Pathfinder</p>
+              <p style={{ fontSize: 10, color: "var(--slate)", marginTop: 1 }}>
+                Especializado en becas peruanas
+                {becaCtx ? ` · ${becaCtx.titulo} activa` : ""}
+              </p>
+            </div>
           </div>
+          <button
+            onClick={() => setShowSettingsModal(true)}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 5, borderRadius: 8, color: "var(--slate-2)" }}
+            title="Configuración"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>settings</span>
+          </button>
         </header>
 
-        {/* Scrollable Chat Area */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 no-scrollbar bg-[#f1f5f9]/30">
-          {messages.length === 1 && (
-            /* Welcome Content (only shows when there's only the welcome message) */
-            <div className="max-w-5xl w-full mx-auto flex flex-col items-center justify-center my-auto py-8">
-              <div className="mb-4 text-center">
-                <div className="w-12 h-12 bg-[#e8eef8] rounded-[12px] flex items-center justify-center mb-3 mx-auto border border-[#e2e8f0]">
-                  <span className="material-symbols-outlined text-[28px] text-[#1a3a7c]" style={{ fontVariationSettings: '"FILL" 1' }}>
-                    psychology
-                  </span>
-                </div>
-                <h1 className="t-lg bold text-[#0F2554] mb-1 px-4 text-center">
-                  ¡Hola {profile?.nombres ? profile.nombres.split(" ")[0] : "Camila"}! ¿En qué puedo ayudarte hoy?
-                </h1>
-                <p className="t-sm text-center">
-                  Tu asistente académico personalizado está listo.
-                </p>
-              </div>
+        {/* Messages */}
+        <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 12, background: "#f8fafd" }}>
 
-              {/* Action Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full px-2 mt-4">
-                {quickActions.map((action, idx) => (
+          {messages.length === 1 && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 16 }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ width: 48, height: 48, background: "var(--navy-light, #e8eef8)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 28, color: "var(--navy)", fontVariationSettings: "'FILL' 1" }}>psychology</span>
+                </div>
+                <p style={{ fontSize: 17, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                  Hola {firstName}, ¿en qué puedo ayudarte?
+                </p>
+                <p style={{ fontSize: 12, color: "var(--slate)" }}>Tu asesor de postulaciones está listo.</p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, width: "100%", maxWidth: 520 }}>
+                {quickActions.map((a, i) => (
                   <button
-                    key={idx}
-                    onClick={() => handleSend(action.title)}
-                    className="flex flex-col gap-1.5 p-4 bg-white border border-[#e2e8f0] rounded-[16px] text-left hover:border-[#1a3a7c] hover:bg-[#e8eef8]/50 transition-all group cursor-pointer"
+                    key={i}
+                    onClick={() => handleSend(a.title)}
+                    style={{
+                      display: "flex", flexDirection: "column", gap: 6, padding: 14,
+                      background: "var(--white)", border: "1px solid var(--border)", borderRadius: 14,
+                      textAlign: "left", cursor: "pointer",
+                    }}
                   >
-                    <span className="material-symbols-outlined text-[#1a3a7c] text-[20px] group-hover:scale-110 transition-transform">
-                      {action.icon}
-                    </span>
-                    <div>
-                      <p className="t-sm bold text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
-                        {action.title}
-                      </p>
-                      <p className="t-xs mt-1 leading-snug">
-                        {action.desc}
-                      </p>
-                    </div>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--navy)" }}>{a.icon}</span>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: "var(--navy)" }}>{a.title}</p>
                   </button>
                 ))}
               </div>
@@ -767,45 +708,38 @@ Reglas obligatorias de comportamiento:
           )}
 
           {messages.length > 1 && (
-            /* Chat messages list */
-            <div className="w-full flex flex-col gap-3 px-4">
-              {messages.map((message) => (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {messages.map((msg) => (
                 <div
-                  key={message.id}
-                  className={`flex gap-2 max-w-[80%] ${
-                    message.sender === "user" ? "self-end flex-row-reverse" : "self-start"
-                  }`}
+                  key={msg.id}
+                  style={{ display: "flex", gap: 8, maxWidth: "78%", alignSelf: msg.sender === "user" ? "flex-end" : "flex-start", flexDirection: msg.sender === "user" ? "row-reverse" : "row" }}
                 >
-                  {/* Avatar */}
-                  <div
-                    className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] bold ${
-                      message.sender === "user" ? "bg-[#fef3c7] text-[#92400e]" : "bg-[#e8eef8] text-[#1a3a7c]"
-                    }`}
-                  >
-                    {message.sender === "user" ? "C" : "IA"}
+                  <div style={{
+                    width: 28, height: 28, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600,
+                    background: msg.sender === "user" ? "var(--navy)" : "var(--navy-light, #e8eef8)",
+                    color: msg.sender === "user" ? "#fff" : "var(--navy)",
+                  }}>
+                    {msg.sender === "user" ? firstName[0].toUpperCase() : "IA"}
                   </div>
-                  {/* Bubble */}
-                  <div
-                    className={`p-3 rounded-[12px] shadow-sm leading-relaxed t-base whitespace-pre-line ${
-                      message.sender === "user"
-                        ? "bg-[#e8eef8] text-[#0F2554] rounded-tr-none"
-                        : "bg-white border border-[#e2e8f0] text-[#0F2554] rounded-tl-none"
-                    }`}
-                  >
-                    {message.text}
+                  <div style={{
+                    padding: "10px 13px", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-line",
+                    borderRadius: msg.sender === "user" ? "12px 0 12px 12px" : "0 12px 12px 12px",
+                    background: msg.sender === "user" ? "var(--navy)" : "var(--white)",
+                    color: msg.sender === "user" ? "#fff" : "var(--navy)",
+                    border: msg.sender === "user" ? "none" : "1px solid var(--border)",
+                  }}>
+                    {msg.text}
                   </div>
                 </div>
               ))}
 
               {isTyping && (
-                <div className="flex gap-2 self-start max-w-[80%] items-center">
-                  <div className="w-7 h-7 rounded-full bg-[#e8eef8] text-[#1a3a7c] shrink-0 flex items-center justify-center text-[10px] bold">
-                    IA
-                  </div>
-                  <div className="bg-white border border-[#e2e8f0] p-3 rounded-[12px] rounded-tl-none shadow-sm flex items-center gap-1.5 py-2.5">
-                    <span className="w-1.5 h-1.5 bg-[#1a3a7c] rounded-full animate-bounce delay-100"></span>
-                    <span className="w-1.5 h-1.5 bg-[#1a3a7c] rounded-full animate-bounce delay-200"></span>
-                    <span className="w-1.5 h-1.5 bg-[#1a3a7c] rounded-full animate-bounce delay-300"></span>
+                <div style={{ display: "flex", gap: 8, alignSelf: "flex-start" }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--navy-light, #e8eef8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "var(--navy)" }}>IA</div>
+                  <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: "0 12px 12px 12px", padding: "12px 16px", display: "flex", alignItems: "center", gap: 4 }}>
+                    {[0, 200, 400].map((d, i) => (
+                      <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--slate-2)", display: "inline-block", animation: `bounce 1.2s ${d}ms infinite` }} />
+                    ))}
                   </div>
                 </div>
               )}
@@ -814,68 +748,83 @@ Reglas obligatorias de comportamiento:
           )}
         </div>
 
-        {/* Fixed Input Area */}
-        <div className="p-4 bg-white border-t border-[#e2e8f0] shrink-0">
-          {/* Suggestion Chips */}
-          {messages.length > 1 && (
-            <div className="w-full mb-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-              {quickActions.map((action, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSend(action.title)}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-[#f1f5f9] border border-[#e2e8f0] rounded-full t-xs bold text-[#64748b] hover:text-[#1a3a7c] hover:border-[#1a3a7c]/30 hover:bg-[#e8eef8] active:scale-95 transition-all shrink-0 cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[#1a3a7c] text-[14px]">
-                    {action.icon}
-                  </span>
-                  <span>{action.title}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="w-full flex items-end gap-3 px-4">
-            <div className="flex-1 bg-[#f1f5f9] rounded-[12px] border border-[#e2e8f0] flex items-center px-3 py-1 gap-2 focus-within:border-[#1a3a7c] transition-all shadow-sm">
-              <button className="text-[#64748b] hover:text-[#1a3a7c] transition-colors p-1 bg-transparent border-none cursor-pointer flex items-center">
-                <span className="material-symbols-outlined text-[20px]">attach_file</span>
-              </button>
-              <textarea
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="flex-1 bg-transparent border-none focus:ring-0 t-base placeholder:text-[#94a3b8] resize-none py-1 outline-none max-h-24 min-h-[20px] text-[#0F2554]"
-                placeholder="Pregúntame sobre tus trámites, becas o pídeme ayuda para tus ensayos..."
-                rows={1}
-              />
-              <button className="text-[#64748b] hover:text-[#1a3a7c] transition-colors p-1 bg-transparent border-none cursor-pointer flex items-center">
-                <span className="material-symbols-outlined text-[20px]">mic</span>
-              </button>
-            </div>
+        {/* Urgencia alert */}
+        {showUrgencia && messages.length > 1 && (
+          <div style={{
+            margin: "0 16px", padding: "9px 12px", background: "var(--amber-bg)", border: "1px solid #fcd34d",
+            borderRadius: 10, display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
+          }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--amber)", flexShrink: 0 }}>alarm</span>
+            <p style={{ fontSize: 10, color: "var(--amber)", flex: 1, lineHeight: 1.5 }}>
+              {docsRechazados > 0 && diasRestantes !== null && diasRestantes <= 10
+                ? <><strong>Cierre en {diasRestantes} días.</strong> Tienes {docsRechazados} documento{docsRechazados > 1 ? "s" : ""} rechazado{docsRechazados > 1 ? "s" : ""}. Sin resolverlos tu postulación queda incompleta.</>
+                : docsRechazados > 0
+                  ? <>Tienes <strong>{docsRechazados} documento{docsRechazados > 1 ? "s" : ""} rechazado{docsRechazados > 1 ? "s" : ""}</strong> en tu mochila. Resuélvelos antes del cierre.</>
+                  : <><strong>Cierre en {diasRestantes} días.</strong> Verifica que todos tus documentos estén en orden.</>
+              }
+            </p>
             <button
-              onClick={() => handleSend(inputValue)}
-              className="bg-[#0F2554] text-white w-9 h-9 rounded-[8px] flex items-center justify-center shadow-md hover:bg-[#1a3a7c] active:scale-95 transition-all shrink-0 cursor-pointer border-none"
+              onClick={() => navigate("/documentos")}
+              style={{ fontSize: 9, fontWeight: 600, padding: "4px 10px", border: "1px solid var(--amber)", borderRadius: 6, color: "var(--amber)", background: "var(--white)", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
             >
-              <span className="material-symbols-outlined text-[18px]">send</span>
+              Ver documento →
             </button>
           </div>
-          <div className="mt-2 text-center">
-            <p className="t-xs uppercase tracking-[0.15em] text-[#94a3b8] font-medium">
-              La IA puede cometer errores. Por favor, verifica la información crítica.
-            </p>
+        )}
+
+        {/* Quick suggestions */}
+        {messages.length > 1 && (
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", padding: "10px 16px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
+            {quickActions.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => handleSend(a.title)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5, padding: "6px 11px",
+                  border: "1px solid var(--border)", borderRadius: 99, fontSize: 10, fontWeight: 500,
+                  color: "var(--navy)", background: "var(--white)", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 12 }}>{a.icon}</span>
+                {a.title}
+              </button>
+            ))}
           </div>
+        )}
+
+        {/* Input */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderTop: "1px solid var(--border)", background: "var(--white)", flexShrink: 0 }}>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, background: "var(--slate-3)", borderRadius: 10, padding: "8px 12px" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--slate-2)", cursor: "pointer" }}>attach_file</span>
+            <textarea
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Pregúntame sobre tus becas, documentos o ensayos..."
+              rows={1}
+              style={{ flex: 1, border: "none", background: "transparent", fontSize: 13, color: "var(--navy)", outline: "none", resize: "none", maxHeight: 80, minHeight: 20, padding: "2px 0" }}
+            />
+            <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--slate-2)", cursor: "pointer" }}>mic</span>
+          </div>
+          <button
+            onClick={() => handleSend(inputValue)}
+            style={{ width: 36, height: 36, borderRadius: 9, background: "var(--navy)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15, cursor: "pointer", flexShrink: 0 }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>send</span>
+          </button>
         </div>
+        <p style={{ textAlign: "center", fontSize: 9, color: "var(--slate-2)", padding: "4px 16px 8px", background: "var(--white)" }}>
+          La IA puede cometer errores. Verifica siempre la información crítica con PRONABEC.
+        </p>
       </section>
 
-      {/* Settings Modal overlay */}
+      {/* Settings modal */}
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white border border-[#e2e8f0] rounded-[16px] p-6 max-w-md w-full shadow-2xl space-y-4 text-[#0F2554]">
+          <div className="bg-white border border-[#e2e8f0] rounded-[16px] p-6 max-w-md w-full shadow-2xl space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="t-md bold text-[#0F2554]">Configuración del Asesor IA</h3>
-              <button 
-                onClick={() => setShowSettingsModal(false)}
-                className="text-[#64748b] hover:text-[#0F2554] bg-transparent border-none cursor-pointer"
-              >
+              <button onClick={() => setShowSettingsModal(false)} className="text-[#64748b] hover:text-[#0F2554] bg-transparent border-none cursor-pointer">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
@@ -887,28 +836,20 @@ Reglas obligatorias de comportamiento:
                 type="text"
                 value={ollamaUrl}
                 onChange={(e) => setOllamaUrl(e.target.value)}
-                placeholder="https://tu-url-de-ngrok-o-cloudflare.trycloudflare.com"
-                className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-[8px] px-3 py-2 t-base focus:border-[#1a3a7c] outline-none transition-all text-[#0F2554]"
+                placeholder="https://tu-url.trycloudflare.com"
+                className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-[8px] px-3 py-2 t-base focus:border-[#1a3a7c] outline-none text-[#0F2554]"
               />
               <p className="t-xs leading-relaxed text-[#64748b]">
-                Ingresa la URL pública generada por tu túnel de Cloudflare, ngrok o localtunnel conectado a Ollama. Dejar en blanco para usar respuestas simuladas locales.
+                Ingresa la URL pública de tu túnel Cloudflare, ngrok o localtunnel. Dejar en blanco para usar respuestas simuladas.
               </p>
             </div>
             <div className="flex justify-end gap-2 pt-1">
+              <button onClick={() => setShowSettingsModal(false)} className="btn-sub px-3 py-1.5">Cancelar</button>
               <button
-                onClick={() => setShowSettingsModal(false)}
-                className="btn-sub px-3 py-1.5 hover:scale-105 active:scale-95 transition-all"
+                onClick={() => { localStorage.setItem("pathfinder_ollama_url", ollamaUrl.trim()); setShowSettingsModal(false); }}
+                className="bg-[#0F2554] text-white px-3 py-1.5 rounded-[8px] t-xs bold hover:bg-[#1a3a7c] border-none cursor-pointer"
               >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.setItem("pathfinder_ollama_url", ollamaUrl.trim());
-                  setShowSettingsModal(false);
-                }}
-                className="bg-[#0F2554] text-white px-3 py-1.5 rounded-[8px] t-xs bold hover:bg-[#1a3a7c] shadow-md hover:scale-105 active:scale-95 transition-all border-none cursor-pointer"
-              >
-                Guardar Cambios
+                Guardar
               </button>
             </div>
           </div>

@@ -12,6 +12,14 @@ export default function BuscarOportunidades() {
   const [isFiltersDrawerOpen, setIsFiltersDrawerOpen] = useState(false);
   const [selectedOportunidad, setSelectedOportunidad] = useState<Oportunidad | null>(null);
 
+  // Estados para filtros avanzados y paginación
+  const [selectedProgramTypes, setSelectedProgramTypes] = useState<string[]>([]);
+  const [selectedFinancing, setSelectedFinancing] = useState<string>("todos");
+  const [selectedGestiones, setSelectedGestiones] = useState<string[]>([]);
+  const [selectedDestinos, setSelectedDestinos] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+
   useEffect(() => {
     const fetchBecas = async () => {
       try {
@@ -145,6 +153,61 @@ export default function BuscarOportunidades() {
     setSelectedOportunidad(null);
   };
 
+  // Determina si una beca es de patrocinador público o privado
+  const isPublicSponsor = (sponsor: string) => {
+    const lower = sponsor.toLowerCase();
+    return (
+      lower.includes("pronabec") ||
+      lower.includes("embajada") ||
+      lower.includes("uni") ||
+      lower.includes("unmsm") ||
+      lower.includes("unalm") ||
+      lower.includes("municipalidad") ||
+      lower.includes("bellas artes")
+    );
+  };
+
+  // Determina el destino de la beca
+  const getDestino = (o: Oportunidad) => {
+    const text = (o.title + " " + o.sponsor + " " + o.sobre).toLowerCase();
+    if (
+      text.includes("extranjero") ||
+      text.includes("ee.uu.") ||
+      text.includes("embajada") ||
+      text.includes("francia") ||
+      text.includes("internacional")
+    ) {
+      return "Extranjero";
+    }
+    if (text.includes("provincia") || text.includes("regiones")) {
+      return "Provincias";
+    }
+    return "Lima";
+  };
+
+  const handleLimpiarFiltros = () => {
+    setSearchQuery("");
+    setIsProfileFilterActive(false);
+    setSelectedProgramTypes([]);
+    setSelectedFinancing("todos");
+    setSelectedGestiones([]);
+    setSelectedDestinos([]);
+    setCurrentPage(1);
+  };
+
+  // Resetear a la página 1 cuando cambia algún filtro
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchQuery,
+    isProfileFilterActive,
+    selectedProgramTypes,
+    selectedFinancing,
+    selectedGestiones,
+    selectedDestinos,
+    activeOportunidadesTab
+  ]);
+
   // Toggle Save (Favorite) — syncs with Supabase becas_guardadas table
   const handleToggleSave = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -274,56 +337,114 @@ export default function BuscarOportunidades() {
       oportunidad.sponsor.toLowerCase().includes(searchQuery.toLowerCase()) ||
       oportunidad.requirement.toLowerCase().includes(searchQuery.toLowerCase());
 
-    if (isProfileFilterActive) {
-      return matchesSearch && oportunidad.affinity >= 85;
-    }
+    const matchesProfile = !isProfileFilterActive || oportunidad.affinity >= 85;
 
-    return matchesSearch;
+    // 1. Tipo de Programa
+    const matchesProgram =
+      selectedProgramTypes.length === 0 ||
+      selectedProgramTypes.some((type) => {
+        if (type === "Universitarias") return oportunidad.level === "Pregrado";
+        if (type === "Técnicas") return oportunidad.level === "Técnico";
+        if (type === "Postgrado") return oportunidad.level === "Maestría";
+        if (type === "Idiomas") return oportunidad.level === "Idioma";
+        return false;
+      });
+
+    // 2. Financiamiento
+    const matchesFinancing =
+      selectedFinancing === "todos" ||
+      (selectedFinancing === "integral"
+        ? (oportunidad.coverage || "").includes("100%")
+        : !(oportunidad.coverage || "").includes("100%"));
+
+    // 3. Gestión
+    const matchesGestion =
+      selectedGestiones.length === 0 ||
+      selectedGestiones.some((g) => {
+        const isPub = isPublicSponsor(oportunidad.sponsor);
+        if (g === "Pública") return isPub;
+        if (g === "Privada") return !isPub;
+        return false;
+      });
+
+    // 4. Destino
+    const matchesDestino =
+      selectedDestinos.length === 0 ||
+      selectedDestinos.includes(getDestino(oportunidad));
+
+    return (
+      matchesSearch &&
+      matchesProfile &&
+      matchesProgram &&
+      matchesFinancing &&
+      matchesGestion &&
+      matchesDestino
+    );
   });
+
+  // Paginación lógica
+  const ITEMS_PER_PAGE = 6;
+  const totalPages = Math.ceil(filteredOportunidades.length / ITEMS_PER_PAGE);
+  const activePage = Math.min(currentPage, Math.max(1, totalPages));
+  const startIndex = (activePage - 1) * ITEMS_PER_PAGE;
+  const paginatedOportunidades = filteredOportunidades.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Scroll suave hacia arriba al cambiar de página
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
 
   return (
     <div className="flex flex-col min-h-screen relative">
       {/* TopNavBar */}
       <header className="sticky top-0 right-0 w-full z-40 bg-white border-b border-[#e2e8f0] h-14 flex justify-between items-center px-6">
-        <div className="flex items-center gap-lg flex-1">
-          <div className="relative w-full max-w-md flex items-center gap-sm">
-            <div className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-2 text-[16px]">
-                search
+        <div className="flex items-center justify-between w-full gap-4">
+          
+          {/* 1. Buscador (flex-1 hace que ocupe todo el espacio sobrante hasta max-w-3xl) */}
+          <div className="relative w-full md:flex-1 max-w-3xl flex items-center">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-2 text-[16px]">
+              search
+            </span>
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-[8px] pl-10 pr-4 py-1.5 t-xs outline-none focus:border-[#1a3a7c] transition-all"
+              placeholder="Buscar becas, universidades o convenios..."
+              type="text"
+            />
+          </div>
+
+          {/* 2. Grupo de Acciones (shrink-0 evita que se aplasten) */}
+          <div className="flex items-center gap-6 shrink-0">
+            {/* Toggle de Perfil */}
+            <div className="flex items-center gap-sm">
+              <span className="t-xs bold hidden sm:inline text-navy">
+                Filtrar por mi Perfil
               </span>
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-[8px] pl-10 pr-4 py-1.5 t-xs outline-none focus:border-[#1a3a7c] transition-all"
-                placeholder="Buscar becas, universidades o convenios..."
-                type="text"
-              />
+              <button
+                className={`w-10 h-5 rounded-full relative transition-colors duration-200 cursor-pointer ${
+                  isProfileFilterActive ? "bg-[#1a3a7c]" : "bg-[#e2e8f0]"
+                }`}
+                onClick={() => setIsProfileFilterActive(!isProfileFilterActive)}
+              >
+                <div
+                  className={`absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
+                    isProfileFilterActive ? "translate-x-5" : ""
+                  }`}
+                />
+              </button>
             </div>
+
+            {/* Botón de Filtros */}
             <button
               onClick={() => setIsFiltersDrawerOpen(true)}
-              className="btn-sub text-xs hover:scale-105 active:scale-95 transition-transform"
+              className="btn-sub text-xs hover:scale-105 active:scale-95 transition-transform flex items-center gap-1"
             >
-              <span className="material-symbols-outlined text-sm mr-1">tune</span>
-              Filtros
+              <span className="material-symbols-outlined text-sm">tune</span>
+              <span>Filtros</span>
             </button>
           </div>
-          <div className="flex items-center gap-sm shrink-0">
-            <span className="t-xs bold hidden sm:inline text-navy">
-              Filtrar por mi Perfil
-            </span>
-            <button
-              className={`w-10 h-5 rounded-full relative transition-colors duration-200 cursor-pointer ${
-                isProfileFilterActive ? "bg-[#1a3a7c]" : "bg-[#e2e8f0]"
-              }`}
-              onClick={() => setIsProfileFilterActive(!isProfileFilterActive)}
-            >
-              <div
-                className={`absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
-                  isProfileFilterActive ? "translate-x-5" : ""
-                }`}
-              ></div>
-            </button>
-          </div>
+
         </div>
       </header>
 
@@ -430,117 +551,157 @@ export default function BuscarOportunidades() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
-            {filteredOportunidades.map((oportunidad) => {
-              const affinityClass = oportunidad.affinity >= 90 ? "badge b-green" : "badge b-blue";
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+              {paginatedOportunidades.map((oportunidad) => {
+                const affinityClass = oportunidad.affinity >= 90 ? "badge b-green" : "badge b-blue";
 
-              const isSaved = savedBecaIds.includes(oportunidad.id);
-              const isApplied = appliedBecaIds.includes(oportunidad.id);
+                const isSaved = savedBecaIds.includes(oportunidad.id);
+                const isApplied = appliedBecaIds.includes(oportunidad.id);
 
-              return (
-                <article
-                  key={oportunidad.id}
-                  onClick={() => setSelectedOportunidad(oportunidad)}
-                  className="card hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
-                  style={{ borderRadius: "var(--r-md)" }}
-                >
-                  <div>
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="w-10 h-10 rounded-[12px] bg-[#e8eef8] flex items-center justify-center text-navy-2">
-                        <span className="material-symbols-outlined text-2xl font-fill">
-                          {oportunidad.icon}
-                        </span>
+                return (
+                  <article
+                    key={oportunidad.id}
+                    onClick={() => setSelectedOportunidad(oportunidad)}
+                    className="card hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                    style={{ borderRadius: "var(--r-md)" }}
+                  >
+                    <div>
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="w-10 h-10 rounded-[12px] bg-[#e8eef8] flex items-center justify-center text-navy-2">
+                          <span className="material-symbols-outlined text-2xl font-fill">
+                            {oportunidad.icon}
+                          </span>
+                        </div>
+                        {activeOportunidadesTab === "postuladas" ? (
+                          <button
+                            className="btn-ico"
+                            title="Cancelar postulación"
+                            onClick={(e) => { e.stopPropagation(); setPendingDeleteId(oportunidad.id); setShowDeleteModal(true); }}
+                          >
+                            <span className="material-symbols-outlined text-red" style={{ color: "var(--red)" }}>delete</span>
+                          </button>
+                        ) : (
+                          <button
+                            className="btn-ico"
+                            onClick={(e) => handleToggleSave(oportunidad.id, e)}
+                            title={isSaved ? "Quitar de guardadas" : "Guardar beca"}
+                          >
+                            <span
+                              className="material-symbols-outlined"
+                              style={isSaved ? { color: "var(--red)" } : {}}
+                            >
+                              favorite
+                            </span>
+                          </button>
+                        )}
                       </div>
+
+                      <div className="mb-3">
+                        <div className="flex items-center gap-xs mb-1 flex-wrap">
+                          <span className={`${affinityClass}`}>
+                            {oportunidad.affinity}% Afinidad
+                          </span>
+                          <span className="badge b-slate">
+                            {oportunidad.level}
+                          </span>
+                          {isApplied && (
+                            <span className="badge b-blue">
+                              Postulado
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="t-base bold group-hover:text-[#1a3a7c] transition-colors leading-snug">
+                          {oportunidad.title}
+                        </h3>
+                        <p className="t-xs">
+                          {oportunidad.sponsor}
+                        </p>
+                      </div>
+
+                      <div className="space-y-sm text-body-sm mb-3">
+                        <div className="flex items-center gap-sm">
+                          <span className="material-symbols-outlined text-sm text-slate-2 shrink-0">
+                            payments
+                          </span>
+                          <span className="t-xs trunc">{oportunidad.coverage}</span>
+                        </div>
+                        <div className="flex items-center gap-sm">
+                          <span className="material-symbols-outlined text-sm text-slate-2 shrink-0">
+                            grade
+                          </span>
+                          <span className="t-xs trunc">{oportunidad.requirement}</span>
+                        </div>
+                        <div className="flex items-center gap-sm">
+                          <span
+                            className={`material-symbols-outlined text-sm shrink-0 ${
+                              oportunidad.id === "BEC-03" ? "text-red" : "text-slate-2"
+                            }`}
+                          >
+                            event
+                          </span>
+                          <span
+                            className={`t-xs ${oportunidad.id === "BEC-03" ? "text-red bold" : ""}`}
+                          >
+                            {oportunidad.deadline}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-[#e2e8f0]">
                       {activeOportunidadesTab === "postuladas" ? (
                         <button
-                          className="btn-ico"
-                          title="Cancelar postulación"
-                          onClick={(e) => { e.stopPropagation(); setPendingDeleteId(oportunidad.id); setShowDeleteModal(true); }}
+                          onClick={(e) => { e.stopPropagation(); navigate("/postulaciones", { state: { becaId: oportunidad.id } }); }}
+                          className="text-[#166534] t-xs bold flex items-center gap-1 cursor-pointer hover:underline border-none bg-transparent"
                         >
-                          <span className="material-symbols-outlined text-red">delete</span>
+                          <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>task_alt</span>
+                          Ver mi progreso
                         </button>
                       ) : (
-                        <button
-                          className={`btn-ico ${isSaved ? "text-red font-fill" : ""}`}
-                          onClick={(e) => handleToggleSave(oportunidad.id, e)}
-                        >
-                          <span className="material-symbols-outlined">favorite</span>
+                        <button className="text-navy-2 t-xs bold flex items-center gap-1 cursor-pointer hover:underline border-none bg-transparent">
+                          Ver Detalles{" "}
+                          <span className="material-symbols-outlined text-sm">arrow_forward</span>
                         </button>
                       )}
                     </div>
+                  </article>
+                );
+              })}
+            </div>
 
-                    <div className="mb-3">
-                      <div className="flex items-center gap-xs mb-1 flex-wrap">
-                        <span className={`${affinityClass}`}>
-                          {oportunidad.affinity}% Afinidad
-                        </span>
-                        <span className="badge b-slate">
-                          {oportunidad.level}
-                        </span>
-                        {isApplied && (
-                          <span className="badge b-blue">
-                            Postulado
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="t-base bold group-hover:text-[#1a3a7c] transition-colors leading-snug">
-                        {oportunidad.title}
-                      </h3>
-                      <p className="t-xs">
-                        {oportunidad.sponsor}
-                      </p>
-                    </div>
-
-                    <div className="space-y-sm text-body-sm mb-3">
-                      <div className="flex items-center gap-sm">
-                        <span className="material-symbols-outlined text-sm text-slate-2 shrink-0">
-                          payments
-                        </span>
-                        <span className="t-xs trunc">{oportunidad.coverage}</span>
-                      </div>
-                      <div className="flex items-center gap-sm">
-                        <span className="material-symbols-outlined text-sm text-slate-2 shrink-0">
-                          grade
-                        </span>
-                        <span className="t-xs trunc">{oportunidad.requirement}</span>
-                      </div>
-                      <div className="flex items-center gap-sm">
-                        <span
-                          className={`material-symbols-outlined text-sm shrink-0 ${
-                            oportunidad.id === "BEC-03" ? "text-red" : "text-slate-2"
-                          }`}
-                        >
-                          event
-                        </span>
-                        <span
-                          className={`t-xs ${oportunidad.id === "BEC-03" ? "text-red bold" : ""}`}
-                        >
-                          {oportunidad.deadline}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-auto pt-2 border-t border-[#e2e8f0]">
-                    {activeOportunidadesTab === "postuladas" ? (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); navigate("/postulaciones", { state: { becaId: oportunidad.id } }); }}
-                        className="text-[#166534] t-xs bold flex items-center gap-1 cursor-pointer hover:underline border-none bg-transparent"
-                      >
-                        <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>task_alt</span>
-                        Ver mi progreso
-                      </button>
-                    ) : (
-                      <button className="text-navy-2 t-xs bold flex items-center gap-1 cursor-pointer hover:underline border-none bg-transparent">
-                        Ver Detalles{" "}
-                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                      </button>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+            {/* Paginador (Controles) */}
+            {totalPages > 1 && (
+              <div className="pg">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={activePage === 1}
+                  className="pb"
+                >
+                  ← Anterior
+                </button>
+                {Array.from({ length: totalPages }, (_, idx) => {
+                  const pNum = idx + 1;
+                  return (
+                    <button
+                      key={pNum}
+                      onClick={() => setCurrentPage(pNum)}
+                      className={`pn ${activePage === pNum ? "on" : ""}`}
+                    >
+                      {pNum}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={activePage === totalPages}
+                  className="pb"
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -560,7 +721,10 @@ export default function BuscarOportunidades() {
       >
         <div className="p-4 border-b border-[#e2e8f0] flex justify-between items-center bg-[#f1f5f9]">
           <h2 className="t-md bold text-[#0F2554]">Filtros Avanzados</h2>
-          <button className="t-link bg-transparent border-none">
+          <button
+            onClick={handleLimpiarFiltros}
+            className="t-link bg-transparent border-none font-medium hover:underline cursor-pointer"
+          >
             Limpiar todo
           </button>
         </div>
@@ -586,7 +750,14 @@ export default function BuscarOportunidades() {
                 {["Universitarias", "Técnicas", "Postgrado", "Idiomas"].map((p, i) => (
                   <label key={i} className="flex items-center gap-2 cursor-pointer group">
                     <input
-                      defaultChecked={i === 0}
+                      checked={selectedProgramTypes.includes(p)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedProgramTypes([...selectedProgramTypes, p]);
+                        } else {
+                          setSelectedProgramTypes(selectedProgramTypes.filter(type => type !== p));
+                        }
+                      }}
                       className="rounded border-[#e2e8f0] text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
                       type="checkbox"
                     />
@@ -617,13 +788,37 @@ export default function BuscarOportunidades() {
             {accordionOpen.financiamiento && (
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input className="text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5" name="fin" type="radio" defaultChecked />
+                  <input
+                    checked={selectedFinancing === "todos"}
+                    onChange={() => setSelectedFinancing("todos")}
+                    className="text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
+                    name="fin"
+                    type="radio"
+                  />
+                  <span className="t-sm text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
+                    Todos
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    checked={selectedFinancing === "integral"}
+                    onChange={() => setSelectedFinancing("integral")}
+                    className="text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
+                    name="fin"
+                    type="radio"
+                  />
                   <span className="t-sm text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
                     Beca Integral (100%)
                   </span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input className="text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5" name="fin" type="radio" />
+                  <input
+                    checked={selectedFinancing === "parcial"}
+                    onChange={() => setSelectedFinancing("parcial")}
+                    className="text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
+                    name="fin"
+                    type="radio"
+                  />
                   <span className="t-sm text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
                     Beca Parcial
                   </span>
@@ -652,6 +847,14 @@ export default function BuscarOportunidades() {
                 {["Pública", "Privada"].map((g, i) => (
                   <label key={i} className="flex items-center gap-2 cursor-pointer group">
                     <input
+                      checked={selectedGestiones.includes(g)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedGestiones([...selectedGestiones, g]);
+                        } else {
+                          setSelectedGestiones(selectedGestiones.filter(type => type !== g));
+                        }
+                      }}
                       className="rounded border-[#e2e8f0] text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
                       type="checkbox"
                     />
@@ -684,7 +887,14 @@ export default function BuscarOportunidades() {
                 {["Lima", "Provincias", "Extranjero"].map((d, i) => (
                   <label key={i} className="flex items-center gap-2 cursor-pointer group">
                     <input
-                      defaultChecked={i === 0}
+                      checked={selectedDestinos.includes(d)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedDestinos([...selectedDestinos, d]);
+                        } else {
+                          setSelectedDestinos(selectedDestinos.filter(type => type !== d));
+                        }
+                      }}
                       className="rounded border-[#e2e8f0] text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
                       type="checkbox"
                     />
@@ -847,7 +1057,7 @@ export default function BuscarOportunidades() {
                     : "border-[#1a3a7c] text-[#1a3a7c]"
                 }`}
               >
-                <span className="material-symbols-outlined text-sm" style={savedBecaIds.includes(selectedOportunidad.id) ? { fontVariationSettings: "'FILL' 1" } : {}}>
+                <span className="material-symbols-outlined text-sm">
                   favorite
                 </span>{" "}
                 {savedBecaIds.includes(selectedOportunidad.id) ? "Guardado ✓" : "Guardar"}
@@ -874,44 +1084,45 @@ export default function BuscarOportunidades() {
         )}
       </div>
 
-      {/* Dark Delete Confirmation Modal */}
+      {/* Light Delete Confirmation Modal */}
       {showDeleteModal && pendingDeleteId && (
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-[#0F2554]/40 backdrop-blur-sm"
             onClick={() => { setShowDeleteModal(false); setPendingDeleteId(null); }}
           />
           {/* Modal */}
-          <div className="relative bg-slate-900 text-white rounded-[16px] p-6 max-w-sm w-full shadow-2xl border border-slate-700 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="relative card max-w-sm w-full shadow-2xl border border-[#e2e8f0] p-6 animate-in slide-in-from-bottom-4 duration-300">
             {/* Icon */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-[8px] bg-red-500/20 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-red-400 text-2xl">delete_forever</span>
+              <div className="w-10 h-10 rounded-[8px] bg-[#fee2e2] flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[#991b1b] text-2xl">delete_forever</span>
               </div>
               <div>
-                <h3 className="t-base bold text-white">¿Cancelar postulación?</h3>
-                <p className="t-xs mt-0.5 text-slate-400">
+                <h3 className="t-base bold text-navy">¿Cancelar postulación?</h3>
+                <p className="t-xs mt-0.5" style={{ color: "var(--slate)" }}>
                   {oportunidades.find(o => o.id === pendingDeleteId)?.title || "Esta beca"}
                 </p>
               </div>
             </div>
-            <p className="t-sm mb-6 leading-relaxed text-slate-300">
+            <p className="t-sm mb-6 leading-relaxed" style={{ color: "var(--slate)" }}>
               Se eliminará tu postulación y todo el progreso guardado. Esta acción no se puede deshacer.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => { setShowDeleteModal(false); setPendingDeleteId(null); }}
-                className="flex-1 py-2 rounded-[8px] border border-slate-600 bg-transparent text-slate-300 t-xs bold hover:bg-slate-800 transition-all cursor-pointer"
+                className="flex-1 py-2 rounded-[8px] border border-[#e2e8f0] bg-white t-xs bold hover:bg-[#f1f5f9] transition-all cursor-pointer"
+                style={{ color: "var(--slate)" }}
               >
                 Cancelar
               </button>
               <button
                 onClick={() => handleDeletePostulation(pendingDeleteId)}
-                className="flex-[1.5] py-2 rounded-[8px] bg-red-600 hover:bg-red-700 text-white t-xs bold transition-all active:scale-95 shadow-lg shadow-red-600/30 cursor-pointer flex items-center justify-center gap-1.5 border-none"
+                className="flex-[1.5] py-2 rounded-[8px] bg-[#991b1b] hover:bg-[#7f1d1d] transition-all active:scale-95 shadow-lg shadow-red-600/20 cursor-pointer flex items-center justify-center gap-1.5 border-none"
               >
-                <span className="material-symbols-outlined text-sm">delete</span>
-                Sí, eliminar
+                <span className="material-symbols-outlined text-sm" style={{ color: "#ffffff" }}>delete</span>
+                <span className="bold" style={{ fontSize: "10px", color: "#ffffff", fontWeight: "bold" }}>Sí, eliminar</span>
               </button>
             </div>
           </div>

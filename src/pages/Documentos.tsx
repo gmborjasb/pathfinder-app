@@ -2,39 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabaseClient";
 
-function StatusBadge({ estado }: { estado: string }) {
-  if (["Validado", "Listo", "Aprobado"].includes(estado)) {
-    return (
-      <span className="s-ok font-medium">
-        <span
-          className="material-symbols-outlined text-[14px]"
-          style={{ fontVariationSettings: "'FILL' 1" }}
-        >
-          check_circle
-        </span>
-        Validado
-      </span>
-    );
-  }
-  if (estado === "Rechazado") {
-    return (
-      <span className="s-err font-medium">
-        <span className="material-symbols-outlined text-[14px]">
-          cancel
-        </span>
-        Rechazado
-      </span>
-    );
-  }
-  return (
-    <span className="s-warn font-medium">
-      <span className="material-symbols-outlined text-[14px]">
-        hourglass_empty
-      </span>
-      En revisión
-    </span>
-  );
-}
+
 
 
 
@@ -136,6 +104,8 @@ export default function Documentos() {
   const [cursos, setCursos] = useState<any[]>([]);
 
   const [tab, setTab] = useState<"disponibles" | "obtenidas">("disponibles");
+  const [coursesPage, setCoursesPage] = useState(1);
+  const [verifyingDocIds, setVerifyingDocIds] = useState<string[]>([]);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const [selectedBecaId, setSelectedBecaId] = useState<string>(() => {
@@ -251,6 +221,10 @@ export default function Documentos() {
     fetchDbDocuments();
   }, [user, selectedBecaId]);
 
+  useEffect(() => {
+    setCoursesPage(1);
+  }, [tab]);
+
   const handleBecaChange = (id: string) => {
     setSelectedBecaId(id);
     if (id) {
@@ -293,6 +267,19 @@ export default function Documentos() {
 
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+
+  const handleRemoveCert = (courseId: string, courseTitle: string) => {
+    const certDocId = `CERT-${courseId}`;
+    const newDocs = uploadedDocIds.filter(id => id !== certDocId);
+    const newCourses = enrolledCourseIds.filter(id => id !== courseId);
+    setUploadedDocIds(newDocs);
+    setEnrolledCourseIds(newCourses);
+    localStorage.setItem("pathfinder_uploaded_docs", JSON.stringify(newDocs));
+    localStorage.setItem("pathfinder_enrolled_courses", JSON.stringify(newCourses));
+    setToastMessage(`Certificado de "${courseTitle}" eliminado de tu mochila.`);
+    setShowSuccessToast(true);
+    setTimeout(() => setShowSuccessToast(false), 3000);
+  };
 
   const handleEnroll = (courseId: string, courseTitle: string) => {
     if (enrolledCourseIds.includes(courseId)) {
@@ -371,24 +358,43 @@ export default function Documentos() {
           .insert({
             postulacion_id: post.id,
             nombre_documento: docName,
-            estado: "Validado",
+            estado: "En Revisión",
             archivo_url: publicUrl,
-            texto_ayuda: "Documento subido exitosamente a Supabase Storage."
+            texto_ayuda: "Documento en proceso de verificación por el Asesor IA."
           });
 
         if (dbErr) throw dbErr;
 
         await fetchDbDocuments();
 
-        const updated = [...uploadedDocIds, selectedDocToUpload];
-        setUploadedDocIds(updated);
-        localStorage.setItem("pathfinder_uploaded_docs", JSON.stringify(updated));
+        setToastMessage(`¡Archivo "${selectedFile.name}" subido! Iniciando verificación...`);
+        setIsUploading(false);
+        setIsUploadModalOpen(false);
+        setSelectedFile(null);
+        setShowSuccessToast(true);
+        setTimeout(() => setShowSuccessToast(false), 2500);
 
-        setToastMessage(`¡Archivo "${selectedFile.name}" subido con éxito en Supabase!`);
+        setTimeout(async () => {
+          try {
+            const { error: updateErr } = await supabase
+              .from("documentos")
+              .update({ estado: "Validado", texto_ayuda: "Documento verificado y validado por el Asesor IA." })
+              .eq("postulacion_id", post.id)
+              .eq("nombre_documento", docName);
+
+            if (!updateErr) {
+              await fetchDbDocuments();
+              setToastMessage(`¡El Asesor IA validó la firma digital de "${docName}"!`);
+              setShowSuccessToast(true);
+              setTimeout(() => setShowSuccessToast(false), 3000);
+            }
+          } catch (e) {
+            console.error("Error transitioning to Validado in Supabase:", e);
+          }
+        }, 3000);
       } catch (err: any) {
         console.error("Error uploading document to Supabase:", err);
         setToastMessage(`Error al subir: ${err.message || "Fallo de conexión."}`);
-      } finally {
         setIsUploading(false);
         setIsUploadModalOpen(false);
         setSelectedFile(null);
@@ -398,18 +404,25 @@ export default function Documentos() {
       return;
     }
 
+    setVerifyingDocIds((prev) => [...prev, selectedDocToUpload]);
+
+    setIsUploading(false);
+    setIsUploadModalOpen(false);
+
+    setToastMessage(`¡Archivo subido! Iniciando verificación digital...`);
+    setShowSuccessToast(true);
+    setTimeout(() => setShowSuccessToast(false), 2500);
+
     setTimeout(() => {
+      setVerifyingDocIds((prev) => prev.filter((id) => id !== selectedDocToUpload));
       const updated = [...uploadedDocIds, selectedDocToUpload];
       setUploadedDocIds(updated);
       localStorage.setItem("pathfinder_uploaded_docs", JSON.stringify(updated));
 
-      setIsUploading(false);
-      setIsUploadModalOpen(false);
-
-      setToastMessage(`¡Archivo subido con éxito! El Asesor IA validó la firma digital.`);
+      setToastMessage(`¡El Asesor IA validó la firma digital de "${docName}"!`);
       setShowSuccessToast(true);
       setTimeout(() => setShowSuccessToast(false), 3000);
-    }, 1500);
+    }, 3000);
   };
 
   const handleSimulatedDownload = (docName: string, archiveUrl?: string) => {
@@ -439,19 +452,44 @@ export default function Documentos() {
       if (dbDoc) {
         return {
           ...doc,
-          fileText: "PDF • Cargado en Supabase",
-          fileTextColor: "text-tertiary",
-          documentIcon: "check_circle",
-          documentIconColor: "text-tertiary",
+          fileText: dbDoc.estado === "En Revisión" ? "PDF • Verificando en Supabase..." : "PDF • Cargado en Supabase",
+          fileTextColor: dbDoc.estado === "En Revisión" ? "text-amber-600" : "text-tertiary",
+          documentIcon: dbDoc.estado === "En Revisión" ? "sync" : "check_circle",
+          documentIconColor: dbDoc.estado === "En Revisión" ? "text-amber-500" : "text-tertiary",
           status: {
             estado: dbDoc.estado || "Validado",
-            color: dbDoc.estado === "Rechazado" ? "text-error" : "text-tertiary",
-            icon: dbDoc.estado === "Rechazado" ? "warning" : "check_circle",
+            color: dbDoc.estado === "Rechazado" ? "text-error" : dbDoc.estado === "En Revisión" ? "text-amber-500" : "text-tertiary",
+            icon: dbDoc.estado === "Rechazado" ? "warning" : dbDoc.estado === "En Revisión" ? "sync" : "check_circle",
             badgeClass: dbDoc.estado === "Rechazado" ? "bg-error-container text-on-error-container font-body-bold text-[12px] rounded" : "",
           },
-          actionType: "options",
+          actionType: dbDoc.estado === "En Revisión" ? "button" : "options",
           archivo_url: dbDoc.archivo_url,
           es_requerido: doc.es_requerido,
+        };
+      }
+
+      const isVerifyingSimulated = verifyingDocIds.includes(stringId) ||
+        (doc.name === "Certificado de Estudios" && verifyingDocIds.includes("2")) ||
+        (doc.name === "DNI Apoderado" && verifyingDocIds.includes("DNI-APO")) ||
+        (doc.name === "Ficha SISFOH" && verifyingDocIds.includes("3")) ||
+        (doc.name === "Decl. Juradas" && verifyingDocIds.includes("DECL")) ||
+        (doc.name === "Examen Aptitud" && verifyingDocIds.includes("50")) ||
+        (doc.name === "Aptitud Especial" && verifyingDocIds.includes("60"));
+
+      if (isVerifyingSimulated) {
+        return {
+          ...doc,
+          fileText: "PDF • Verificando firma digital...",
+          fileTextColor: "text-amber-600",
+          documentIcon: "sync",
+          documentIconColor: "text-amber-500",
+          status: {
+            estado: "En Revisión",
+            color: "text-amber-500",
+            icon: "sync",
+            badgeClass: "",
+          },
+          actionType: "button",
         };
       }
 
@@ -499,35 +537,6 @@ export default function Documentos() {
     return list;
   };
 
-  const getCategories = () => {
-    const catMap = new Map();
-    const docs = getDetailedDocuments();
-    
-    docs.filter(d => d.es_requerido).forEach(doc => {
-      const catName = doc.category || "Otros";
-      if (!catMap.has(catName)) {
-        catMap.set(catName, {
-          title: catName,
-          icon: catName === "Identidad" ? "badge" : catName === "Académicos" ? "school" : catName === "Socioeconómicos" ? "account_balance" : "folder",
-          hasError: false,
-          items: []
-        });
-      }
-      const cat = catMap.get(catName);
-      cat.items.push({
-        id: doc.id,
-        name: doc.name,
-        status: doc.status.estado === "Validado" ? "LISTO" : doc.status.estado === "Rechazado" ? "Reemplazar" : "PENDIENTE"
-      });
-      if (doc.status.estado === "Rechazado") {
-        cat.hasError = true;
-      }
-    });
-    
-    return Array.from(catMap.values());
-  };
-
-  const currentCategories = getCategories();
   const currentDocs = getDetailedDocuments();
 
   // FIX #2: "Rechazado" does NOT count as ready
@@ -567,500 +576,653 @@ export default function Documentos() {
   const obtenidas = capacitacionesConEstado.filter(c => c.enMochila);
   const listaCapacitaciones = tab === "disponibles" ? disponibles : obtenidas;
 
+  const COURSES_PER_PAGE = 3;
+  const totalCoursesPages = Math.ceil(listaCapacitaciones.length / COURSES_PER_PAGE);
+  const activeCoursesPage = Math.min(coursesPage, Math.max(1, totalCoursesPages));
+  const startCourseIndex = (activeCoursesPage - 1) * COURSES_PER_PAGE;
+  const paginatedCourses = listaCapacitaciones.slice(startCourseIndex, startCourseIndex + COURSES_PER_PAGE);
+
+
+  const categoriesList = [
+    { name: "Identidad", icon: "badge" },
+    { name: "Académicos", icon: "school" },
+    { name: "Socioeconómicos", icon: "account_balance" }
+  ];
 
   return (
-    <main className="flex-1 overflow-y-auto custom-scrollbar pb-16">
-      <div className="max-w-6xl mx-auto px-md md:px-margin-desktop py-xl space-y-xl w-full">
-        {/* HEADER */}
-        <header className="flex flex-col gap-1">
-          <h1 className="t-lg bold">
-            Mochila de Documentos
-          </h1>
-          <p className="t-sm mt-1">
-            Organiza y gestiona todos tus certificados necesarios para tus postulaciones en un solo lugar.
-          </p>
-        </header>
+    <div className="page animate-fade-in select-none">
+      {/* Header */}
+      <div>
+        <p className="t4">Mochila de Documentos</p>
+        <p className="t1 muted" style={{ marginTop: "3px" }}>
+          Organiza y gestiona todos tus certificados necesarios para tus postulaciones en un solo lugar.
+        </p>
+      </div>
 
-        {/* Meta Selector Section */}
-        <section className="card flex flex-col md:flex-row md:items-center justify-between gap-md">
-          <div className="space-y-1 max-w-lg">
-            <div className="flex items-center gap-sm">
-              <span className="material-symbols-outlined text-primary text-xl font-fill">target</span>
-              <h3 className="t-base bold">
-                Beca / Meta de Postulación Vinculada
-              </h3>
+      {/* Barra compacta de contexto */}
+      <div className="bar">
+        <div className="bar-seg" style={{ paddingLeft: 0, flexShrink: 0 }}>
+          <span className="material-symbols-outlined text-[15px] shrink-0" style={{ color: "var(--navy-2)", fontVariationSettings: "'FILL' 1" }}>target</span>
+          <select
+            value={selectedBecaId}
+            onChange={(e) => handleBecaChange(e.target.value)}
+            className="bar-select"
+          >
+            <option value="">Ninguna (Mochila General)</option>
+            {appliedBecaIds.map((id) => {
+              const beca = becas.find((b) => b.id === id);
+              if (!beca) return null;
+              return (
+                <option key={beca.id} value={beca.id}>
+                  {beca.title}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+        {selectedBeca && (
+          <>
+            <div className="bar-sep"></div>
+            <div className="bar-seg">
+              <span className="material-symbols-outlined text-[13px] text-slate-2 shrink-0">school</span>
+              <span className="t0 bold" style={{ color: "var(--navy)" }}>{selectedBeca.sponsor}</span>
+              <span className="t0 muted2">· {selectedBeca.level}</span>
             </div>
-            <p className="t-xs leading-normal">
-              Conecta tu Mochila a una de tus metas de becas activas para que el Asesor IA adapte tus requisitos automáticamente.
-            </p>
-          </div>
+            <div className="bar-sep"></div>
+            <div className="bar-seg">
+              <span className="material-symbols-outlined text-[13px] shrink-0" style={{ color: colorReloj }}>alarm</span>
+              <span className="t0 bold" style={{ color: colorReloj }}>
+                {fechaFormateada
+                  ? diasRestantes !== null && diasRestantes > 0
+                    ? `Cierra en ${diasRestantes} días`
+                    : "Cerró"
+                  : "Sin fecha"}
+              </span>
+            </div>
+            {selectedBeca.affinity && (
+              <>
+                <div className="bar-sep"></div>
+                <div className="bar-seg" style={{ paddingRight: 0 }}>
+                  <span className="t0 bold" style={{ color: "var(--green)" }}>{selectedBeca.affinity}% afinidad</span>
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
 
-          <div className="w-full md:w-80 shrink-0">
-            {/* FIX #3: Show only beca.title, no internal ID */}
-            <select
-              value={selectedBecaId}
-              onChange={(e) => handleBecaChange(e.target.value)}
-              className="w-full bg-white border border-[#e2e8f0] rounded-[12px] p-2 t-base outline-none cursor-pointer"
-            >
-              <option value="">Ninguna (Mochila General)</option>
-              {appliedBecaIds.map((id) => {
-                const beca = becas.find((b) => b.id === id);
-                if (!beca) return null;
+      {/* Progreso del expediente + alerta condicional */}
+      <div className={`grid grid-cols-1 ${selectedBeca && currentDocs.some(d => d.status.estado === "Rechazado") ? "md:grid-cols-2" : ""} gap-[10px]`}>
+        <div className="card">
+          <p className="lbl" style={{ marginBottom: "6px" }}>Progreso del expediente</p>
+          <div className="prog-nums">
+            <span className="prog-pct">{currentPercentage}%</span>
+            <span className="prog-txt">
+              {selectedBeca ? `${docsListos} de ${totalCount} documentos listos` : `${dbDocs.length} documentos en mochila`}
+            </span>
+          </div>
+          <div className="prog-track" style={{ marginTop: "8px" }}>
+            <div className="prog-fill" style={{ width: `${currentPercentage}%` }}></div>
+          </div>
+        </div>
+
+        {selectedBeca && (() => {
+          const rechazados = currentDocs.filter(d => d.status.estado === "Rechazado");
+          if (rechazados.length === 0) return null;
+          const primerRechazado = rechazados[0];
+          return (
+            <div className="alert animate-fade-in">
+              <span className="material-symbols-outlined shrink-0" style={{ color: "var(--red)", fontSize: "16px", marginTop: "1px" }}>warning</span>
+              <div>
+                <p className="alert-t">Documento rechazado</p>
+                <p className="alert-s">
+                  El "{primerRechazado.name}" fue rechazado. {primerRechazado.texto_ayuda || "Debes reemplazarlo antes del cierre para no perder tu lugar."}
+                </p>
+                <button className="btn-alert" onClick={() => startUploadSim(String(primerRechazado.id))}>Reemplazar ahora →</button>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* Categorías de documentos */}
+      <div className="cat-grid">
+        {categoriesList.map((cat) => {
+          const catDocs = currentDocs.filter(d => d.category === cat.name);
+          if (catDocs.length === 0) {
+            return (
+              <div key={cat.name} className="cat-card" style={{ borderColor: "var(--border)", opacity: 0.5 }}>
+                <div className="cat-head">
+                  <div className="row-c">
+                    <span className="material-symbols-outlined cat-icon" style={{ color: "var(--slate-2)" }}>{cat.icon}</span>
+                    <span className="cat-title">{cat.name}</span>
+                  </div>
+                  <span className="cat-badge" style={{ backgroundColor: "var(--slate-3)", color: "var(--slate)" }}>0/0</span>
+                </div>
+                <div style={{ textAlign: "center", padding: "12px 0" }}>
+                  <p className="t0 muted2">Sin documentos requeridos para esta beca</p>
+                </div>
+              </div>
+            );
+          }
+
+          const listos = catDocs.filter(d => ["Validado", "Listo", "Aprobado"].includes(d.status.estado)).length;
+          const rechazados = catDocs.filter(d => d.status.estado === "Rechazado");
+          const tieneRechazados = rechazados.length > 0;
+          const esCompleta = listos === catDocs.length;
+          
+          const borderStyle = tieneRechazados ? { borderColor: "var(--red)" } : { borderColor: "var(--border)" };
+          const badgeClass = esCompleta ? "cat-badge cb-g" : tieneRechazados ? "cat-badge cb-r" : "cat-badge cb-a";
+
+          return (
+            <div key={cat.name} className="cat-card" style={borderStyle}>
+              <div className="cat-head">
+                <div className="row-c">
+                  <span className="material-symbols-outlined cat-icon">{cat.icon}</span>
+                  <span className="cat-title">{cat.name}</span>
+                </div>
+                <span className={badgeClass}>{listos}/{catDocs.length}</span>
+              </div>
+              {catDocs.map((doc) => {
+                const status = doc.status.estado;
+                const isItemRejected = status === "Rechazado";
+                const isItemValid = ["Validado", "Listo", "Aprobado"].includes(status);
+                
                 return (
-                  <option key={beca.id} value={beca.id} title={beca.title}>
-                    {beca.title}
-                  </option>
+                  <div
+                    key={doc.id}
+                    className="cat-item"
+                    style={isItemRejected ? { backgroundColor: "var(--red-bg)" } : {}}
+                  >
+                    <span className="t1" style={{ color: isItemRejected ? "var(--red)" : "var(--navy)" }}>{doc.name}</span>
+                    {isItemValid ? (
+                      <span className="status-pill sp-g">Validado</span>
+                    ) : status === "En Revisión" ? (
+                      <span className="status-pill sp-a">Validando</span>
+                    ) : isItemRejected ? (
+                      <span className="status-pill sp-r">Rechazado</span>
+                    ) : (
+                      <span className="status-pill sp-p">Pendiente</span>
+                    )}
+                  </div>
                 );
               })}
-            </select>
-          </div>
-        </section>
-
-        {/* Selected Beca Details Badge Card */}
-        {selectedBeca && (
-          <div className="bg-[#e8eef8] border border-[#e2e8f0] p-4 rounded-[16px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
-            <div className="flex items-center gap-md">
-              <div className="w-10 h-10 rounded-[12px] bg-white flex items-center justify-center text-navy-2 shrink-0">
-                <span className="material-symbols-outlined text-xl font-fill">{selectedBeca.icon || "school"}</span>
-              </div>
-              <div>
-                {/* FIX #7: "Expediente requerido" — sentence case, no uppercase */}
-                <p className="t-label">
-                  Expediente requerido
-                </p>
-                <h4 className="t-base bold leading-tight mt-0.5">
-                  {selectedBeca.title}
-                </h4>
-                <p className="t-xs mt-0.5">
-                  Organizado por <span className="bold">{selectedBeca.sponsor}</span> • Requisito: <span className="bold">{selectedBeca.requirement}</span>
-                </p>
-              </div>
             </div>
-            <div className="flex items-center gap-md self-start sm:self-center">
-              <div className="text-left sm:text-right">
-                <p className="t-label">Cierre de Convocatoria</p>
-                {/* FIX #4 + FIX #5: Formatted date + dynamic clock color */}
-                <p className={`t-sm font-medium mt-0.5 flex items-center gap-1 ${colorReloj}`}>
-                  <span className="material-symbols-outlined text-sm">alarm</span>
-                  {fechaFormateada
-                    ? diasRestantes !== null && diasRestantes > 0
-                      ? `Cierra el ${fechaFormateada} (${diasRestantes} días)`
-                      : `Cerró el ${fechaFormateada}`
-                    : "—"}
-                </p>
-              </div>
-              {/* FIX #1: Only show affinity badge if value is truthy */}
-              {selectedBeca.affinity ? (
-                <div className="badge b-blue font-medium text-xs whitespace-nowrap">
-                  {selectedBeca.affinity}% afinidad
-                </div>
-              ) : null}
-            </div>
-          </div>
-        )}
+          );
+        })}
+      </div>
 
-        {/* PROGRESS & ALERT */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
-          <div className="lg:col-span-2 card flex flex-col justify-center">
-            <div className="flex justify-between items-end mb-sm">
-              <div>
-                <p className="t-label">
-                  Progreso del Expediente
-                </p>
-                <p className="t-lg bold">
-                  {currentPercentage}%
-                </p>
-              </div>
-              <p className="t-sm">
-                {docsListos} de {totalCount} documentos listos
-              </p>
-            </div>
-            {currentPercentage === 0 ? (
-              <p className="t-xs mt-1">
-                Sube tu primer documento para comenzar
-              </p>
-            ) : (
-              <div className="prog-track">
-                <div
-                  className="prog-fill transition-all duration-700"
-                  style={{ width: `${currentPercentage}%` }}
-                />
-              </div>
-            )}
+      {/* Tabla de documentos */}
+      <div className="tbl-wrap">
+        <div className="tbl-head">
+          <p className="t3">Detalle de documentación</p>
+          <div className="row-c" style={{ gap: "4px" }}>
+            <button className="ico-btn" title="Filtrar" aria-label="Filtrar">
+              <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>filter_list</span>
+            </button>
+            <button className="ico-btn" title="Buscar" aria-label="Buscar">
+              <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>search</span>
+            </button>
           </div>
-
-          {/* Alerta condicional: solo si hay documentos rechazados */}
-          {(() => {
-            const rechazados = currentDocs.filter(d => d.status.estado === "Rechazado");
-            if (rechazados.length === 0) return null;
-            return (
-              <div className="card b-red flex items-start gap-md border border-red">
-                <div className="w-8 h-8 bg-red text-white rounded-full flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[16px]">priority_high</span>
-                </div>
-                <div>
-                  <p className="t-sm bold text-red">Atención inmediata</p>
-                  <p className="t-xs text-red mt-1 leading-normal">
-                    {rechazados.length === 1
-                      ? `"${rechazados[0].name}" fue rechazado. Reemplázalo para no perder elegibilidad.`
-                      : `Tienes ${rechazados.length} documentos rechazados. Revísalos para no perder elegibilidad.`}
-                  </p>
-                  <button
-                    onClick={() => startUploadSim(String(rechazados[0].id))}
-                    className="mt-2 t-xs bold text-red underline cursor-pointer"
-                  >
-                    Reemplazar ahora →
-                  </button>
-                </div>
-              </div>
-            );
-          })()}
         </div>
-
-        {/* CATEGORIES CARDS */}
-        {/* FIX #6: Completeness indicator per category */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
-          {currentCategories.map((category: any, idx: number) => {
-            const listosEnCategoria = category.items.filter((item: any) => {
-              return item.status === "LISTO";
-            }).length;
-            const totalEnCategoria = category.items.length;
-            const completenessBadgeClass = listosEnCategoria === totalEnCategoria
-              ? "badge b-green"
-              : listosEnCategoria > 0
-                ? "badge b-amber"
-                : "badge b-red";
-
-            return (
-              <div
-                key={idx}
-                className={`card hover:shadow-md transition-shadow ${
-                  category.hasError && !uploadedDocIds.includes("2") ? "border-red bg-red-bg/5" : ""
-                }`}
-              >
-                <div className="flex items-center gap-sm mb-md border-b border-[#e2e8f0] pb-2">
-                  <span className="material-symbols-outlined text-navy-2 font-fill text-[20px]">
-                    {category.icon}
-                  </span>
-                  <h3 className="t-base bold">
-                    {category.title}
-                  </h3>
-                  {/* Completeness badge */}
-                  <span className={`${completenessBadgeClass} ml-auto`}>
-                    {listosEnCategoria}/{totalEnCategoria}
-                  </span>
-                </div>
-                <div className="space-y-sm">
-                  {category.items.map((item: any, itemIdx: number) => {
-                    const status = item.status;
-
-                    return (
-                      <div
-                        key={itemIdx}
-                        className={`flex items-center justify-between p-2 px-3 rounded-[8px] border text-xs ${
-                          status === "Reemplazar"
-                            ? "bg-red-bg border-red text-red"
-                            : "bg-white border-[#e2e8f0]"
-                        }`}
-                      >
-                        <span className="t-xs bold">{item.name}</span>
-                        {status === "LISTO" && (
-                          <span className="badge b-green">
-                            Listo
-                          </span>
-                        )}
-                        {status === "PENDIENTE" && (
-                          <button
-                            onClick={() => {
-                              startUploadSim(String(item.id));
-                            }}
-                            className="btn-sub text-xs hover:scale-105 active:scale-95 transition-transform cursor-pointer"
-                          >
-                            Subir
-                          </button>
-                        )}
-                        {status === "Reemplazar" && (
-                          <button
-                            onClick={() => startUploadSim(String(item.id))}
-                            className="text-red t-xs bold flex items-center gap-1 hover:underline cursor-pointer"
-                          >
-                            <span className="material-symbols-outlined text-xs">refresh</span> Reemplazar
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* TABLE SECTION */}
-        <section className="card overflow-hidden" style={{ padding: "0" }}>
-          <div className="px-4 py-3 border-b border-[#e2e8f0] flex justify-between items-center bg-[#f1f5f9]/50">
-            <h2 className="t-md bold">
-              Detalle de Documentación
-            </h2>
-            <div className="flex gap-sm">
-              <button className="btn-ico" aria-label="Filtrar">
-                <span className="material-symbols-outlined text-[18px]">filter_list</span>
-              </button>
-              <button className="btn-ico" aria-label="Buscar">
-                <span className="material-symbols-outlined text-[18px]">search</span>
-              </button>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            {/* FIX #9: Fixed table layout with colgroup */}
-            <table className="tbl" style={{ tableLayout: "fixed" }}>
-              <colgroup>
-                <col style={{ width: "35%" }} />
-                <col style={{ width: "38%" }} />
-                <col style={{ width: "17%" }} />
-                <col style={{ width: "10%" }} />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th>Documento</th>
-                  <th>Ayuda / Descripción</th>
-                  <th>Estado</th>
-                  <th style={{ textAlign: "right" }}>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentDocs.map((doc) => (
-                  <tr key={doc.id}>
-                    <td>
-                      <div className="flex items-center gap-sm">
-                        <span className={`material-symbols-outlined ${doc.documentIconColor} text-[20px] shrink-0`}>
-                          {doc.documentIcon}
-                        </span>
-                        <div className="min-w-0">
-                          {/* FIX #9: truncate + tooltip on long names */}
-                          <p className="t-sm bold trunc" title={doc.name}>
-                            {doc.name}
-                          </p>
-                          <p className={`t-xs ${doc.fileTextColor ? "bold" : ""}`} style={{ color: doc.fileTextColor ? "var(--green)" : undefined }}>
-                            {doc.fileText}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <p className="t-xs leading-normal">{doc.description}</p>
-                    </td>
-                    <td>
-                      {/* FIX #8: Unified StatusBadge */}
-                      <StatusBadge estado={doc.status.estado} />
-                    </td>
-                    <td style={{ textAlign: "right" }}>
-                      {doc.actionType === "options" ? (
-                        <div className="flex justify-end gap-xs">
-                          {/* FIX #11: tooltip on preview button */}
-                          <button
-                            onClick={() => handleSimulatedDownload(doc.name, (doc as any).archivo_url)}
-                            className="btn-ico"
-                            title="Previsualizar documento"
-                            aria-label="Previsualizar documento"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">visibility</span>
-                          </button>
-                          <div className="relative">
-                            <button
-                              onClick={() => setOpenMenuId(openMenuId === String(doc.id) ? null : String(doc.id))}
-                              className="btn-ico"
-                              title="Más opciones"
-                            >
-                              <span className="material-symbols-outlined text-[18px]">more_vert</span>
-                            </button>
-                            {openMenuId === String(doc.id) && (
-                              <div className="absolute right-0 mt-1 w-36 bg-white border border-border-subtle shadow-lg rounded-xl z-10 overflow-hidden text-left py-1">
-                                <button 
-                                  onClick={() => { setOpenMenuId(null); startUploadSim(String(doc.id)); }} 
-                                  className="w-full px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
-                                >
-                                  <span className="material-symbols-outlined text-sm">edit</span> Modificar
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                    setOpenMenuId(null);
-                                    setUploadedDocIds(prev => prev.filter(id => id !== String(doc.id)));
-                                    setToastMessage("Documento eliminado localmente");
-                                    setShowSuccessToast(true);
-                                    setTimeout(() => setShowSuccessToast(false), 3000);
-                                  }} 
-                                  className="w-full px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer"
-                                >
-                                  <span className="material-symbols-outlined text-sm">delete</span> Eliminar
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => startUploadSim(String(doc.id))}
-                          className="btn-sub text-xs hover:scale-105 active:scale-95 transition-transform"
-                        >
-                          {doc.actionText}
-                        </button>
-                      )}
+        <div className="overflow-x-auto">
+          <table className="tbl-mochila" style={{ tableLayout: "fixed" }}>
+            <colgroup>
+              <col style={{ width: "32%" }} />
+              <col style={{ width: "34%" }} />
+              <col style={{ width: "20%" }} />
+              <col style={{ width: "14%" }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Documento</th>
+                <th>Ayuda / descripción</th>
+                <th>Estado</th>
+                <th style={{ textAlign: "right" }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* required docs section */}
+              {currentDocs.filter(d => d.es_requerido).length > 0 && (
+                <>
+                  <tr>
+                    <td colSpan={4} style={{ padding: "10px 14px 4px" }}>
+                      <span className="lbl">Documentos requeridos por la beca</span>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                  {currentDocs.filter(d => d.es_requerido).map((doc) => {
+                    const status = doc.status.estado;
+                    const isItemRejected = status === "Rechazado";
+                    const isItemValid = ["Validado", "Listo", "Aprobado"].includes(status);
 
-        {/* DROPZONE AREA */}
-        <section>
-          <div
-            onClick={() => startUploadSim("3")}
-            className="border border-dashed border-[#e2e8f0] rounded-[16px] p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-[#e8eef8] transition-all"
-          >
-            <div className="w-12 h-12 bg-[#e8eef8] text-navy-2 rounded-full flex items-center justify-center mb-3 shrink-0">
-              <span className="material-symbols-outlined text-[24px]">cloud_upload</span>
-            </div>
-            <h3 className="t-md bold">
-              Subir nuevos documentos
-            </h3>
-            <p className="t-xs mt-2 max-w-md px-4">
-              Arrastra y suelta tus archivos aquí o haz clic para explorar. Aceptamos PDF, JPG y PNG hasta 10MB por archivo.
-            </p>
-            <div className="mt-3 flex gap-2">
-              <div className="badge b-slate">
-                <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span>
-                PDF
-              </div>
-              <div className="badge b-slate">
-                <span className="material-symbols-outlined text-[14px]">image</span>
-                JPG / PNG
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* RECOMMENDED COURSES SECTION */}
-        <section className="space-y-md border-t border-[#e2e8f0] pt-6">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-sm">
-              <span className="material-symbols-outlined text-navy-2 text-xl">workspace_premium</span>
-              <h3 className="t-md bold">
-                Capacitaciones Recomendadas para tu CV
-              </h3>
-            </div>
-            <p className="t-xs mt-1">
-              Completa cursos cortos de alta demanda tecnológica y obtén certificados digitales que se agregarán automáticamente a tu expediente.
-            </p>
-          </div>
-
-          {/* FIX #14: Tabs for disponibles vs obtenidas */}
-          <div className="tabs" style={{ maxWidth: "320px" }}>
-            {(["disponibles", "obtenidas"] as const).map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`tab ${tab === t ? "on" : ""}`}
-              >
-                {t === "disponibles"
-                  ? `Disponibles (${disponibles.length})`
-                  : `Obtenidas (${obtenidas.length})`}
-              </button>
-            ))}
-          </div>
-
-          {listaCapacitaciones.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
-              <span className="material-symbols-outlined text-3xl text-gray-300">
-                {tab === "disponibles" ? "school" : "workspace_premium"}
-              </span>
-              <p className="t-sm bold">
-                {tab === "disponibles"
-                  ? "No hay capacitaciones disponibles por el momento."
-                  : "Aún no has obtenido ningún certificado."}
-              </p>
-              {tab === "obtenidas" && (
-                <button
-                  onClick={() => setTab("disponibles")}
-                  className="t-xs bold text-navy-2 underline cursor-pointer border-none bg-transparent"
-                >
-                  Ver capacitaciones disponibles →
-                </button>
+                    return (
+                      <tr key={doc.id} style={isItemRejected ? { backgroundColor: "#fff8f8" } : {}}>
+                        <td>
+                          <div className="row-c" style={{ gap: "8px" }}>
+                            {isItemValid ? (
+                              <span className="material-symbols-outlined text-[15px] shrink-0 text-green-600" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                            ) : isItemRejected ? (
+                              <span className="material-symbols-outlined text-[15px] shrink-0 text-red-500">warning</span>
+                            ) : (
+                              <span className="material-symbols-outlined text-[15px] shrink-0 text-slate-400">description</span>
+                            )}
+                            <div style={{ minWidth: 0 }}>
+                              <p className="doc-name" title={doc.name}>{doc.name}</p>
+                              <p className="doc-sub" style={isItemRejected ? { color: "#b91c1c" } : {}}>
+                                {isItemRejected ? doc.texto_ayuda || "Firma no legible — rechazado" : doc.fileText}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <p className="desc">{doc.description}</p>
+                        </td>
+                        <td>
+                          {isItemValid ? (
+                            <span className="s-ok">
+                              <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                              Validado
+                            </span>
+                          ) : status === "En Revisión" ? (
+                            <span className="s-rev">
+                              <span className="material-symbols-outlined text-xs animate-spin">sync</span>
+                              Validando
+                            </span>
+                          ) : isItemRejected ? (
+                            <span className="s-rej">
+                              <span className="material-symbols-outlined text-xs">close</span>
+                              Rechazado
+                            </span>
+                          ) : (
+                            <span className="s-pen">
+                              <span className="material-symbols-outlined text-xs">hourglass_empty</span>
+                              Pendiente
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {doc.actionType === "options" || status === "En Revisión" ? (
+                            <div className="act-row">
+                              <button
+                                className="ico-btn"
+                                title="Previsualizar"
+                                aria-label="Previsualizar"
+                                onClick={() => handleSimulatedDownload(doc.name, doc.archivo_url)}
+                              >
+                                <span className="material-symbols-outlined text-[15px]">visibility</span>
+                              </button>
+                              <div className="relative">
+                                <button
+                                  className="ico-btn"
+                                  title="Más opciones"
+                                  aria-label="Más opciones"
+                                  onClick={() => setOpenMenuId(openMenuId === String(doc.id) ? null : String(doc.id))}
+                                >
+                                  <span className="material-symbols-outlined text-[15px]">more_vert</span>
+                                </button>
+                                {openMenuId === String(doc.id) && (
+                                  <div className="absolute right-0 mt-1 w-32 bg-white border border-border shadow-lg rounded-xl z-[20] overflow-hidden text-left py-1">
+                                    <button
+                                      onClick={() => {
+                                        setOpenMenuId(null);
+                                        startUploadSim(String(doc.id));
+                                      }}
+                                      className="w-full px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-none bg-transparent text-left cursor-pointer"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">edit</span> Modificar
+                                    </button>
+                                    <button
+                                      onClick={async () => {
+                                        setOpenMenuId(null);
+                                        const newUploadedIds = uploadedDocIds.filter(
+                                          (id) =>
+                                            id !== String(doc.id) &&
+                                            id !== `CERT-${doc.id}` &&
+                                            !(doc.name === "DNI Apoderado" && id === "DNI-APO") &&
+                                            !(doc.name === "Ficha SISFOH" && id === "3") &&
+                                            !(doc.name === "Decl. Juradas" && id === "DECL")
+                                        );
+                                        setUploadedDocIds(newUploadedIds);
+                                        localStorage.setItem("pathfinder_uploaded_docs", JSON.stringify(newUploadedIds));
+                                        if (user && selectedBecaId) {
+                                          try {
+                                            const { data: post } = await supabase
+                                              .from("postulaciones")
+                                              .select("id")
+                                              .eq("usuario_id", user.id)
+                                              .eq("beca_id", selectedBecaId)
+                                              .single();
+                                            if (post) {
+                                              await supabase
+                                                .from("documentos")
+                                                .delete()
+                                                .eq("postulacion_id", post.id)
+                                                .eq("nombre_documento", doc.name);
+                                              await fetchDbDocuments();
+                                            }
+                                          } catch (err) {
+                                            console.error("Error deleting doc:", err);
+                                          }
+                                        }
+                                        setToastMessage("Documento eliminado");
+                                        setShowSuccessToast(true);
+                                        setTimeout(() => setShowSuccessToast(false), 3000);
+                                      }}
+                                      className="w-full px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2 border-none bg-transparent text-left cursor-pointer"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">delete</span> Eliminar
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="act-row">
+                              <button className="btn-up" onClick={() => startUploadSim(String(doc.id))}>
+                                {isItemRejected ? "Reemplazar" : "Subir"}
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </>
               )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
-              {/* FIX #12 + #13 + #15 + #16: Unified card layout */}
-              {listaCapacitaciones.map((curso) => {
+
+              {/* complementary docs section */}
+              {currentDocs.filter(d => !d.es_requerido).length > 0 && (
+                <>
+                  <tr>
+                    <td colSpan={4} style={{ padding: "10px 14px 4px" }}>
+                      <span className="lbl">Certificados complementarios</span>
+                    </td>
+                  </tr>
+                  {currentDocs.filter(d => !d.es_requerido).map((doc) => {
+                    const status = doc.status.estado;
+                    const isItemRejected = status === "Rechazado";
+                    const isItemValid = ["Validado", "Listo", "Aprobado"].includes(status);
+
+                    return (
+                      <tr key={doc.id} style={isItemRejected ? { backgroundColor: "#fff8f8" } : {}}>
+                        <td>
+                          <div className="row-c" style={{ gap: "8px" }}>
+                            {isItemValid ? (
+                              <span className="material-symbols-outlined text-[15px] shrink-0 text-green-600" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                            ) : status === "En Revisión" ? (
+                              <span className="material-symbols-outlined text-[15px] shrink-0 text-amber-500 animate-spin">sync</span>
+                            ) : isItemRejected ? (
+                              <span className="material-symbols-outlined text-[15px] shrink-0 text-red-500">warning</span>
+                            ) : (
+                              <span className="material-symbols-outlined text-[15px] shrink-0 text-slate-400">description</span>
+                            )}
+                            <div style={{ minWidth: 0 }}>
+                              <p className="doc-name" title={doc.name}>{doc.name}</p>
+                              <p className="doc-sub" style={isItemRejected ? { color: "#b91c1c" } : status === "En Revisión" ? { color: "#d97706" } : {}}>
+                                {isItemRejected ? doc.texto_ayuda || "Firma no legible — rechazado" : doc.fileText}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <p className="desc">{doc.description}</p>
+                        </td>
+                        <td>
+                          {isItemValid ? (
+                            <span className="s-ok">
+                              <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                              Validado
+                            </span>
+                          ) : status === "En Revisión" ? (
+                            <span className="s-rev">
+                              <span className="material-symbols-outlined text-xs animate-spin">sync</span>
+                              Validando
+                            </span>
+                          ) : isItemRejected ? (
+                            <span className="s-rej">
+                              <span className="material-symbols-outlined text-xs">close</span>
+                              Rechazado
+                            </span>
+                          ) : (
+                            <span className="s-pen">
+                              <span className="material-symbols-outlined text-xs">hourglass_empty</span>
+                              Pendiente
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {doc.actionType === "options" || status === "En Revisión" ? (
+                            <div className="act-row">
+                              <button
+                                className="ico-btn"
+                                title="Previsualizar"
+                                aria-label="Previsualizar"
+                                onClick={() => handleSimulatedDownload(doc.name, doc.archivo_url)}
+                              >
+                                <span className="material-symbols-outlined text-[15px]">visibility</span>
+                              </button>
+                              <div className="relative">
+                                <button
+                                  className="ico-btn"
+                                  title="Más opciones"
+                                  aria-label="Más opciones"
+                                  onClick={() => setOpenMenuId(openMenuId === String(doc.id) ? null : String(doc.id))}
+                                >
+                                  <span className="material-symbols-outlined text-[15px]">more_vert</span>
+                                </button>
+                                {openMenuId === String(doc.id) && (
+                                  <div className="absolute right-0 mt-1 w-32 bg-white border border-border shadow-lg rounded-xl z-[20] overflow-hidden text-left py-1">
+                                    <button
+                                      onClick={() => {
+                                        setOpenMenuId(null);
+                                        startUploadSim(String(doc.id));
+                                      }}
+                                      className="w-full px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-none bg-transparent text-left cursor-pointer"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">edit</span> Modificar
+                                    </button>
+                                    <button
+                                      onClick={async () => {
+                                        setOpenMenuId(null);
+                                        const newUploadedIds = uploadedDocIds.filter(
+                                          (id) =>
+                                            id !== String(doc.id) &&
+                                            id !== `CERT-${doc.id}` &&
+                                            !(doc.name === "DNI Apoderado" && id === "DNI-APO") &&
+                                            !(doc.name === "Ficha SISFOH" && id === "3") &&
+                                            !(doc.name === "Decl. Juradas" && id === "DECL")
+                                        );
+                                        setUploadedDocIds(newUploadedIds);
+                                        localStorage.setItem("pathfinder_uploaded_docs", JSON.stringify(newUploadedIds));
+                                        if (user && selectedBecaId) {
+                                          try {
+                                            const { data: post } = await supabase
+                                              .from("postulaciones")
+                                              .select("id")
+                                              .eq("usuario_id", user.id)
+                                              .eq("beca_id", selectedBecaId)
+                                              .single();
+                                            if (post) {
+                                              await supabase
+                                                .from("documentos")
+                                                .delete()
+                                                .eq("postulacion_id", post.id)
+                                                .eq("nombre_documento", doc.name);
+                                              await fetchDbDocuments();
+                                            }
+                                          } catch (err) {
+                                            console.error("Error deleting doc:", err);
+                                          }
+                                        }
+                                        setToastMessage("Documento eliminado");
+                                        setShowSuccessToast(true);
+                                        setTimeout(() => setShowSuccessToast(false), 3000);
+                                      }}
+                                      className="w-full px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2 border-none bg-transparent text-left cursor-pointer"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">delete</span> Eliminar
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="act-row">
+                              <button className="btn-up" onClick={() => startUploadSim(String(doc.id))}>
+                                {isItemRejected ? "Reemplazar" : "Subir"}
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Drop zone */}
+      <div className="drop" onClick={() => startUploadSim("3")}>
+        <div className="drop-icon">
+          <span className="material-symbols-outlined">cloud_upload</span>
+        </div>
+        <p className="t2 bold">Subir nuevos documentos</p>
+        <p className="t0 muted">Arrastra tus archivos aquí o haz clic para explorar. PDF, JPG o PNG hasta 10 MB.</p>
+        <div className="fmt-pills">
+          <div className="fmt-pill">
+            <span className="material-symbols-outlined text-[12px]">picture_as_pdf</span> PDF
+          </div>
+          <div className="fmt-pill">
+            <span className="material-symbols-outlined text-[12px]">image</span> JPG / PNG
+          </div>
+        </div>
+      </div>
+
+      {/* Capacitaciones */}
+      <div>
+        <div className="row-c" style={{ gap: "7px", marginBottom: "4px" }}>
+          <span className="material-symbols-outlined text-[16px] text-navy-2 font-fill">workspace_premium</span>
+          <p className="t3">Capacitaciones recomendadas para tu CV</p>
+        </div>
+        <p className="t0 muted" style={{ marginBottom: "12px" }}>
+          Completa cursos cortos y obtén certificados digitales que se agregarán automáticamente a tu expediente.
+        </p>
+
+        <div className="cap-tabs">
+          <button
+            className={`cap-tab ${tab === "disponibles" ? "on" : ""}`}
+            onClick={() => setTab("disponibles")}
+          >
+            Disponibles ({disponibles.length})
+          </button>
+          <button
+            className={`cap-tab ${tab === "obtenidas" ? "on" : ""}`}
+            onClick={() => setTab("obtenidas")}
+          >
+            Obtenidas ({obtenidas.length})
+          </button>
+        </div>
+
+        {listaCapacitaciones.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <p className="t0 muted">No hay capacitaciones en esta lista.</p>
+          </div>
+        ) : (
+          <>
+            <div className="cap-grid">
+              {paginatedCourses.map((curso) => {
                 const { enMochila, isEnrolled } = curso;
 
                 return (
                   <div
                     key={curso.id}
-                    className="card flex flex-col justify-between hover:shadow-md transition-all"
+                    className="cap-card"
+                    style={enMochila ? { borderColor: "#86efac" } : {}}
                   >
+                    <span className="dur-pill">{curso.duration}</span>
                     <div>
-                      <div className="flex justify-between items-start mb-2">
-                        {/* FIX #15: Duration badge — neutral metadata style */}
-                        <span className="badge b-slate">
-                          {curso.duration}
-                        </span>
-                      </div>
-                      <h4 className="t-base bold mt-1">
-                        {curso.title}
-                      </h4>
-                      <p className="t-xs mt-1 bold">
-                        {curso.sponsor}
-                      </p>
-                      <p className="t-xs mt-3 leading-normal border-t border-[#e2e8f0] pt-2">
-                        <span className="bold">Mínimo:</span> {curso.requirement}
-                      </p>
+                      <p className="cap-title">{curso.title}</p>
+                      <p className="cap-org">{curso.sponsor}</p>
                     </div>
+                    <p className="cap-min">
+                      <span>Mínimo:</span> {curso.requirement}
+                    </p>
 
-                    <div className="mt-4 pt-2">
-                      {enMochila ? (
-                        // FIX #12: Completed card — positive state
-                        <div className="w-full bg-[#dcfce7] border border-[#166534] text-[#166534] rounded-[8px] py-2 font-medium text-xs flex items-center justify-center gap-2">
-                          <span
-                            className="material-symbols-outlined text-base"
-                            style={{ fontVariationSettings: "'FILL' 1" }}
-                          >
-                            check_circle
-                          </span>
+                    {enMochila ? (
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <div className="btn-done" style={{ flex: 1 }}>
+                          <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                           Certificado en mochila
                         </div>
-                      ) : (
                         <button
-                          onClick={() => handleEnroll(curso.id, curso.title)}
-                          className={`w-full py-2 rounded-[8px] text-xs font-medium cursor-pointer transition-all flex items-center justify-center gap-2 active:scale-95 ${
-                            isEnrolled
-                              ? "bg-[#1a3a7c] text-white hover:opacity-90 border-none"
-                              : "bg-white border border-[#1a3a7c] text-[#1a3a7c] hover:bg-[#e8eef8]"
-                          }`}
+                          className="ico-btn"
+                          title="Eliminar de mochila"
+                          aria-label="Eliminar de mochila"
+                          onClick={() => handleRemoveCert(curso.id, curso.title)}
+                          style={{ flexShrink: 0, color: "var(--red)", padding: "6px" }}
                         >
-                          <span className="material-symbols-outlined text-base">
-                            {isEnrolled ? "download" : "school"}
-                          </span>
-                          {isEnrolled ? "Descargar certificado" : "Iniciar Clase"}
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    ) : isEnrolled ? (
+                      <button className="btn-dl" onClick={() => handleEnroll(curso.id, curso.title)}>
+                        <span className="material-symbols-outlined text-[15px]">download</span>
+                        Descargar certificado
+                      </button>
+                    ) : (
+                      <button className="btn-ini" onClick={() => handleEnroll(curso.id, curso.title)}>
+                        <span className="material-symbols-outlined text-[15px]">school</span>
+                        Iniciar clase
+                      </button>
+                    )}
                   </div>
                 );
               })}
             </div>
-          )}
-        </section>
+
+            {totalCoursesPages > 1 && (
+              <div className="pg" style={{ marginTop: "16px" }}>
+                <button
+                  onClick={() => setCoursesPage(prev => Math.max(1, prev - 1))}
+                  disabled={activeCoursesPage === 1}
+                  className="pb"
+                >
+                  ← Anterior
+                </button>
+                {Array.from({ length: totalCoursesPages }, (_, idx) => {
+                  const pNum = idx + 1;
+                  return (
+                    <button
+                      key={pNum}
+                      onClick={() => setCoursesPage(pNum)}
+                      className={`pn ${activeCoursesPage === pNum ? "on" : ""}`}
+                    >
+                      {pNum}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setCoursesPage(prev => Math.min(totalCoursesPages, prev + 1))}
+                  disabled={activeCoursesPage === totalCoursesPages}
+                  className="pb"
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* SIMULATED FILE UPLOAD MODAL DIALOG */}
       {isUploadModalOpen && (
-        <div className="fixed inset-0 bg-on-surface/40 backdrop-blur-sm z-[99] flex items-center justify-center p-md cursor-default">
-          <div className="bg-surface rounded-2xl max-w-sm w-full p-lg border border-border-subtle shadow-2xl flex flex-col gap-md">
+        <div className="fixed inset-0 bg-[#0F2554]/40 backdrop-blur-sm z-[99] flex items-center justify-center p-md cursor-default">
+          <div className="card max-w-sm w-full p-lg shadow-2xl flex flex-col gap-md">
             <div className="flex justify-between items-start">
-              <h3 className="font-body-bold text-on-surface font-bold text-base leading-tight">
+              <h3 className="t-md bold">
                 {user ? "Subir Archivo Real" : "Simulación de Carga Digital"}
               </h3>
               <button
@@ -1068,46 +1230,46 @@ export default function Documentos() {
                   setIsUploadModalOpen(false);
                   setSelectedFile(null);
                 }}
-                className="material-symbols-outlined text-muted-slate hover:text-on-surface cursor-pointer p-0.5 rounded-full hover:bg-slate-100"
+                className="btn-ico"
               >
-                close
+                <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <p className="text-xs text-slate-500 leading-normal">
+            <p className="t-xs leading-normal" style={{ color: "var(--slate)" }}>
               {user
                 ? "Selecciona el archivo en formato PDF o Imagen para subirlo a tu expediente seguro de Supabase."
                 : "Selecciona una muestra simulada de archivo PDF para cargar en tu Mochila del Expediente. El sistema validará su autenticidad mediante firma electrónica."}
             </p>
 
-            <form onSubmit={handleUploadSubmit} className="space-y-md mt-2">
+            <form onSubmit={handleUploadSubmit} className="flex flex-col gap-4 mt-2">
               {user ? (
-                <div className="space-y-sm">
+                <div className="flex flex-col gap-2">
                   <input
                     type="file"
                     accept=".pdf,image/*"
                     onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                     required
-                    className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                    className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#e8eef8] file:text-[#1a3a7c] hover:file:bg-[#e8eef8]/80 cursor-pointer"
                   />
                   {selectedFile && (
-                    <p className="text-[10px] text-tertiary font-semibold">
+                    <p className="text-[10px] text-green-700 font-semibold">
                       Listo: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                     </p>
                   )}
                 </div>
               ) : (
-                <div className="p-md bg-surface-container-low rounded-xl border border-border-subtle flex items-center gap-sm">
-                  <span className="material-symbols-outlined text-primary text-[24px]">picture_as_pdf</span>
+                <div className="p-3 bg-slate-100 rounded-xl border border-border flex items-center gap-sm">
+                  <span className="material-symbols-outlined text-[24px]" style={{ color: "var(--navy-2)" }}>picture_as_pdf</span>
                   <div>
-                    <p className="font-body-bold text-xs font-bold text-slate-700">
+                    <p className="t-xs bold text-slate-700">
                       {selectedDocToUpload === "2"
                         ? "certificado_estudios_camila.pdf"
                         : selectedDocToUpload === "3"
                           ? "ficha_sisfoh_apoderado.pdf"
                           : "documento_sustento_expediente.pdf"}
                     </p>
-                    <p className="text-[10px] text-muted-slate mt-0.5">PDF Oficial firmado digitalmente por MINEDU</p>
+                    <p className="t-xs mt-0.5" style={{ color: "var(--slate)" }}>PDF Oficial firmado digitalmente por MINEDU</p>
                   </div>
                 </div>
               )}
@@ -1115,7 +1277,7 @@ export default function Documentos() {
               <button
                 type="submit"
                 disabled={isUploading}
-                className="w-full py-3 bg-primary text-white font-bold rounded-xl text-xs flex items-center justify-center gap-sm cursor-pointer shadow hover:scale-[1.01] active:scale-95 transition-all disabled:opacity-50"
+                className="w-full py-2 bg-[#1a3a7c] hover:bg-[#0F2554] text-white font-bold rounded-xl text-xs flex items-center justify-center gap-sm cursor-pointer shadow transition-all disabled:opacity-50 border-none"
               >
                 {isUploading ? (
                   <>
@@ -1136,14 +1298,14 @@ export default function Documentos() {
 
       {/* Success Notification Toast */}
       {showSuccessToast && (
-        <div className="fixed top-20 right-6 z-[99] bg-primary text-white p-lg rounded-2xl shadow-2xl flex items-center gap-md border border-white/20 animate-in slide-in-from-right-4 duration-300">
-          <span className="material-symbols-outlined text-[24px]">verified</span>
+        <div className="fixed top-20 right-6 z-[99] bg-[#0F2554] text-white p-4 rounded-2xl shadow-2xl flex items-center gap-md border border-white/20 animate-in slide-in-from-right-4 duration-300">
+          <span className="material-symbols-outlined text-[24px] text-green-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
           <div>
-            <p className="font-body-bold font-bold text-sm">Mochila de Documentos</p>
-            <p className="text-xs opacity-90">{toastMessage}</p>
+            <p style={{ fontSize: "12px", fontWeight: "bold", color: "#ffffff", margin: 0 }}>Mochila de Documentos</p>
+            <p style={{ fontSize: "11px", color: "#cbd5e1", margin: "2px 0 0 0" }}>{toastMessage}</p>
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

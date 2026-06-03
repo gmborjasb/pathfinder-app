@@ -30,6 +30,12 @@ const Dashboard: React.FC = () => {
   const [activeDot, setActiveDot] = useState(0);
   const sliderRef = useRef<HTMLDivElement>(null);
 
+  const [postulaciones, setPostulaciones] = useState<any[]>([]);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [postDocsMap, setPostDocsMap] = useState<Record<string, any[]>>({});
+  const [showBecaDD, setShowBecaDD] = useState(false);
+  const becaDDRef = useRef<HTMLDivElement>(null);
+
   const [savedBecaIds] = useState<string[]>(() => {
     const stored = localStorage.getItem("pathfinder_saved_becas");
     if (stored) {
@@ -60,24 +66,27 @@ const Dashboard: React.FC = () => {
         if (talleresRes.data) setTalleres(talleresRes.data);
 
         if (user) {
-          const { data: post } = await supabase
+          const { data: posts } = await supabase
             .from("postulaciones")
             .select("*")
             .eq("usuario_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+            .order("created_at", { ascending: false });
 
-          if (post) {
-            setPostulation(post);
-            const { data: docs } = await supabase
-              .from("documentos")
-              .select("*")
-              .eq("postulacion_id", post.id);
+          if (posts && posts.length > 0) {
+            setPostulaciones(posts);
+            setPostulation(posts[0]);
+            setSelectedPostId(posts[0].id);
 
-            if (docs) {
-              setDbDocs(docs);
+            const map: Record<string, any[]> = {};
+            for (const p of posts) {
+              const { data: docs } = await supabase
+                .from("documentos")
+                .select("*")
+                .eq("postulacion_id", p.id);
+              if (docs) map[p.id] = docs;
             }
+            setPostDocsMap(map);
+            setDbDocs(map[posts[0].id] || []);
           }
         }
       } catch (err) {
@@ -127,6 +136,25 @@ const Dashboard: React.FC = () => {
       setActiveDot(dotIndex);
     }
   };
+
+  // Sync dbDocs when selected postulation changes
+  useEffect(() => {
+    if (selectedPostId && postDocsMap[selectedPostId]) {
+      setDbDocs(postDocsMap[selectedPostId]);
+    }
+  }, [selectedPostId, postDocsMap]);
+
+  // Close beca dropdown on outside click
+  useEffect(() => {
+    if (!showBecaDD) return;
+    const handler = (e: MouseEvent) => {
+      if (becaDDRef.current && !becaDDRef.current.contains(e.target as Node)) {
+        setShowBecaDD(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showBecaDD]);
 
   const profileName = profile?.nombres ? profile.nombres.split(" ")[0] : "Camila";
 
@@ -212,35 +240,39 @@ const Dashboard: React.FC = () => {
   };
 
   const getDashboardDocs = () => {
-    const baseDocs = [
-      { id: 1, name: "Certificado de Estudios", origin: "Trámite Minedu", actionType: "download" },
-      { id: 2, name: "Constancia de Primeros Puestos", origin: "Colegio Secundario", actionType: "download" },
-      { id: 3, name: "Declaración Jurada de Ingresos", origin: "Formato Pronabec", actionType: "upload_signature" },
-      { id: 4, name: "Certificado de Inglés", origin: "Británico / ICPNA", actionType: "upload_certificate" }
-    ];
+    // Build required docs list from active beca, then overlay real DB status
+    let requiredDocs: { id: number; name: string; origin: string }[] = [];
 
-    return baseDocs.map((doc) => {
-      const dbDoc = dbDocs.find((d) => d.nombre_documento === doc.name);
+    if (activeBeca && Array.isArray(activeBeca.documentos_requeridos) && activeBeca.documentos_requeridos.length > 0) {
+      requiredDocs = activeBeca.documentos_requeridos.map((d: any, i: number) => ({
+        id: i + 1,
+        name: d.name || d.nombre_documento || "",
+        origin: d.description || d.fileText || "",
+      }));
+    } else {
+      requiredDocs = [
+        { id: 1, name: "Certificado de Estudios", origin: "Trámite Minedu" },
+        { id: 2, name: "Constancia de Primeros Puestos", origin: "Colegio Secundario" },
+        { id: 3, name: "Declaración Jurada de Ingresos", origin: "Formato Pronabec" },
+        { id: 4, name: "Certificado de Inglés", origin: "Británico / ICPNA" },
+      ];
+    }
+
+    return requiredDocs.map((req) => {
+      const dbDoc = selectedDocs.find((d: any) => d.nombre_documento === req.name);
       if (dbDoc) {
+        const isValid     = ["Validado", "Listo", "Aprobado"].includes(dbDoc.estado);
+        const isRejected  = dbDoc.estado === "Rechazado";
+        const isReviewing = dbDoc.estado === "En Revisión";
         return {
-          ...doc,
-          status: dbDoc.estado === "Rechazado" ? "error" : "valid",
-          statusText: dbDoc.estado === "Rechazado" ? "Rechazado" : "Validado",
-          actionType: "download",
-          archivo_url: dbDoc.archivo_url
+          ...req,
+          status:     isValid ? "valid" : isRejected ? "error" : isReviewing ? "reviewing" : "pending",
+          statusText: isValid ? "Validado" : isRejected ? "Rechazado" : isReviewing ? "Validando" : "Pendiente",
+          actionType: isValid || isReviewing ? "download" : "upload",
+          archivo_url: dbDoc.archivo_url,
         };
       }
-      return {
-        ...doc,
-        status: doc.id === 3 ? "warning" : doc.id === 4 ? "pending" : "valid",
-        statusText: doc.id === 1 
-          ? "Validado" 
-          : doc.id === 2 
-            ? "Validado"
-            : doc.id === 3 
-              ? "Falta firma" 
-              : "Pendiente",
-      };
+      return { ...req, status: "pending", statusText: "Pendiente", actionType: "upload" };
     });
   };
 
@@ -291,10 +323,26 @@ const Dashboard: React.FC = () => {
     }))
     .sort((a, b) => getEventWeight(a.statusFrequency) - getEventWeight(b.statusFrequency));
 
-  const activePaso = postulation ? postulation.paso_pipeline : null;
+  const selectedPost = postulaciones.find(p => p.id === selectedPostId) || postulation;
+  const activePaso = selectedPost ? selectedPost.paso_pipeline : null;
   const progressPercent = activePaso ? Math.round(((activePaso - 1) / 3) * 100) : 0;
-  const activeBeca = postulation ? becas.find(b => b.id === postulation.beca_id) : null;
+  const activeBeca = selectedPost ? becas.find(b => b.id === selectedPost.beca_id) : null;
   const activeBecaTitle = activeBeca ? activeBeca.titulo : "Beca 18";
+
+  const selectedDocs = selectedPostId ? (postDocsMap[selectedPostId] || dbDocs) : dbDocs;
+  const docsListos = selectedDocs.filter(d => ["Validado", "Listo", "Aprobado"].includes(d.estado)).length;
+  const docsTotal = selectedDocs.length;
+  const diasCierre = activeBeca?.fecha_cierre
+    ? Math.floor((new Date(activeBeca.fecha_cierre).getTime() - Date.now()) / 86400000)
+    : null;
+
+  const pasoLabels = ["", "Preparación", "Enviada", "Evaluación", "Resultados"];
+  const badgeColors: Record<number, { bg: string; color: string }> = {
+    1: { bg: "#fef3c7", color: "#92400e" },
+    2: { bg: "#e8eef8", color: "#1a3a7c" },
+    3: { bg: "#dcfce7", color: "#166534" },
+    4: { bg: "#f1f5f9", color: "#64748b" },
+  };
 
   const beca18 = becas.find(b => b.id === "BEC-01");
   const beca18DeadlineText = beca18?.fecha_cierre ? `el ${formatLongDate(beca18.fecha_cierre)}` : "pronto";
@@ -304,93 +352,138 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="root">
-      {/* Header and Welcome Section */}
-      <div>
+      {/* Header */}
+      <div style={{ marginBottom: 14 }}>
         <p className="t-lg">Hola, {profileName}</p>
-        <p className="t-sm muted" style={{ marginTop: "3px" }}>Aquí tienes el estado de tu camino a la universidad.</p>
-        
-        {postulation && (
-          <div style={{ maxWidth: "300px", marginTop: "10px" }}>
-            <div className="row" style={{ marginBottom: "5px" }}>
-              <span className="t-xs muted">
-                Progreso en {activeBecaTitle} · Paso {activePaso} de 4
+        <p className="t-sm muted" style={{ marginTop: 3 }}>Aquí tienes el estado de tu camino a la universidad.</p>
+      </div>
+
+      {/* Beca selector */}
+      <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 14, padding: "14px 16px", marginBottom: 14, display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
+        <span style={{ fontSize: 10, fontWeight: 500, color: "var(--slate)", textTransform: "uppercase", letterSpacing: ".06em", whiteSpace: "nowrap" }}>Seguimiento de</span>
+        <div style={{ flex: 1, position: "relative" }} ref={becaDDRef}>
+          <button
+            onClick={() => setShowBecaDD(!showBecaDD)}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#e8eef8", border: "1.5px solid #1a3a7c", borderRadius: 10, padding: "8px 12px", cursor: "pointer", gap: 8 }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 500, color: "#0F2554", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, textAlign: "left" }}>
+              {activeBecaTitle}
+            </span>
+            {activePaso && (
+              <span style={{ fontSize: 10, color: "#1a3a7c", whiteSpace: "nowrap", flexShrink: 0 }}>
+                Paso {activePaso} de 4
               </span>
-              <span className="t-xs bold" style={{ color: "var(--navy-2)" }}>{progressPercent}%</span>
+            )}
+            <span className="material-symbols-outlined" style={{ fontSize: 16, color: "#1a3a7c", flexShrink: 0, transition: "transform .2s", transform: showBecaDD ? "rotate(180deg)" : "none" }}>expand_more</span>
+          </button>
+
+          {showBecaDD && postulaciones.length > 0 && (
+            <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, boxShadow: "0 8px 24px rgba(15,37,84,.12)", zIndex: 100, overflow: "hidden" }}>
+              {postulaciones.map((p) => {
+                const b = becas.find(b => b.id === p.beca_id);
+                const isSelected = p.id === selectedPostId;
+                const bc = badgeColors[p.paso_pipeline] || badgeColors[1];
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => { setSelectedPostId(p.id); setShowBecaDD(false); }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", cursor: "pointer", gap: 8, borderBottom: "1px solid var(--border)", background: isSelected ? "#e8eef8" : "var(--white)" }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: "#e8eef8", display: "flex", alignItems: "center", justifyContent: "center", color: "#1a3a7c", flexShrink: 0 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 13 }}>school</span>
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 12, fontWeight: 500, color: "#0F2554", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b?.titulo || "Beca"}</p>
+                        <p style={{ fontSize: 10, color: "#64748b" }}>{b?.sponsor || ""}</p>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 9, fontWeight: 500, padding: "2px 7px", borderRadius: 99, background: bc.bg, color: bc.color, whiteSpace: "nowrap", flexShrink: 0 }}>
+                      {pasoLabels[p.paso_pipeline] || "En curso"}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="prog-track">
-              <div className="prog-fill" style={{ width: `${progressPercent}%` }}></div>
+          )}
+        </div>
+      </div>
+
+      {/* Dark pipeline card */}
+      {selectedPost ? (
+        <div style={{ background: "#0F2554", borderRadius: 14, padding: "18px 20px", marginBottom: 14, color: "white", position: "relative", overflow: "hidden" }}>
+          {/* Top row */}
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+            <div style={{ minWidth: 0, flex: 1, marginRight: 16 }}>
+              <p style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,.55)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 4 }}>Postulación en curso</p>
+              <p style={{ fontSize: 15, fontWeight: 500, color: "white", lineHeight: 1.2 }}>{activeBecaTitle}</p>
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,.5)", marginTop: 2 }}>{activeBeca?.sponsor}</p>
+            </div>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <p style={{ fontSize: 28, fontWeight: 500, color: "white", lineHeight: 1 }}>{progressPercent}%</p>
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,.5)", marginTop: 2 }}>completado</p>
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Pipeline steps */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", padding: "0 8px" }}>
+            <div style={{ position: "absolute", top: 17, left: 8, right: 8, height: 2, background: "rgba(255,255,255,.15)", borderRadius: 2 }} />
+            <div style={{ position: "absolute", top: 17, left: 8, height: 2, background: "#60a5fa", borderRadius: 2, transition: "width .6s", width: activePaso === 1 ? "8%" : activePaso === 2 ? "40%" : activePaso === 3 ? "72%" : "100%" }} />
+            {getPipelineSteps(activePaso || 1).map((step) => {
+              const isDone = step.status === "completed";
+              const isActive = step.status === "active";
+              const circleStyle = isDone
+                ? { background: "#60a5fa", color: "#0F2554" }
+                : isActive
+                  ? { background: "white", color: "#1a3a7c", boxShadow: "0 0 0 4px rgba(96,165,250,.3)" }
+                  : { background: "rgba(255,255,255,.1)", color: "rgba(255,255,255,.3)" };
+              const labelColor = isDone ? "rgba(255,255,255,.7)" : isActive ? "white" : "rgba(255,255,255,.3)";
+              return (
+                <div key={step.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, position: "relative", zIndex: 1, width: "25%" }}>
+                  <div style={{ width: 34, height: 34, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", ...circleStyle }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+                      {isDone ? "check" : step.icon}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 9, textAlign: "center", lineHeight: 1.3, color: labelColor, fontWeight: isDone || isActive ? 500 : 400 }}>{step.label}</span>
+                  {isActive && <span style={{ background: "rgba(96,165,250,.25)", color: "#bfdbfe", fontSize: 8, fontWeight: 500, padding: "1px 6px", borderRadius: 99 }}>Actual</span>}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Stats row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,.1)" }}>
+            <div>
+              <p style={{ fontSize: 9, color: "rgba(255,255,255,.45)", textTransform: "uppercase", letterSpacing: ".05em" }}>Afinidad</p>
+              <p style={{ fontSize: 12, fontWeight: 500, color: "#86efac" }}>
+                {activeBeca?.afinidad ? `${activeBeca.afinidad}% match` : "—"}
+              </p>
+            </div>
+            <div>
+              <p style={{ fontSize: 9, color: "rgba(255,255,255,.45)", textTransform: "uppercase", letterSpacing: ".05em" }}>Documentos</p>
+              <p style={{ fontSize: 12, fontWeight: 500, color: docsTotal > 0 && docsListos === docsTotal ? "#86efac" : "#fcd34d" }}>
+                {docsTotal > 0 ? `${docsListos} de ${docsTotal} listos` : "Sin docs"}
+              </p>
+            </div>
+            <div>
+              <p style={{ fontSize: 9, color: "rgba(255,255,255,.45)", textTransform: "uppercase", letterSpacing: ".05em" }}>Cierre</p>
+              <p style={{ fontSize: 12, fontWeight: 500, color: diasCierre === null ? "white" : diasCierre <= 7 ? "#fca5a5" : diasCierre <= 30 ? "#fcd34d" : "#86efac" }}>
+                {diasCierre === null ? "Sin fecha" : diasCierre < 0 ? "Cerrado" : `En ${diasCierre} días`}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ background: "#0F2554", borderRadius: 14, padding: "18px 20px", marginBottom: 14, color: "white", textAlign: "center" }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 28, color: "rgba(255,255,255,.4)", marginBottom: 8, display: "block" }}>assignment_late</span>
+          <p style={{ fontSize: 13, fontWeight: 500, color: "white" }}>Sin postulaciones activas</p>
+          <p style={{ fontSize: 11, color: "rgba(255,255,255,.5)", marginTop: 4 }}>Explora becas y guarda tus favoritas para comenzar.</p>
+        </div>
+      )}
 
       <div className="dashboard-grid">
         <div className="dashboard-col">
-
-          {/* Pipeline de Postulación */}
-          <div className="card">
-            <div className="row" style={{ marginBottom: "14px" }}>
-              <div>
-                <p className="t-base bold">Pipeline de postulación</p>
-                <p className="t-xs muted" style={{ marginTop: "2px" }}>
-                  Proceso actual para <span className="bold" style={{ color: "var(--navy-2)" }}>{activeBecaTitle}</span>
-                </p>
-              </div>
-              {postulation ? (
-                <span className="badge b-amber">
-                  {postulation.estado_general.charAt(0).toUpperCase() + postulation.estado_general.slice(1).toLowerCase()}
-                </span>
-              ) : (
-                <span className="badge b-slate">Sin postulación</span>
-              )}
-            </div>
-
-            {!postulation ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "16px 0", textAlign: "center" }}>
-                <span className="material-symbols-outlined muted" style={{ fontSize: "28px", marginBottom: "8px" }}>assignment_late</span>
-                <p className="t-sm bold">Sin postulaciones activas</p>
-                <p className="t-xs muted" style={{ marginTop: "4px", maxWidth: "260px" }}>
-                  Aún no has iniciado una postulación. Explora becas y guarda tus favoritas para comenzar.
-                </p>
-                <a href="/buscar" className="t-link" style={{ marginTop: "10px", fontSize: "11px" }}>
-                  Explorar becas ahora →
-                </a>
-              </div>
-            ) : (
-              <div className="pipe-wrap">
-                <div className="pipe-bg"></div>
-                <div 
-                  className="pipe-fill" 
-                  style={{ 
-                    width: activePaso === 1 ? "8%" : activePaso === 2 ? "40%" : activePaso === 3 ? "72%" : "100%" 
-                  }}
-                ></div>
-                
-                {getPipelineSteps(activePaso).map((step) => {
-                  let stepClass = "sc-pend";
-                  if (step.status === "completed") stepClass = "sc-done";
-                  else if (step.status === "active") stepClass = "sc-active";
-
-                  return (
-                    <div key={step.id} className="step">
-                      <div className={`sc ${stepClass}`}>
-                        <span className="material-symbols-outlined text-[16px]">
-                          {step.status === "completed" ? "check" : step.icon}
-                        </span>
-                      </div>
-                      <span 
-                        className={`t-xs ${step.status === "pending" ? "muted2" : "bold"}`} 
-                        style={{ color: step.status !== "pending" ? "var(--navy-2)" : undefined, textAlign: "center" }}
-                      >
-                        {step.label}
-                      </span>
-                      {step.status === "active" && <span className="pill-now">Actual</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
 
           {/* Alerta de Documento Rechazado */}
           {hasRejectedDoc && (
@@ -436,12 +529,15 @@ const Dashboard: React.FC = () => {
                     let statusClass = "s-ok";
                     let statusIcon = "check_circle";
 
-                    if (doc.status === "warning") {
+                    if (doc.status === "reviewing") {
                       statusClass = "s-warn";
-                      statusIcon = "warning";
-                    } else if (doc.status === "error" || doc.status === "pending") {
+                      statusIcon = "sync";
+                    } else if (doc.status === "error") {
                       statusClass = "s-err";
                       statusIcon = "cancel";
+                    } else if (doc.status === "pending") {
+                      statusClass = "s-pen";
+                      statusIcon = "hourglass_empty";
                     }
 
                     return (

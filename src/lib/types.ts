@@ -10,6 +10,14 @@ export interface Beca {
   icon: string;
   sobre: string;
   beneficios: string[];
+  // Criterios de la beca — vienen del RPC calcular_recomendaciones_becas
+  reqNotaMinima?: number | null;
+  reqSisfoh?: string | null;
+  reqMerito?: string | null;
+  reqTipoColegio?: string | null;
+  requiereMujeres?: boolean;
+  priorizaVoluntariado?: boolean;
+  priorizaDeportista?: boolean;
 }
 
 export type Oportunidad = Beca;

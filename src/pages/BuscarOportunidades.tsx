@@ -1,14 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
 import type { Oportunidad } from "../lib/types";
+import {
+  getBecasRecomendadas,
+  getBecasFallback,
+  type BecaRecomendada,
+  type BecaRaw,
+} from "../services/recomendaciones";
 
 export default function BuscarOportunidades() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [oportunidades, setOportunidades] = useState<Oportunidad[]>([]);
-  const [isProfileFilterActive, setIsProfileFilterActive] = useState(false);
+  const [isLoadingBecas, setIsLoadingBecas] = useState(false);
+  // Controla caché: solo re-llama a la RPC cuando cambia user o se activa filtro
+  const recomendacionesCargadas = useRef(false);
+  const lastUserId = useRef<string | null>(null);
+
   const [isFiltersDrawerOpen, setIsFiltersDrawerOpen] = useState(false);
   const [selectedOportunidad, setSelectedOportunidad] = useState<Oportunidad | null>(null);
 
@@ -20,52 +30,103 @@ export default function BuscarOportunidades() {
   const [currentPage, setCurrentPage] = useState<number>(1);
 
 
+  // Mappers ---------------------------------------------------------------
+  const mapRPCToOportunidad = (rows: BecaRecomendada[]): Oportunidad[] =>
+    rows.map((row) => {
+      let days = 30;
+      if (row.fecha_cierre) {
+        const diffTime = new Date(row.fecha_cierre).getTime() - Date.now();
+        days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+      }
+      return {
+        id: row.beca_id,
+        title: row.titulo,
+        sponsor: row.sponsor,
+        coverage: row.cobertura || "",
+        requirement: row.requisitos || "",
+        deadline: days > 1 ? `Cierra en ${days} días` : `Cierra mañana`,
+        level: row.nivel as Oportunidad["level"],
+        affinity: row.afinidad_calculada,
+        icon: row.icono || "school",
+        sobre: row.sobre || "",
+        beneficios: Array.isArray(row.beneficios) ? row.beneficios : [],
+        // Criterios reales de la beca para el cruce de requisitos
+        reqNotaMinima: row.req_nota_minima ?? null,
+        reqSisfoh: row.req_sisfoh ?? null,
+        reqMerito: row.req_merito ?? null,
+        reqTipoColegio: row.req_tipo_colegio ?? null,
+        requiereMujeres: row.requiere_mujeres ?? false,
+        priorizaVoluntariado: row.prioriza_voluntariado ?? false,
+        priorizaDeportista: row.prioriza_deportista ?? false,
+      };
+    });
+
+  const mapFallbackToOportunidad = (rows: BecaRaw[]): Oportunidad[] =>
+    rows.map((row) => {
+      let days = 30;
+      if (row.fecha_cierre) {
+        const diffTime = new Date(row.fecha_cierre).getTime() - Date.now();
+        days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+      }
+      return {
+        id: row.id,
+        title: row.titulo,
+        sponsor: row.sponsor,
+        coverage: row.cobertura || "",
+        requirement: row.requisitos || "",
+        deadline: days > 1 ? `Cierra en ${days} días` : `Cierra mañana`,
+        level: row.nivel as Oportunidad["level"],
+        affinity: row.afinidad ?? 50,
+        icon: row.icono || "school",
+        sobre: row.sobre || "",
+        beneficios: Array.isArray(row.beneficios) ? row.beneficios : [],
+      };
+    });
+
+  // Carga de becas con RPC (caché: solo re-llama si cambia el usuario) ------
   useEffect(() => {
+    const isPlaceholder =
+      !import.meta.env.VITE_SUPABASE_URL ||
+      import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
+    if (isPlaceholder) return;
+
+    const userId = user?.id ?? null;
+    const userChanged = userId !== lastUserId.current;
+
+    // Evitar re-fetch si ya cargamos y el usuario no cambió
+    if (recomendacionesCargadas.current && !userChanged) return;
+
     const fetchBecas = async () => {
+      setIsLoadingBecas(true);
       try {
-        if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder")) {
-          return;
+        if (userId) {
+          const data = await getBecasRecomendadas(userId);
+          setOportunidades(mapRPCToOportunidad(data));
+        } else {
+          const data = await getBecasFallback();
+          setOportunidades(mapFallbackToOportunidad(data));
         }
-        const { data, error } = await supabase
-          .from("becas")
-          .select("*")
-          .order("id", { ascending: true });
-
-        if (error) {
-          console.error("Error fetching scholarships from Supabase:", error);
-          return;
-        }
-
-        if (data) {
-          const mapped: Oportunidad[] = data.map((row: any) => {
-            let days = 30;
-            if (row.fecha_cierre) {
-              const diffTime = new Date(row.fecha_cierre).getTime() - new Date().getTime();
-              days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-            }
-            return {
-              id: row.id,
-              title: row.titulo,
-              sponsor: row.sponsor,
-              coverage: row.cobertura,
-              requirement: row.requisitos,
-              deadline: days > 1 ? `Cierra en ${days} días` : `Cierra mañana`,
-              level: row.nivel,
-              affinity: row.afinidad || 85,
-              icon: row.icono || "school",
-              sobre: row.sobre || "",
-              beneficios: Array.isArray(row.beneficios) ? row.beneficios : []
-            };
-          });
-          setOportunidades(mapped);
-        }
+        recomendacionesCargadas.current = true;
+        lastUserId.current = userId;
       } catch (err) {
-        console.error("Unexpected error fetching scholarships:", err);
+        console.error("[BuscarOportunidades] Error al cargar becas:", err);
+        // Si la RPC falla, intenta el fallback simple
+        try {
+          const data = await getBecasFallback();
+          setOportunidades(mapFallbackToOportunidad(data));
+          recomendacionesCargadas.current = true;
+          lastUserId.current = userId;
+        } catch (fallbackErr) {
+          console.error("[BuscarOportunidades] Fallback también falló:", fallbackErr);
+        }
+      } finally {
+        setIsLoadingBecas(false);
       }
     };
 
     fetchBecas();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const [activeOportunidadesTab, setActiveOportunidadesTab] = useState<"explorar" | "guardadas" | "postuladas">(() => {
     const storedTab = localStorage.getItem("pathfinder_search_tab");
@@ -187,7 +248,6 @@ export default function BuscarOportunidades() {
 
   const handleLimpiarFiltros = () => {
     setSearchQuery("");
-    setIsProfileFilterActive(false);
     setSelectedProgramTypes([]);
     setSelectedFinancing("todos");
     setSelectedGestiones([]);
@@ -200,7 +260,7 @@ export default function BuscarOportunidades() {
     setCurrentPage(1);
   }, [
     searchQuery,
-    isProfileFilterActive,
+
     selectedProgramTypes,
     selectedFinancing,
     selectedGestiones,
@@ -284,25 +344,135 @@ export default function BuscarOportunidades() {
     closeAllDrawers();
   };
 
-  // Dynamic requirements checklists generator
+  // Genera las filas del cruce de requisitos usando datos reales del perfil
   const generateRequisitos = (oportunidad: Oportunidad) => {
-    let minNota = 14.0;
-    if (oportunidad.requirement.toLowerCase().includes("16")) minNota = 16.0;
-    else if (oportunidad.requirement.toLowerCase().includes("15")) minNota = 15.0;
+    const rows: { campo: string; perfil: string; estado: "Cumple" | "NoCumple" | "Pendiente" }[] = [];
+    const sinDatos = !profile;
 
-    // Student has GPA of 18.5
-    const cumpleNota = 18.5 >= minNota;
+    // --- Helpers de perfil ---
+    const userGpa = profile
+      ? parseFloat((profile.perfil_detalles?.notas?.gpa ?? "0").toString())
+      : null;
+    const userSisfoh = profile?.perfil_detalles?.sisfoh ?? null;
+    const userColegio = profile?.perfil_detalles?.tipo_colegio ?? null;
+    const userMerito = profile?.merito_academico ?? null;
+    const userVoluntariado = profile?.hace_voluntariado ?? null;
+    const userDeportista = profile?.es_deportista ?? null;
+    const userGenero = profile?.genero ?? null;
+    const userIngles = profile?.perfil_detalles?.idiomas?.nivelIngles ?? null;
 
-    return [
-      { campo: `Promedio >= ${minNota.toFixed(1)}`, perfil: "18.5", estado: cumpleNota ? "Cumple" : "Pendiente" },
-      {
-        campo: oportunidad.level === "Idioma" ? "Certificado escolar" : "Idioma Inglés (B2)",
-        perfil: oportunidad.level === "Idioma" ? "5to Sec." : "B2 (Intermedio)",
-        estado: "Cumple",
-      },
-      { campo: "Certificado de salud", perfil: "No cargado", estado: "Pendiente" },
-      { campo: "Ensayo de motivación", perfil: "Sin iniciar", estado: "Pendiente" },
-    ];
+    // Helpers de cumplimiento SISFOH (jerarquía: Pobreza Extrema ⊂ Pobre)
+    const cumpleSisfoh = (req: string | null | undefined, user: string | null): boolean => {
+      if (!req || req === "Cualquiera") return true;
+      if (!user) return false;
+      if (req === "Pobre") return user === "Pobre" || user === "Pobreza Extrema";
+      return req === user;
+    };
+
+    // Helper de mérito (quinto ⊂ tercio ⊂ medio)
+    const cumpleMerito = (req: string | null | undefined, user: string | null): boolean => {
+      if (!req || req === "ninguno") return true;
+      if (!user) return false;
+      if (req === "tercio") return user === "quinto" || user === "tercio";
+      if (req === "quinto") return user === "quinto";
+      return false;
+    };
+
+    // Helper label de mérito
+    const labelMerito = (m: string | null) => {
+      if (m === "quinto") return "Quinto Superior";
+      if (m === "tercio") return "Tercio Superior";
+      if (m === "medio") return "Medio Superior";
+      return "Sin datos";
+    };
+
+    // --- Fila 1: Nota mínima (siempre visible) ---
+    const minNota = oportunidad.reqNotaMinima ?? 11.0;
+    const gpaLabel = sinDatos || userGpa === null ? "Sin datos" : userGpa.toFixed(1);
+    const cumpleNota = userGpa !== null && userGpa >= minNota;
+    rows.push({
+      campo: `Promedio mínimo ≥ ${minNota.toFixed(1)}`,
+      perfil: gpaLabel,
+      estado: sinDatos || userGpa === null ? "Pendiente" : cumpleNota ? "Cumple" : "NoCumple",
+    });
+
+    // --- Fila 2: Mérito (solo si la beca lo pide) ---
+    const reqMerito = oportunidad.reqMerito;
+    if (reqMerito && reqMerito !== "ninguno") {
+      rows.push({
+        campo: `Mérito: ${labelMerito(reqMerito)}`,
+        perfil: sinDatos || !userMerito ? "Sin datos" : labelMerito(userMerito),
+        estado: sinDatos || !userMerito ? "Pendiente" : cumpleMerito(reqMerito, userMerito) ? "Cumple" : "NoCumple",
+      });
+    }
+
+    // --- Fila 3: SISFOH (solo si la beca lo pide) ---
+    const reqSisfoh = oportunidad.reqSisfoh;
+    if (reqSisfoh && reqSisfoh !== "Cualquiera") {
+      rows.push({
+        campo: `SISFOH: ${reqSisfoh}`,
+        perfil: sinDatos || !userSisfoh ? "Sin datos" : userSisfoh,
+        estado: sinDatos || !userSisfoh ? "Pendiente" : cumpleSisfoh(reqSisfoh, userSisfoh) ? "Cumple" : "NoCumple",
+      });
+    }
+
+    // --- Fila 4: Tipo de colegio (solo si la beca lo pide) ---
+    const reqColegio = oportunidad.reqTipoColegio;
+    if (reqColegio && reqColegio !== "Cualquiera") {
+      const cumpleColegio = userColegio === reqColegio;
+      rows.push({
+        campo: `Colegio de origen: ${reqColegio}`,
+        perfil: sinDatos || !userColegio ? "Sin datos" : userColegio,
+        estado: sinDatos || !userColegio ? "Pendiente" : cumpleColegio ? "Cumple" : "NoCumple",
+      });
+    }
+
+    // --- Fila 5: Voluntariado (solo si la beca lo prioriza) ---
+    if (oportunidad.priorizaVoluntariado) {
+      rows.push({
+        campo: "Experiencia en Voluntariado",
+        perfil: sinDatos || userVoluntariado === null ? "Sin datos" : userVoluntariado ? "Sí" : "No",
+        estado: sinDatos || userVoluntariado === null ? "Pendiente" : userVoluntariado ? "Cumple" : "NoCumple",
+      });
+    }
+
+    // --- Fila 6: Deportista (solo si la beca lo prioriza) ---
+    if (oportunidad.priorizaDeportista) {
+      rows.push({
+        campo: "Deportista de Alta Competencia",
+        perfil: sinDatos || userDeportista === null ? "Sin datos" : userDeportista ? "Sí" : "No",
+        estado: sinDatos || userDeportista === null ? "Pendiente" : userDeportista ? "Cumple" : "NoCumple",
+      });
+    }
+
+    // --- Fila 7: Género (solo si la beca es exclusiva para mujeres) ---
+    if (oportunidad.requiereMujeres) {
+      rows.push({
+        campo: "Beca exclusiva para mujeres",
+        perfil: sinDatos || !userGenero ? "Sin datos" : userGenero,
+        estado: sinDatos || !userGenero ? "Pendiente" : userGenero === "Femenino" ? "Cumple" : "NoCumple",
+      });
+    }
+
+    // --- Fila 8: Nivel de inglés (solo para becas de Idioma) ---
+    if (oportunidad.level === "Idioma") {
+      rows.push({
+        campo: "Nivel de Inglés requerido",
+        perfil: sinDatos || !userIngles ? "Sin datos" : userIngles,
+        estado: sinDatos || !userIngles ? "Pendiente" : (userIngles === "B2" || userIngles === "C1" || userIngles === "C2") ? "Cumple" : "NoCumple",
+      });
+    }
+
+    // Si no hay ninguna fila de criterio específico, mostrar mínimo la nota
+    if (rows.length === 0) {
+      rows.push({
+        campo: "Promedio mínimo ≥ 11.0",
+        perfil: gpaLabel,
+        estado: "Pendiente",
+      });
+    }
+
+    return rows;
   };
 
   // Delete a postulation from Supabase and update local state
@@ -323,6 +493,20 @@ export default function BuscarOportunidades() {
     }
   };
 
+  // Helper: clase de color del badge de afinidad según score real
+  const getAffinityBadgeClass = (score: number): string => {
+    if (score >= 85) return "badge b-green";
+    if (score >= 60) return "badge b-blue";
+    return "badge b-slate";
+  };
+
+  // Helper: etiqueta textual de afinidad
+  const getAffinityLabel = (score: number): string => {
+    if (score >= 85) return `${score}% Alta Afinidad`;
+    if (score >= 60) return `${score}% Afinidad`;
+    return `${score}% Baja Afinidad`;
+  };
+
   // Filter and search logic
   const filteredOportunidades = oportunidades.filter((oportunidad) => {
     if (activeOportunidadesTab === "guardadas") {
@@ -337,7 +521,8 @@ export default function BuscarOportunidades() {
       oportunidad.sponsor.toLowerCase().includes(searchQuery.toLowerCase()) ||
       oportunidad.requirement.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesProfile = !isProfileFilterActive || oportunidad.affinity >= 85;
+    // Umbral 70 porque ahora es score real, no un 85 fijo hardcodeado
+
 
     // 1. Tipo de Programa
     const matchesProgram =
@@ -374,7 +559,6 @@ export default function BuscarOportunidades() {
 
     return (
       matchesSearch &&
-      matchesProfile &&
       matchesProgram &&
       matchesFinancing &&
       matchesGestion &&
@@ -416,24 +600,6 @@ export default function BuscarOportunidades() {
 
           {/* 2. Grupo de Acciones (shrink-0 evita que se aplasten) */}
           <div className="flex items-center gap-6 shrink-0">
-            {/* Toggle de Perfil */}
-            <div className="flex items-center gap-sm">
-              <span className="t-xs bold hidden sm:inline text-navy">
-                Filtrar por mi Perfil
-              </span>
-              <button
-                className={`w-10 h-5 rounded-full relative transition-colors duration-200 cursor-pointer ${
-                  isProfileFilterActive ? "bg-[#1a3a7c]" : "bg-[#e2e8f0]"
-                }`}
-                onClick={() => setIsProfileFilterActive(!isProfileFilterActive)}
-              >
-                <div
-                  className={`absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
-                    isProfileFilterActive ? "translate-x-5" : ""
-                  }`}
-                />
-              </button>
-            </div>
 
             {/* Botón de Filtros */}
             <button
@@ -504,7 +670,36 @@ export default function BuscarOportunidades() {
         </div>
 
         {/* Results Grid - Scrollable and highly responsive */}
-        {filteredOportunidades.length === 0 ? (
+        {/* Skeleton de carga — 6 tarjetas animadas */}
+        {isLoadingBecas ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="card flex flex-col gap-3"
+                style={{ borderRadius: "var(--r-md)", minHeight: 200 }}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="w-10 h-10 rounded-[12px] bg-[#e2e8f0] animate-pulse" />
+                  <div className="w-6 h-6 rounded-full bg-[#e2e8f0] animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 w-24 rounded bg-[#e2e8f0] animate-pulse" />
+                  <div className="h-5 w-4/5 rounded bg-[#e2e8f0] animate-pulse" />
+                  <div className="h-4 w-2/5 rounded bg-[#e2e8f0] animate-pulse" />
+                </div>
+                <div className="space-y-2 mt-2">
+                  <div className="h-3 w-full rounded bg-[#e2e8f0] animate-pulse" />
+                  <div className="h-3 w-full rounded bg-[#e2e8f0] animate-pulse" />
+                  <div className="h-3 w-3/5 rounded bg-[#e2e8f0] animate-pulse" />
+                </div>
+                <div className="mt-auto pt-2 border-t border-[#e2e8f0]">
+                  <div className="h-4 w-28 rounded bg-[#e2e8f0] animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredOportunidades.length === 0 ? (
           <div className="card text-center max-w-md mx-auto my-8 w-full">
             {activeOportunidadesTab === "guardadas" ? (
               <>
@@ -550,11 +745,12 @@ export default function BuscarOportunidades() {
               </>
             )}
           </div>
-        ) : (
+        ) : isLoadingBecas ? null : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
               {paginatedOportunidades.map((oportunidad) => {
-                const affinityClass = oportunidad.affinity >= 90 ? "badge b-green" : "badge b-blue";
+                const affinityClass = getAffinityBadgeClass(oportunidad.affinity);
+                const affinityLabel = getAffinityLabel(oportunidad.affinity);
 
                 const isSaved = savedBecaIds.includes(oportunidad.id);
                 const isApplied = appliedBecaIds.includes(oportunidad.id);
@@ -599,8 +795,11 @@ export default function BuscarOportunidades() {
 
                       <div className="mb-3">
                         <div className="flex items-center gap-xs mb-1 flex-wrap">
-                          <span className={`${affinityClass}`}>
-                            {oportunidad.affinity}% Afinidad
+                          <span
+                            className={`${affinityClass}`}
+                            title={`Afinidad calculada: Académico 40% + Socioeconómico 30% + Extracurricular 20% + Perfil 10%`}
+                          >
+                            {affinityLabel}
                           </span>
                           <span className="badge b-slate">
                             {oportunidad.level}
@@ -1015,6 +1214,17 @@ export default function BuscarOportunidades() {
                 <h3 className="t-md bold border-l-4 border-[#1a3a7c] pl-2 text-[#0F2554]">
                   Cruce de Requisitos
                 </h3>
+
+                {/* Banner si el perfil no está completo */}
+                {!profile && (
+                  <div className="flex items-center gap-2 bg-[#fef3c7] border border-[#d97706]/30 rounded-[8px] px-3 py-2 mb-2">
+                    <span className="material-symbols-outlined text-[#d97706] text-sm">info</span>
+                    <p className="t-xs text-[#92400e]">
+                      <span className="font-semibold">Completa tu perfil</span> para ver el cruce real de requisitos con tus datos.
+                    </p>
+                  </div>
+                )}
+
                 <div className="bg-white rounded-[12px] overflow-hidden border border-[#e2e8f0] p-3">
                   <table className="tbl">
                     <thead>
@@ -1034,6 +1244,10 @@ export default function BuscarOportunidades() {
                               <span className="s-ok bold">
                                 <span className="material-symbols-outlined text-xs">check_circle</span> Cumple
                               </span>
+                            ) : req.estado === "NoCumple" ? (
+                              <span className="bold" style={{ color: "#991b1b", display: "flex", alignItems: "center", gap: "3px", fontSize: "11px" }}>
+                                <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>cancel</span> No cumple
+                              </span>
                             ) : (
                               <span className="s-warn bold">
                                 <span className="material-symbols-outlined text-xs">pending</span> Pendiente
@@ -1046,6 +1260,7 @@ export default function BuscarOportunidades() {
                   </table>
                 </div>
               </section>
+
             </div>
 
             <div className="p-4 bg-white border-t border-[#e2e8f0] flex gap-3 sticky bottom-0 z-10">

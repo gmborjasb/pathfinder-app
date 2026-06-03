@@ -7,9 +7,21 @@ interface UserProfile {
   dni: string | null;
   nombres: string;
   correo: string;
+  // Nuevas columnas directas
+  fecha_nacimiento?: string | null;
+  genero?: string | null;
+  merito_academico?: string | null;
+  area_interes?: string | null;
+  tiene_conadis?: boolean;
+  es_deportista?: boolean;
+  hace_voluntariado?: boolean;
+  hijo_docente?: boolean;
+  acepta_privacidad?: boolean;
+  privacidad_fecha?: string | null;
   perfil_detalles: {
     tipo_colegio?: string;
     sisfoh?: string;
+    sisfoh_fecha_vencimiento?: string;
     departamento?: string;
     provincia?: string;
     distrito?: string;
@@ -18,11 +30,25 @@ interface UserProfile {
     nivelPerfil?: number;
     notas?: {
       gpa?: number;
+      año3?: number;
+      año4?: number;
+      año5?: number;
+    };
+    colegio?: {
+      ano_egreso?: string;
     };
     idiomas?: {
       nivelIngles?: string;
       instituto?: string;
+      certificacion_oficial?: boolean;
     };
+    area_interes?: string;
+    merito_academico?: string;
+    hace_voluntariado?: boolean;
+    es_deportista?: boolean;
+    tiene_liderazgo?: boolean;
+    tiene_emprendimiento?: boolean;
+    acepta_privacidad?: boolean;
   };
   created_at?: string;
 }

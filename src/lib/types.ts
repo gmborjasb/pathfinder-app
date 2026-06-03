@@ -46,12 +46,29 @@ export interface PerfilData {
   nombres: string;
   dni: string;
   correo: string;
+  // Sección A — nuevos
+  fechaNacimiento?: string;
+  genero?: string;
+  // Sección B
   tipoColegio: string;
+  anoEgreso?: string;
+  meritoAcademico?: string;   // 'quinto' | 'tercio' | 'medio'
+  areaInteres?: string;
+  // Sección C
   sisfoh: string;
+  sisfohFechaVencimiento?: string;
   departamento: string;
   provincia: string;
   distrito: string;
   condiciones: Record<string, boolean>;
+  tieneConadis?: boolean;
+  hijoDocente?: boolean;
+  // Sección D
+  haceVoluntariado?: boolean;
+  esDeportista?: boolean;
+  tieneLiderazgo?: boolean;
+  tieneEmprendimiento?: boolean;
+  // General
   institucionActual: string;
   notas: {
     año3: number;
@@ -61,5 +78,7 @@ export interface PerfilData {
   idiomas: {
     nivelIngles: string;
     instituto: string;
+    certificacionOficial?: boolean;
   };
+  aceptaPrivacidad?: boolean;
 }

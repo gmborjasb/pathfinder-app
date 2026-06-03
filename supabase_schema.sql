@@ -107,6 +107,32 @@ CREATE TABLE IF NOT EXISTS public.talleres (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- =========================================================================
+-- 1b. NUEVAS COLUMNAS — PERFIL EXTENDIDO
+-- =========================================================================
+
+-- Tabla usuarios: campos de perfil extendido
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS fecha_nacimiento DATE;
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS genero VARCHAR(30);
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS merito_academico VARCHAR(20);   -- 'quinto'|'tercio'|'medio'
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS area_interes VARCHAR(50);
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS tiene_conadis BOOLEAN DEFAULT false;
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS es_deportista BOOLEAN DEFAULT false;
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS hace_voluntariado BOOLEAN DEFAULT false;
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS hijo_docente BOOLEAN DEFAULT false;
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS acepta_privacidad BOOLEAN DEFAULT false;
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS privacidad_fecha TIMESTAMPTZ;
+
+-- Tabla becas: campos para cálculo dinámico de afinidad
+ALTER TABLE public.becas ADD COLUMN IF NOT EXISTS req_edad_maxima INT;
+ALTER TABLE public.becas ADD COLUMN IF NOT EXISTS req_nota_minima DECIMAL(4,2);
+ALTER TABLE public.becas ADD COLUMN IF NOT EXISTS req_sisfoh VARCHAR(20);            -- 'pobre_extremo'|'pobre'|'cualquiera'
+ALTER TABLE public.becas ADD COLUMN IF NOT EXISTS req_merito VARCHAR(20);            -- 'quinto'|'tercio'|'medio'
+ALTER TABLE public.becas ADD COLUMN IF NOT EXISTS prioriza_voluntariado BOOLEAN DEFAULT false;
+ALTER TABLE public.becas ADD COLUMN IF NOT EXISTS prioriza_deportista BOOLEAN DEFAULT false;
+
+-- =========================================================================
+
 -- Vincular clave foránea en Postulaciones a Becas de manera segura
 ALTER TABLE public.postulaciones DROP CONSTRAINT IF EXISTS fk_postulaciones_beca;
 ALTER TABLE public.postulaciones 

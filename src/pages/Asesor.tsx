@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabaseClient";
+import { getBecasRecomendadas } from "../services/recomendaciones";
+import type { BecaRecomendada } from "../services/recomendaciones";
 
 interface Message {
   id: string;
@@ -29,6 +31,7 @@ export default function Asesor() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [useLocalFallback, setUseLocalFallback] = useState(false);
+  const [recomendaciones, setRecomendaciones] = useState<BecaRecomendada[]>([]);
 
   // Rename state
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -111,6 +114,20 @@ export default function Asesor() {
     };
 
     fetchContext();
+  }, [user]);
+
+  // ── Fetch top recommended becas for advisor context ───────────────────────
+  useEffect(() => {
+    const fetchRecomendaciones = async () => {
+      if (!user) return;
+      try {
+        const data = await getBecasRecomendadas(user.id);
+        setRecomendaciones(data.slice(0, 5));
+      } catch (err) {
+        console.error("Error al cargar becas afines para el chat:", err);
+      }
+    };
+    fetchRecomendaciones();
   }, [user]);
 
   // ── Session helpers ───────────────────────────────────────────────────────
@@ -418,6 +435,134 @@ export default function Asesor() {
     }
   };
 
+  const fetchIAContextualResponse = async (userText: string, currentMessages: Message[]) => {
+    setIsTyping(true);
+
+    const apiKey = import.meta.env.VITE_AI_API_KEY;
+
+    // Si no hay API Key de Groq, intentamos usar Ollama como fallback secundario o el simulador local
+    if (!apiKey) {
+      const savedUrl = localStorage.getItem("pathfinder_ollama_url") || "";
+      if (savedUrl) {
+        await fetchOllamaResponse(userText, currentMessages);
+      } else {
+        simulateAiResponseFallback(userText, currentMessages);
+      }
+      return;
+    }
+
+    const name = profile?.nombres || "Estudiante";
+    const gpa = profile?.perfil_detalles?.notas?.gpa || "No registrado";
+    const sisfoh = profile?.perfil_detalles?.sisfoh || "No registrado";
+    const colegio = profile?.perfil_detalles?.tipo_colegio || "No registrado";
+    const merito = profile?.merito_academico || "No registrado";
+    const voluntariado = profile?.hace_voluntariado ? "Sí" : "No";
+    const deportista = profile?.es_deportista ? "Sí" : "No";
+    const ingles = profile?.perfil_detalles?.idiomas?.nivelIngles || "No registrado";
+
+    let promptSistema = `Eres Motibot, un mentor virtual y asistente motivacional diseñado exclusivamente para apoyar a estudiantes de colegio en su camino académico y personal. Tu propósito es ser un guía inspirador que ayude a los alumnos a mantener el enfoque, superar obstáculos, conseguir becas y recordar por qué sus metas son importantes.
+
+Al contestar, debes seguir estas reglas estrictas:
+
+- Tono y Lenguaje: Debes usar un lenguaje cercano, empático y muy alentador. No hables de forma demasiado rígida, sino como un mentor joven y sabio que entiende las presiones escolares y la búsqueda de oportunidades.
+- Uso de Emojis: ¡Es obligatorio! Usa emojis que transmitan energía positiva y estudio (🚀, 📚, ✨, 💪, 🎓) para que la conversación sea visualmente atractiva para los jóvenes.
+- Enfoque en Metas y Becas: Siempre que el estudiante mencione un objetivo (ej. "quiero pasar matemáticas", "ser ingeniero" o "ganar una beca"), recuérdale su capacidad y dale un pequeño consejo práctico o una frase motivadora relacionada.
+- Restricción de Contenido: No debes responder preguntas que no tengan que ver con estudios, becas, motivación, gestión del tiempo, bienestar estudiantil o crecimiento personal. Si te preguntan algo fuera de este ámbito, redirige la charla hacia sus metas académicas de forma amable. NO RESPONDAS PREGUNTAS QUE NO TENGAN QUE VER CON ESTUDIOS, SI TE PREGUNTAN ALGO AJENO SIMPLEMENTE DÍ QUE TU PROPOSITO ES SER UN AYUDANTE ACADÉMICO.
+- Identidad: Siempre preséntate o actúa como Motibot, el compañero que nunca deja que se rindan.
+
+Te estás comunicando con el estudiante ${name}. Aquí tienes su perfil académico y personal actual:
+- Promedio académico (GPA): ${gpa}
+- Clasificación socioeconómica (SISFOH): ${sisfoh}
+- Colegio de procedencia: ${colegio}
+- Mérito académico: ${merito}
+- Realiza voluntariado: ${voluntariado}
+- Deportista calificado: ${deportista}
+- Nivel de inglés: ${ingles}
+
+`;
+
+    if (becaCtx) {
+      promptSistema += `El estudiante tiene una beca objetivo activa a la que está postulando:
+- Beca objetivo: "${becaCtx.titulo}" (Sponsor: ${becaCtx.sponsor})
+`;
+      if (diasRestantes !== null) {
+        promptSistema += `- Días restantes para el cierre: ${diasRestantes} días.
+`;
+      }
+      if (docsRechazados > 0) {
+        promptSistema += `- ALERTA CRÍTICA: Tiene ${docsRechazados} documento(s) RECHAZADO(S) en su mochila. Recuérdale con mucho ánimo que debe corregirlos a tiempo para no perder esta gran oportunidad.
+`;
+      }
+    }
+
+    if (recomendaciones && recomendaciones.length > 0) {
+      promptSistema += `
+Aquí tienes las 5 becas de la base de datos de Pathfinder más afines a su perfil (ordenadas de mayor a menor afinidad). Úsalas para sugerírselas de forma motivadora si te pregunta por becas o si se alinean con sus metas académicas:
+`;
+      recomendaciones.forEach((b, index) => {
+        promptSistema += `${index + 1}. "${b.titulo}" (Sponsor: ${b.sponsor}) | Afinidad: ${b.afinidad_calculada}% | Cobertura: ${b.cobertura} | Requisitos: ${b.requisitos}
+`;
+      });
+    }
+
+    // Unimos el historial en el formato esperado por Groq (OpenAI format)
+    const mensajesParaEnviar = [
+      { role: "system", content: promptSistema },
+      ...currentMessages.map(msg => ({
+        role: msg.sender === "user" ? "user" : "assistant",
+        content: msg.text
+      }))
+    ];
+
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: mensajesParaEnviar,
+          temperature: 0.7
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Groq API error: ${response.status}`);
+      }
+
+      const datos = await response.json();
+      const textoRespuesta = datos.choices[0].message.content || "No pude generar una respuesta. 🤖";
+
+      const nextMessages: Message[] = [
+        ...currentMessages,
+        { id: `ai-${Date.now()}`, sender: "ai", text: textoRespuesta, timestamp: new Date() }
+      ];
+
+      setMessages(nextMessages);
+      setIsTyping(false);
+      saveChatSession(nextMessages);
+
+    } catch (error) {
+      console.error("Error al conectar con Groq API:", error);
+      // Fallback a Ollama si está configurado, o simulador local
+      const savedUrl = localStorage.getItem("pathfinder_ollama_url") || "";
+      if (savedUrl) {
+        await fetchOllamaResponse(userText, currentMessages);
+      } else {
+        setIsTyping(false);
+        const errorMsg: Message = {
+          id: `ai-err-${Date.now()}`,
+          sender: "ai",
+          text: "Ups, tuve un problema técnico al conectarme con Motibot. ¿Podrías intentar enviar tu mensaje de nuevo? 🤖",
+          timestamp: new Date()
+        };
+        setMessages([...currentMessages, errorMsg]);
+      }
+    }
+  };
+
   const handleSend = (text: string) => {
     if (!text.trim()) return;
     const newMsg: Message = { id: `user-${Date.now()}`, sender: "user", text, timestamp: new Date() };
@@ -425,7 +570,7 @@ export default function Asesor() {
     setMessages(updated);
     setInputValue("");
     saveChatSession(updated);
-    fetchOllamaResponse(text, updated);
+    fetchIAContextualResponse(text, updated);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

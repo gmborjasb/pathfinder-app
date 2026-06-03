@@ -20,15 +20,17 @@ export default function BuscarOportunidades() {
   const lastUserId = useRef<string | null>(null);
 
   const [isFiltersDrawerOpen, setIsFiltersDrawerOpen] = useState(false);
-  const [selectedOportunidad, setSelectedOportunidad] = useState<Oportunidad | null>(null);
+  const [selectedOportunidad, setSelectedOportunidad] =
+    useState<Oportunidad | null>(null);
 
   // Estados para filtros avanzados y paginación
-  const [selectedProgramTypes, setSelectedProgramTypes] = useState<string[]>([]);
+  const [selectedProgramTypes, setSelectedProgramTypes] = useState<string[]>(
+    [],
+  );
   const [selectedFinancing, setSelectedFinancing] = useState<string>("todos");
   const [selectedGestiones, setSelectedGestiones] = useState<string[]>([]);
   const [selectedDestinos, setSelectedDestinos] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
-
 
   // Mappers ---------------------------------------------------------------
   const mapRPCToOportunidad = (rows: BecaRecomendada[]): Oportunidad[] =>
@@ -117,7 +119,10 @@ export default function BuscarOportunidades() {
           recomendacionesCargadas.current = true;
           lastUserId.current = userId;
         } catch (fallbackErr) {
-          console.error("[BuscarOportunidades] Fallback también falló:", fallbackErr);
+          console.error(
+            "[BuscarOportunidades] Fallback también falló:",
+            fallbackErr,
+          );
         }
       } finally {
         setIsLoadingBecas(false);
@@ -125,10 +130,12 @@ export default function BuscarOportunidades() {
     };
 
     fetchBecas();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const [activeOportunidadesTab, setActiveOportunidadesTab] = useState<"explorar" | "guardadas" | "postuladas">(() => {
+  const [activeOportunidadesTab, setActiveOportunidadesTab] = useState<
+    "explorar" | "guardadas" | "postuladas"
+  >(() => {
     const storedTab = localStorage.getItem("pathfinder_search_tab");
     if (storedTab === "guardadas" || storedTab === "postuladas") {
       localStorage.removeItem("pathfinder_search_tab");
@@ -144,7 +151,11 @@ export default function BuscarOportunidades() {
   const [savedBecaIds, setSavedBecaIds] = useState<string[]>(() => {
     const saved = localStorage.getItem("pathfinder_saved_becas");
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
     }
     return [];
   });
@@ -155,7 +166,12 @@ export default function BuscarOportunidades() {
   // Load saved becas from Supabase on mount
   useEffect(() => {
     const loadSavedBecas = async () => {
-      if (!user || !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder")) return;
+      if (
+        !user ||
+        !import.meta.env.VITE_SUPABASE_URL ||
+        import.meta.env.VITE_SUPABASE_URL.includes("placeholder")
+      )
+        return;
       try {
         const { data, error } = await supabase
           .from("becas_guardadas")
@@ -176,7 +192,12 @@ export default function BuscarOportunidades() {
   // Load applied becas from Supabase postulaciones table
   useEffect(() => {
     const loadAppliedBecas = async () => {
-      if (!user || !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder")) return;
+      if (
+        !user ||
+        !import.meta.env.VITE_SUPABASE_URL ||
+        import.meta.env.VITE_SUPABASE_URL.includes("placeholder")
+      )
+        return;
       try {
         const { data, error } = await supabase
           .from("postulaciones")
@@ -265,7 +286,7 @@ export default function BuscarOportunidades() {
     selectedFinancing,
     selectedGestiones,
     selectedDestinos,
-    activeOportunidadesTab
+    activeOportunidadesTab,
   ]);
 
   // Toggle Save (Favorite) — syncs with Supabase becas_guardadas table
@@ -279,19 +300,38 @@ export default function BuscarOportunidades() {
 
     setSavedBecaIds(updated);
     localStorage.setItem("pathfinder_saved_becas", JSON.stringify(updated));
-    setToastMessage(isSaved ? "Beca eliminada de tus guardados." : "¡Beca guardada con éxito!");
+    setToastMessage(
+      isSaved
+        ? "Beca eliminada de tus guardados."
+        : "¡Beca guardada con éxito!",
+    );
     setShowSuccessToast(true);
     setTimeout(() => setShowSuccessToast(false), 3000);
 
-    if (!user || !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder")) return;
+    if (
+      !user ||
+      !import.meta.env.VITE_SUPABASE_URL ||
+      import.meta.env.VITE_SUPABASE_URL.includes("placeholder")
+    )
+      return;
     try {
       if (isSaved) {
-        await supabase.from("becas_guardadas").delete().eq("usuario_id", user.id).eq("beca_id", id);
+        await supabase
+          .from("becas_guardadas")
+          .delete()
+          .eq("usuario_id", user.id)
+          .eq("beca_id", id);
       } else {
         const { data: existing } = await supabase
-          .from("becas_guardadas").select("id").eq("usuario_id", user.id).eq("beca_id", id).maybeSingle();
+          .from("becas_guardadas")
+          .select("id")
+          .eq("usuario_id", user.id)
+          .eq("beca_id", id)
+          .maybeSingle();
         if (!existing) {
-          await supabase.from("becas_guardadas").insert([{ usuario_id: user.id, beca_id: id }]);
+          await supabase
+            .from("becas_guardadas")
+            .insert([{ usuario_id: user.id, beca_id: id }]);
         }
       }
     } catch (err) {
@@ -313,7 +353,11 @@ export default function BuscarOportunidades() {
     localStorage.setItem("pathfinder_applied_becas", JSON.stringify(updated));
 
     // Also persist to Supabase so MisPostulaciones can read it
-    if (user && import.meta.env.VITE_SUPABASE_URL && !import.meta.env.VITE_SUPABASE_URL.includes("placeholder")) {
+    if (
+      user &&
+      import.meta.env.VITE_SUPABASE_URL &&
+      !import.meta.env.VITE_SUPABASE_URL.includes("placeholder")
+    ) {
       try {
         // Check if already exists
         const { data: existing } = await supabase
@@ -338,7 +382,9 @@ export default function BuscarOportunidades() {
       }
     }
 
-    setToastMessage("¡Postulación enviada con éxito! Revisa tu pestaña 'Mis Postulaciones'.");
+    setToastMessage(
+      "¡Postulación enviada con éxito! Revisa tu pestaña 'Mis Postulaciones'.",
+    );
     setShowSuccessToast(true);
     setTimeout(() => setShowSuccessToast(false), 3000);
     closeAllDrawers();
@@ -346,7 +392,11 @@ export default function BuscarOportunidades() {
 
   // Genera las filas del cruce de requisitos usando datos reales del perfil
   const generateRequisitos = (oportunidad: Oportunidad) => {
-    const rows: { campo: string; perfil: string; estado: "Cumple" | "NoCumple" | "Pendiente" }[] = [];
+    const rows: {
+      campo: string;
+      perfil: string;
+      estado: "Cumple" | "NoCumple" | "Pendiente";
+    }[] = [];
     const sinDatos = !profile;
 
     // --- Helpers de perfil ---
@@ -362,15 +412,22 @@ export default function BuscarOportunidades() {
     const userIngles = profile?.perfil_detalles?.idiomas?.nivelIngles ?? null;
 
     // Helpers de cumplimiento SISFOH (jerarquía: Pobreza Extrema ⊂ Pobre)
-    const cumpleSisfoh = (req: string | null | undefined, user: string | null): boolean => {
+    const cumpleSisfoh = (
+      req: string | null | undefined,
+      user: string | null,
+    ): boolean => {
       if (!req || req === "Cualquiera") return true;
       if (!user) return false;
-      if (req === "Pobre") return user === "Pobre" || user === "Pobreza Extrema";
+      if (req === "Pobre")
+        return user === "Pobre" || user === "Pobreza Extrema";
       return req === user;
     };
 
     // Helper de mérito (quinto ⊂ tercio ⊂ medio)
-    const cumpleMerito = (req: string | null | undefined, user: string | null): boolean => {
+    const cumpleMerito = (
+      req: string | null | undefined,
+      user: string | null,
+    ): boolean => {
       if (!req || req === "ninguno") return true;
       if (!user) return false;
       if (req === "tercio") return user === "quinto" || user === "tercio";
@@ -388,12 +445,18 @@ export default function BuscarOportunidades() {
 
     // --- Fila 1: Nota mínima (siempre visible) ---
     const minNota = oportunidad.reqNotaMinima ?? 11.0;
-    const gpaLabel = sinDatos || userGpa === null ? "Sin datos" : userGpa.toFixed(1);
+    const gpaLabel =
+      sinDatos || userGpa === null ? "Sin datos" : userGpa.toFixed(1);
     const cumpleNota = userGpa !== null && userGpa >= minNota;
     rows.push({
       campo: `Promedio mínimo ≥ ${minNota.toFixed(1)}`,
       perfil: gpaLabel,
-      estado: sinDatos || userGpa === null ? "Pendiente" : cumpleNota ? "Cumple" : "NoCumple",
+      estado:
+        sinDatos || userGpa === null
+          ? "Pendiente"
+          : cumpleNota
+            ? "Cumple"
+            : "NoCumple",
     });
 
     // --- Fila 2: Mérito (solo si la beca lo pide) ---
@@ -402,7 +465,12 @@ export default function BuscarOportunidades() {
       rows.push({
         campo: `Mérito: ${labelMerito(reqMerito)}`,
         perfil: sinDatos || !userMerito ? "Sin datos" : labelMerito(userMerito),
-        estado: sinDatos || !userMerito ? "Pendiente" : cumpleMerito(reqMerito, userMerito) ? "Cumple" : "NoCumple",
+        estado:
+          sinDatos || !userMerito
+            ? "Pendiente"
+            : cumpleMerito(reqMerito, userMerito)
+              ? "Cumple"
+              : "NoCumple",
       });
     }
 
@@ -412,7 +480,12 @@ export default function BuscarOportunidades() {
       rows.push({
         campo: `SISFOH: ${reqSisfoh}`,
         perfil: sinDatos || !userSisfoh ? "Sin datos" : userSisfoh,
-        estado: sinDatos || !userSisfoh ? "Pendiente" : cumpleSisfoh(reqSisfoh, userSisfoh) ? "Cumple" : "NoCumple",
+        estado:
+          sinDatos || !userSisfoh
+            ? "Pendiente"
+            : cumpleSisfoh(reqSisfoh, userSisfoh)
+              ? "Cumple"
+              : "NoCumple",
       });
     }
 
@@ -423,7 +496,12 @@ export default function BuscarOportunidades() {
       rows.push({
         campo: `Colegio de origen: ${reqColegio}`,
         perfil: sinDatos || !userColegio ? "Sin datos" : userColegio,
-        estado: sinDatos || !userColegio ? "Pendiente" : cumpleColegio ? "Cumple" : "NoCumple",
+        estado:
+          sinDatos || !userColegio
+            ? "Pendiente"
+            : cumpleColegio
+              ? "Cumple"
+              : "NoCumple",
       });
     }
 
@@ -431,8 +509,18 @@ export default function BuscarOportunidades() {
     if (oportunidad.priorizaVoluntariado) {
       rows.push({
         campo: "Experiencia en Voluntariado",
-        perfil: sinDatos || userVoluntariado === null ? "Sin datos" : userVoluntariado ? "Sí" : "No",
-        estado: sinDatos || userVoluntariado === null ? "Pendiente" : userVoluntariado ? "Cumple" : "NoCumple",
+        perfil:
+          sinDatos || userVoluntariado === null
+            ? "Sin datos"
+            : userVoluntariado
+              ? "Sí"
+              : "No",
+        estado:
+          sinDatos || userVoluntariado === null
+            ? "Pendiente"
+            : userVoluntariado
+              ? "Cumple"
+              : "NoCumple",
       });
     }
 
@@ -440,8 +528,18 @@ export default function BuscarOportunidades() {
     if (oportunidad.priorizaDeportista) {
       rows.push({
         campo: "Deportista de Alta Competencia",
-        perfil: sinDatos || userDeportista === null ? "Sin datos" : userDeportista ? "Sí" : "No",
-        estado: sinDatos || userDeportista === null ? "Pendiente" : userDeportista ? "Cumple" : "NoCumple",
+        perfil:
+          sinDatos || userDeportista === null
+            ? "Sin datos"
+            : userDeportista
+              ? "Sí"
+              : "No",
+        estado:
+          sinDatos || userDeportista === null
+            ? "Pendiente"
+            : userDeportista
+              ? "Cumple"
+              : "NoCumple",
       });
     }
 
@@ -450,7 +548,12 @@ export default function BuscarOportunidades() {
       rows.push({
         campo: "Beca exclusiva para mujeres",
         perfil: sinDatos || !userGenero ? "Sin datos" : userGenero,
-        estado: sinDatos || !userGenero ? "Pendiente" : userGenero === "Femenino" ? "Cumple" : "NoCumple",
+        estado:
+          sinDatos || !userGenero
+            ? "Pendiente"
+            : userGenero === "Femenino"
+              ? "Cumple"
+              : "NoCumple",
       });
     }
 
@@ -459,7 +562,12 @@ export default function BuscarOportunidades() {
       rows.push({
         campo: "Nivel de Inglés requerido",
         perfil: sinDatos || !userIngles ? "Sin datos" : userIngles,
-        estado: sinDatos || !userIngles ? "Pendiente" : (userIngles === "B2" || userIngles === "C1" || userIngles === "C2") ? "Cumple" : "NoCumple",
+        estado:
+          sinDatos || !userIngles
+            ? "Pendiente"
+            : userIngles === "B2" || userIngles === "C1" || userIngles === "C2"
+              ? "Cumple"
+              : "NoCumple",
       });
     }
 
@@ -481,7 +589,12 @@ export default function BuscarOportunidades() {
     setShowDeleteModal(false);
     setPendingDeleteId(null);
 
-    if (!user || !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder")) return;
+    if (
+      !user ||
+      !import.meta.env.VITE_SUPABASE_URL ||
+      import.meta.env.VITE_SUPABASE_URL.includes("placeholder")
+    )
+      return;
     try {
       await supabase
         .from("postulaciones")
@@ -520,9 +633,6 @@ export default function BuscarOportunidades() {
       oportunidad.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       oportunidad.sponsor.toLowerCase().includes(searchQuery.toLowerCase()) ||
       oportunidad.requirement.toLowerCase().includes(searchQuery.toLowerCase());
-
-    // Umbral 70 porque ahora es score real, no un 85 fijo hardcodeado
-
 
     // 1. Tipo de Programa
     const matchesProgram =
@@ -571,7 +681,10 @@ export default function BuscarOportunidades() {
   const totalPages = Math.ceil(filteredOportunidades.length / ITEMS_PER_PAGE);
   const activePage = Math.min(currentPage, Math.max(1, totalPages));
   const startIndex = (activePage - 1) * ITEMS_PER_PAGE;
-  const paginatedOportunidades = filteredOportunidades.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const paginatedOportunidades = filteredOportunidades.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
 
   // Scroll suave hacia arriba al cambiar de página
   useEffect(() => {
@@ -583,7 +696,6 @@ export default function BuscarOportunidades() {
       {/* TopNavBar */}
       <header className="sticky top-0 right-0 w-full z-40 bg-white border-b border-[#e2e8f0] h-14 flex justify-between items-center px-6">
         <div className="flex items-center justify-between w-full gap-4">
-          
           {/* 1. Buscador (flex-1 hace que ocupe todo el espacio sobrante hasta max-w-3xl) */}
           <div className="relative w-full md:flex-1 max-w-3xl flex items-center">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-2 text-[16px]">
@@ -600,7 +712,6 @@ export default function BuscarOportunidades() {
 
           {/* 2. Grupo de Acciones (shrink-0 evita que se aplasten) */}
           <div className="flex items-center gap-6 shrink-0">
-
             {/* Botón de Filtros */}
             <button
               onClick={() => setIsFiltersDrawerOpen(true)}
@@ -610,24 +721,26 @@ export default function BuscarOportunidades() {
               <span>Filtros</span>
             </button>
           </div>
-
         </div>
       </header>
 
       {/* Body Content */}
       <div className="p-md md:p-margin-desktop max-w-7xl mx-auto space-y-lg w-full">
-
         <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-sm border-b border-[#e2e8f0] pb-3">
           <div>
             <h2 className="t-lg bold leading-none">
-              {activeOportunidadesTab === "explorar" && "Oportunidades Disponibles"}
+              {activeOportunidadesTab === "explorar" &&
+                "Oportunidades Disponibles"}
               {activeOportunidadesTab === "guardadas" && "Mis Becas Guardadas"}
               {activeOportunidadesTab === "postuladas" && "Mis Postulaciones"}
             </h2>
             <p className="t-sm mt-1.5">
-              {activeOportunidadesTab === "explorar" && `${filteredOportunidades.length} de ${oportunidades.length} resultados para tu perfil`}
-              {activeOportunidadesTab === "guardadas" && `${savedBecaIds.length} beca${savedBecaIds.length !== 1 ? "s" : ""} guardada${savedBecaIds.length !== 1 ? "s" : ""} — listas para postular`}
-              {activeOportunidadesTab === "postuladas" && `${appliedBecaIds.length} beca${appliedBecaIds.length !== 1 ? "s" : ""} con postulación activa`}
+              {activeOportunidadesTab === "explorar" &&
+                `${filteredOportunidades.length} de ${oportunidades.length} resultados`}
+              {activeOportunidadesTab === "guardadas" &&
+                `${savedBecaIds.length} beca${savedBecaIds.length !== 1 ? "s" : ""} guardada${savedBecaIds.length !== 1 ? "s" : ""} — listas para postular`}
+              {activeOportunidadesTab === "postuladas" &&
+                `${appliedBecaIds.length} beca${appliedBecaIds.length !== 1 ? "s" : ""} con postulación activa`}
             </p>
           </div>
 
@@ -638,14 +751,18 @@ export default function BuscarOportunidades() {
                 onClick={() => setActiveOportunidadesTab("explorar")}
                 className={`tab ${activeOportunidadesTab === "explorar" ? "on" : ""}`}
               >
-                <span className="material-symbols-outlined text-[12px] mr-1">travel_explore</span>
+                <span className="material-symbols-outlined text-[12px] mr-1">
+                  travel_explore
+                </span>
                 Explorar
               </button>
               <button
                 onClick={() => setActiveOportunidadesTab("guardadas")}
                 className={`tab ${activeOportunidadesTab === "guardadas" ? "on" : ""}`}
               >
-                <span className="material-symbols-outlined text-[12px] mr-1">favorite</span>
+                <span className="material-symbols-outlined text-[12px] mr-1">
+                  favorite
+                </span>
                 Guardadas
                 {savedBecaIds.length > 0 && (
                   <span className="badge b-red ml-1">
@@ -657,7 +774,9 @@ export default function BuscarOportunidades() {
                 onClick={() => setActiveOportunidadesTab("postuladas")}
                 className={`tab ${activeOportunidadesTab === "postuladas" ? "on" : ""}`}
               >
-                <span className="material-symbols-outlined text-[12px] mr-1">task_alt</span>
+                <span className="material-symbols-outlined text-[12px] mr-1">
+                  task_alt
+                </span>
                 Postuladas
                 {appliedBecaIds.length > 0 && (
                   <span className="badge b-blue ml-1">
@@ -703,10 +822,15 @@ export default function BuscarOportunidades() {
           <div className="card text-center max-w-md mx-auto my-8 w-full">
             {activeOportunidadesTab === "guardadas" ? (
               <>
-                <span className="material-symbols-outlined text-slate text-5xl mb-3">favorite_border</span>
-                <h3 className="t-md bold mb-1">No tienes becas guardadas aún</h3>
+                <span className="material-symbols-outlined text-slate text-5xl mb-3">
+                  favorite_border
+                </span>
+                <h3 className="t-md bold mb-1">
+                  No tienes becas guardadas aún
+                </h3>
                 <p className="t-xs mb-4">
-                  Explora las oportunidades y haz clic en ❤️ para guardar las que te interesen. Luego podrás postular con un solo clic.
+                  Explora las oportunidades y haz clic en ❤️ para guardar las
+                  que te interesen. Luego podrás postular con un solo clic.
                 </p>
                 <button
                   onClick={() => setActiveOportunidadesTab("explorar")}
@@ -717,10 +841,15 @@ export default function BuscarOportunidades() {
               </>
             ) : activeOportunidadesTab === "postuladas" ? (
               <>
-                <span className="material-symbols-outlined text-slate text-5xl mb-3">task_alt</span>
-                <h3 className="t-md bold mb-1">Aún no has postulado a ninguna beca</h3>
+                <span className="material-symbols-outlined text-slate text-5xl mb-3">
+                  task_alt
+                </span>
+                <h3 className="t-md bold mb-1">
+                  Aún no has postulado a ninguna beca
+                </h3>
                 <p className="t-xs mb-4">
-                  Guarda primero una beca y desde la pestaña "Guardadas" podrás postular. Tu progreso aparecerá en Mis Postulaciones.
+                  Guarda primero una beca y desde la pestaña "Guardadas" podrás
+                  postular. Tu progreso aparecerá en Mis Postulaciones.
                 </p>
                 <div className="flex gap-2 justify-center">
                   <button
@@ -739,9 +868,13 @@ export default function BuscarOportunidades() {
               </>
             ) : (
               <>
-                <span className="material-symbols-outlined text-slate text-5xl mb-3">search_off</span>
+                <span className="material-symbols-outlined text-slate text-5xl mb-3">
+                  search_off
+                </span>
                 <h3 className="t-md bold mb-1">Sin resultados</h3>
-                <p className="t-xs mb-4">Intenta con otros términos de búsqueda.</p>
+                <p className="t-xs mb-4">
+                  Intenta con otros términos de búsqueda.
+                </p>
               </>
             )}
           </div>
@@ -749,7 +882,9 @@ export default function BuscarOportunidades() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
               {paginatedOportunidades.map((oportunidad) => {
-                const affinityClass = getAffinityBadgeClass(oportunidad.affinity);
+                const affinityClass = getAffinityBadgeClass(
+                  oportunidad.affinity,
+                );
                 const affinityLabel = getAffinityLabel(oportunidad.affinity);
 
                 const isSaved = savedBecaIds.includes(oportunidad.id);
@@ -773,15 +908,26 @@ export default function BuscarOportunidades() {
                           <button
                             className="btn-ico"
                             title="Cancelar postulación"
-                            onClick={(e) => { e.stopPropagation(); setPendingDeleteId(oportunidad.id); setShowDeleteModal(true); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPendingDeleteId(oportunidad.id);
+                              setShowDeleteModal(true);
+                            }}
                           >
-                            <span className="material-symbols-outlined text-red" style={{ color: "var(--red)" }}>delete</span>
+                            <span
+                              className="material-symbols-outlined text-red"
+                              style={{ color: "var(--red)" }}
+                            >
+                              delete
+                            </span>
                           </button>
                         ) : (
                           <button
                             className="btn-ico"
                             onClick={(e) => handleToggleSave(oportunidad.id, e)}
-                            title={isSaved ? "Quitar de guardadas" : "Guardar beca"}
+                            title={
+                              isSaved ? "Quitar de guardadas" : "Guardar beca"
+                            }
                           >
                             <span
                               className="material-symbols-outlined"
@@ -805,17 +951,13 @@ export default function BuscarOportunidades() {
                             {oportunidad.level}
                           </span>
                           {isApplied && (
-                            <span className="badge b-blue">
-                              Postulado
-                            </span>
+                            <span className="badge b-blue">Postulado</span>
                           )}
                         </div>
                         <h3 className="t-base bold group-hover:text-[#1a3a7c] transition-colors leading-snug">
                           {oportunidad.title}
                         </h3>
-                        <p className="t-xs">
-                          {oportunidad.sponsor}
-                        </p>
+                        <p className="t-xs">{oportunidad.sponsor}</p>
                       </div>
 
                       <div className="space-y-sm text-body-sm mb-3">
@@ -823,18 +965,24 @@ export default function BuscarOportunidades() {
                           <span className="material-symbols-outlined text-sm text-slate-2 shrink-0">
                             payments
                           </span>
-                          <span className="t-xs trunc">{oportunidad.coverage}</span>
+                          <span className="t-xs trunc">
+                            {oportunidad.coverage}
+                          </span>
                         </div>
                         <div className="flex items-center gap-sm">
                           <span className="material-symbols-outlined text-sm text-slate-2 shrink-0">
                             grade
                           </span>
-                          <span className="t-xs trunc">{oportunidad.requirement}</span>
+                          <span className="t-xs trunc">
+                            {oportunidad.requirement}
+                          </span>
                         </div>
                         <div className="flex items-center gap-sm">
                           <span
                             className={`material-symbols-outlined text-sm shrink-0 ${
-                              oportunidad.id === "BEC-03" ? "text-red" : "text-slate-2"
+                              oportunidad.id === "BEC-03"
+                                ? "text-red"
+                                : "text-slate-2"
                             }`}
                           >
                             event
@@ -851,16 +999,28 @@ export default function BuscarOportunidades() {
                     <div className="flex items-center justify-between mt-auto pt-2 border-t border-[#e2e8f0]">
                       {activeOportunidadesTab === "postuladas" ? (
                         <button
-                          onClick={(e) => { e.stopPropagation(); navigate("/postulaciones", { state: { becaId: oportunidad.id } }); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate("/postulaciones", {
+                              state: { becaId: oportunidad.id },
+                            });
+                          }}
                           className="text-[#166534] t-xs bold flex items-center gap-1 cursor-pointer hover:underline border-none bg-transparent"
                         >
-                          <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>task_alt</span>
+                          <span
+                            className="material-symbols-outlined text-sm"
+                            style={{ fontVariationSettings: "'FILL' 1" }}
+                          >
+                            task_alt
+                          </span>
                           Ver mi progreso
                         </button>
                       ) : (
                         <button className="text-navy-2 t-xs bold flex items-center gap-1 cursor-pointer hover:underline border-none bg-transparent">
                           Ver Detalles{" "}
-                          <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                          <span className="material-symbols-outlined text-sm">
+                            arrow_forward
+                          </span>
                         </button>
                       )}
                     </div>
@@ -873,7 +1033,9 @@ export default function BuscarOportunidades() {
             {totalPages > 1 && (
               <div className="pg">
                 <button
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
                   disabled={activePage === 1}
                   className="pb"
                 >
@@ -892,7 +1054,9 @@ export default function BuscarOportunidades() {
                   );
                 })}
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
                   disabled={activePage === totalPages}
                   className="pb"
                 >
@@ -935,7 +1099,9 @@ export default function BuscarOportunidades() {
               onClick={() => toggleAccordion("programa")}
               className="flex items-center justify-between w-full mb-3 group cursor-pointer bg-transparent border-none"
             >
-              <span className="t-base bold text-[#0F2554]">Tipo de Programa</span>
+              <span className="t-base bold text-[#0F2554]">
+                Tipo de Programa
+              </span>
               <span
                 className={`material-symbols-outlined text-[18px] text-[#64748b] transition-transform duration-200 ${
                   accordionOpen.programa ? "rotate-180" : ""
@@ -946,25 +1112,35 @@ export default function BuscarOportunidades() {
             </button>
             {accordionOpen.programa && (
               <div className="space-y-2">
-                {["Universitarias", "Técnicas", "Postgrado", "Idiomas"].map((p, i) => (
-                  <label key={i} className="flex items-center gap-2 cursor-pointer group">
-                    <input
-                      checked={selectedProgramTypes.includes(p)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedProgramTypes([...selectedProgramTypes, p]);
-                        } else {
-                          setSelectedProgramTypes(selectedProgramTypes.filter(type => type !== p));
-                        }
-                      }}
-                      className="rounded border-[#e2e8f0] text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
-                      type="checkbox"
-                    />
-                    <span className="t-sm text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
-                      {p}
-                    </span>
-                  </label>
-                ))}
+                {["Universitarias", "Técnicas", "Postgrado", "Idiomas"].map(
+                  (p, i) => (
+                    <label
+                      key={i}
+                      className="flex items-center gap-2 cursor-pointer group"
+                    >
+                      <input
+                        checked={selectedProgramTypes.includes(p)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedProgramTypes([
+                              ...selectedProgramTypes,
+                              p,
+                            ]);
+                          } else {
+                            setSelectedProgramTypes(
+                              selectedProgramTypes.filter((type) => type !== p),
+                            );
+                          }
+                        }}
+                        className="rounded border-[#e2e8f0] text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
+                        type="checkbox"
+                      />
+                      <span className="t-sm text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
+                        {p}
+                      </span>
+                    </label>
+                  ),
+                )}
               </div>
             )}
           </div>
@@ -1044,14 +1220,19 @@ export default function BuscarOportunidades() {
             {accordionOpen.gestion && (
               <div className="space-y-2">
                 {["Pública", "Privada"].map((g, i) => (
-                  <label key={i} className="flex items-center gap-2 cursor-pointer group">
+                  <label
+                    key={i}
+                    className="flex items-center gap-2 cursor-pointer group"
+                  >
                     <input
                       checked={selectedGestiones.includes(g)}
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelectedGestiones([...selectedGestiones, g]);
                         } else {
-                          setSelectedGestiones(selectedGestiones.filter(type => type !== g));
+                          setSelectedGestiones(
+                            selectedGestiones.filter((type) => type !== g),
+                          );
                         }
                       }}
                       className="rounded border-[#e2e8f0] text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
@@ -1084,14 +1265,19 @@ export default function BuscarOportunidades() {
             {accordionOpen.destino && (
               <div className="space-y-2">
                 {["Lima", "Provincias", "Extranjero"].map((d, i) => (
-                  <label key={i} className="flex items-center gap-2 cursor-pointer group">
+                  <label
+                    key={i}
+                    className="flex items-center gap-2 cursor-pointer group"
+                  >
                     <input
                       checked={selectedDestinos.includes(d)}
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelectedDestinos([...selectedDestinos, d]);
                         } else {
-                          setSelectedDestinos(selectedDestinos.filter(type => type !== d));
+                          setSelectedDestinos(
+                            selectedDestinos.filter((type) => type !== d),
+                          );
                         }
                       }}
                       className="rounded border-[#e2e8f0] text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
@@ -1138,7 +1324,9 @@ export default function BuscarOportunidades() {
                     {selectedOportunidad.level}
                   </span>
                   <span className="badge b-amber uppercase">
-                    {selectedOportunidad.affinity >= 90 ? "Excelencia" : "Aptitud"}
+                    {selectedOportunidad.affinity >= 90
+                      ? "Excelencia"
+                      : "Aptitud"}
                   </span>
                 </div>
                 <h2 className="t-lg bold text-[#0F2554] leading-tight">
@@ -1148,7 +1336,9 @@ export default function BuscarOportunidades() {
                   <span className="material-symbols-outlined text-sm font-fill">
                     verified
                   </span>
-                  <span>{selectedOportunidad.affinity}% de afinidad con tu perfil</span>
+                  <span>
+                    {selectedOportunidad.affinity}% de afinidad con tu perfil
+                  </span>
                 </div>
               </div>
             </div>
@@ -1203,7 +1393,9 @@ export default function BuscarOportunidades() {
                       <span className="material-symbols-outlined text-[#166534] text-sm">
                         check_circle
                       </span>
-                      <span className="t-sm text-[#0F2554] leading-snug">{ben}</span>
+                      <span className="t-sm text-[#0F2554] leading-snug">
+                        {ben}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -1218,9 +1410,12 @@ export default function BuscarOportunidades() {
                 {/* Banner si el perfil no está completo */}
                 {!profile && (
                   <div className="flex items-center gap-2 bg-[#fef3c7] border border-[#d97706]/30 rounded-[8px] px-3 py-2 mb-2">
-                    <span className="material-symbols-outlined text-[#d97706] text-sm">info</span>
+                    <span className="material-symbols-outlined text-[#d97706] text-sm">
+                      info
+                    </span>
                     <p className="t-xs text-[#92400e]">
-                      <span className="font-semibold">Completa tu perfil</span> para ver el cruce real de requisitos con tus datos.
+                      <span className="font-semibold">Completa tu perfil</span>{" "}
+                      para ver el cruce real de requisitos con tus datos.
                     </p>
                   </div>
                 )}
@@ -1235,32 +1430,60 @@ export default function BuscarOportunidades() {
                       </tr>
                     </thead>
                     <tbody>
-                      {generateRequisitos(selectedOportunidad).map((req, idx) => (
-                        <tr key={idx}>
-                          <td className="t-base text-[#0F2554]">{req.campo}</td>
-                          <td className="t-base bold text-[#0F2554] font-semibold">{req.perfil}</td>
-                          <td>
-                            {req.estado === "Cumple" ? (
-                              <span className="s-ok bold">
-                                <span className="material-symbols-outlined text-xs">check_circle</span> Cumple
-                              </span>
-                            ) : req.estado === "NoCumple" ? (
-                              <span className="bold" style={{ color: "#991b1b", display: "flex", alignItems: "center", gap: "3px", fontSize: "11px" }}>
-                                <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>cancel</span> No cumple
-                              </span>
-                            ) : (
-                              <span className="s-warn bold">
-                                <span className="material-symbols-outlined text-xs">pending</span> Pendiente
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                      {generateRequisitos(selectedOportunidad).map(
+                        (req, idx) => (
+                          <tr key={idx}>
+                            <td className="t-base text-[#0F2554]">
+                              {req.campo}
+                            </td>
+                            <td className="t-base bold text-[#0F2554] font-semibold">
+                              {req.perfil}
+                            </td>
+                            <td>
+                              {req.estado === "Cumple" ? (
+                                <span className="s-ok bold">
+                                  <span className="material-symbols-outlined text-xs">
+                                    check_circle
+                                  </span>{" "}
+                                  Cumple
+                                </span>
+                              ) : req.estado === "NoCumple" ? (
+                                <span
+                                  className="bold"
+                                  style={{
+                                    color: "#991b1b",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "3px",
+                                    fontSize: "11px",
+                                  }}
+                                >
+                                  <span
+                                    className="material-symbols-outlined text-xs"
+                                    style={{
+                                      fontVariationSettings: "'FILL' 1",
+                                    }}
+                                  >
+                                    cancel
+                                  </span>{" "}
+                                  No cumple
+                                </span>
+                              ) : (
+                                <span className="s-warn bold">
+                                  <span className="material-symbols-outlined text-xs">
+                                    pending
+                                  </span>{" "}
+                                  Pendiente
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ),
+                      )}
                     </tbody>
                   </table>
                 </div>
               </section>
-
             </div>
 
             <div className="p-4 bg-white border-t border-[#e2e8f0] flex gap-3 sticky bottom-0 z-10">
@@ -1275,14 +1498,23 @@ export default function BuscarOportunidades() {
                 <span className="material-symbols-outlined text-sm">
                   favorite
                 </span>{" "}
-                {savedBecaIds.includes(selectedOportunidad.id) ? "Guardado ✓" : "Guardar"}
+                {savedBecaIds.includes(selectedOportunidad.id)
+                  ? "Guardado ✓"
+                  : "Guardar"}
               </button>
               {appliedBecaIds.includes(selectedOportunidad.id) ? (
                 <button
-                  onClick={() => { navigate("/postulaciones", { state: { becaId: selectedOportunidad.id } }); closeAllDrawers(); }}
+                  onClick={() => {
+                    navigate("/postulaciones", {
+                      state: { becaId: selectedOportunidad.id },
+                    });
+                    closeAllDrawers();
+                  }}
                   className="flex-[2] bg-[#e8eef8] text-[#1a3a7c] border border-[#1a3a7c]/30 py-2 rounded-[8px] flex items-center justify-center gap-1 cursor-pointer font-bold hover:bg-[#e2e8f0] transition-all hover:scale-[1.01] active:scale-95"
                 >
-                  <span className="material-symbols-outlined text-sm font-fill">task_alt</span>
+                  <span className="material-symbols-outlined text-sm font-fill">
+                    task_alt
+                  </span>
                   Ver mi progreso
                 </button>
               ) : (
@@ -1291,7 +1523,9 @@ export default function BuscarOportunidades() {
                   className="flex-[2] bg-[#0F2554] text-white py-2 rounded-[8px] shadow-sm hover:bg-[#1a3a7c] hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-1 ml-auto cursor-pointer bold border-none"
                 >
                   Postular ahora{" "}
-                  <span className="material-symbols-outlined text-sm">bolt</span>
+                  <span className="material-symbols-outlined text-sm">
+                    bolt
+                  </span>
                 </button>
               )}
             </div>
@@ -1305,28 +1539,43 @@ export default function BuscarOportunidades() {
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-[#0F2554]/40 backdrop-blur-sm"
-            onClick={() => { setShowDeleteModal(false); setPendingDeleteId(null); }}
+            onClick={() => {
+              setShowDeleteModal(false);
+              setPendingDeleteId(null);
+            }}
           />
           {/* Modal */}
           <div className="relative card max-w-sm w-full shadow-2xl border border-[#e2e8f0] p-6 animate-in slide-in-from-bottom-4 duration-300">
             {/* Icon */}
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-[8px] bg-[#fee2e2] flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#991b1b] text-2xl">delete_forever</span>
+                <span className="material-symbols-outlined text-[#991b1b] text-2xl">
+                  delete_forever
+                </span>
               </div>
               <div>
-                <h3 className="t-base bold text-navy">¿Cancelar postulación?</h3>
+                <h3 className="t-base bold text-navy">
+                  ¿Cancelar postulación?
+                </h3>
                 <p className="t-xs mt-0.5" style={{ color: "var(--slate)" }}>
-                  {oportunidades.find(o => o.id === pendingDeleteId)?.title || "Esta beca"}
+                  {oportunidades.find((o) => o.id === pendingDeleteId)?.title ||
+                    "Esta beca"}
                 </p>
               </div>
             </div>
-            <p className="t-sm mb-6 leading-relaxed" style={{ color: "var(--slate)" }}>
-              Se eliminará tu postulación y todo el progreso guardado. Esta acción no se puede deshacer.
+            <p
+              className="t-sm mb-6 leading-relaxed"
+              style={{ color: "var(--slate)" }}
+            >
+              Se eliminará tu postulación y todo el progreso guardado. Esta
+              acción no se puede deshacer.
             </p>
             <div className="flex gap-3">
               <button
-                onClick={() => { setShowDeleteModal(false); setPendingDeleteId(null); }}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setPendingDeleteId(null);
+                }}
                 className="flex-1 py-2 rounded-[8px] border border-[#e2e8f0] bg-white t-xs bold hover:bg-[#f1f5f9] transition-all cursor-pointer"
                 style={{ color: "var(--slate)" }}
               >
@@ -1336,8 +1585,22 @@ export default function BuscarOportunidades() {
                 onClick={() => handleDeletePostulation(pendingDeleteId)}
                 className="flex-[1.5] py-2 rounded-[8px] bg-[#991b1b] hover:bg-[#7f1d1d] transition-all active:scale-95 shadow-lg shadow-red-600/20 cursor-pointer flex items-center justify-center gap-1.5 border-none"
               >
-                <span className="material-symbols-outlined text-sm" style={{ color: "#ffffff" }}>delete</span>
-                <span className="bold" style={{ fontSize: "10px", color: "#ffffff", fontWeight: "bold" }}>Sí, eliminar</span>
+                <span
+                  className="material-symbols-outlined text-sm"
+                  style={{ color: "#ffffff" }}
+                >
+                  delete
+                </span>
+                <span
+                  className="bold"
+                  style={{
+                    fontSize: "10px",
+                    color: "#ffffff",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Sí, eliminar
+                </span>
               </button>
             </div>
           </div>
@@ -1347,7 +1610,9 @@ export default function BuscarOportunidades() {
       {/* Floating Success Notification Toast */}
       {showSuccessToast && (
         <div className="fixed top-20 right-6 z-[99] bg-[#0F2554] text-white p-4 rounded-[12px] shadow-2xl flex items-center gap-3 border border-white/10 animate-pulse">
-          <span className="material-symbols-outlined text-[20px]">verified</span>
+          <span className="material-symbols-outlined text-[20px]">
+            verified
+          </span>
           <div>
             <p className="t-sm bold text-white">Notificación de Pathfinder</p>
             <p className="t-xs text-white/95">{toastMessage}</p>

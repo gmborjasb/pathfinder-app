@@ -3,6 +3,57 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
 
+const getProfilePct = (currentProfile: any) => {
+  // 1. Try to read from currentProfile (from useAuth)
+  if (currentProfile) {
+    const pd = currentProfile.perfil_detalles;
+    if (pd && typeof pd.nivelPerfil === "number") {
+      return Math.min(pd.nivelPerfil, 100);
+    }
+  }
+
+  // 2. Try to read from localStorage
+  const stored = localStorage.getItem("pathfinder_profile");
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed.nivelPerfil === "number") {
+        return Math.min(parsed.nivelPerfil, 100);
+      }
+      if (parsed && parsed.perfil_detalles && typeof parsed.perfil_detalles.nivelPerfil === "number") {
+        return Math.min(parsed.perfil_detalles.nivelPerfil, 100);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // 3. Fallback calculation if no precalculated score exists (similar to Perfil.tsx)
+  const p = currentProfile || {};
+  const pd = currentProfile?.perfil_detalles || {};
+  
+  const items = [
+    !!(p.nombres || "").trim(),
+    !!(p.dni || "").trim(),
+    !!(p.correo || "").trim(),
+    !!p.fecha_nacimiento,
+    p.genero !== "Prefiero no decir",
+    !!(pd.institucionActual || "").trim(),
+    !!pd.colegio?.ano_egreso,
+    Number(pd.notas?.año3) > 0,
+    Number(pd.notas?.año4) > 0,
+    Number(pd.notas?.año5) > 0,
+    !!p.merito_academico,
+    !!p.area_interes,
+    pd.sisfoh !== "No Pobre",
+    Object.values(pd.condiciones || {}).some(Boolean) || p.tiene_conadis || p.hijo_docente,
+    pd.idiomas?.nivelIngles !== "Ninguno",
+    p.hace_voluntariado || p.es_deportista || pd.tiene_liderazgo || pd.tiene_emprendimiento,
+    p.acepta_privacidad,
+  ];
+  return Math.round((items.filter(Boolean).length / items.length) * 100);
+};
+
 export function Sidebar() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -100,19 +151,22 @@ export function Sidebar() {
   }, [showFootMenu]);
 
   // Profile completeness
-  const pd = profile?.perfil_detalles;
-  const profilePct = (() => {
-    if (pd?.nivelPerfil && pd.nivelPerfil > 0)
-      return Math.min(pd.nivelPerfil * 20, 100);
-    let score = 0;
-    if (profile?.nombres) score += 20;
-    if (pd?.tipo_colegio) score += 15;
-    if (pd?.departamento) score += 15;
-    if (pd?.notas?.gpa) score += 20;
-    if (pd?.sisfoh) score += 15;
-    if (pd?.idiomas?.nivelIngles) score += 15;
-    return score;
-  })();
+  const [profilePct, setProfilePct] = useState(0);
+
+  useEffect(() => {
+    const updateCompleteness = () => {
+      const pct = getProfilePct(profile);
+      setProfilePct(pct);
+    };
+
+    updateCompleteness();
+    window.addEventListener("storage", updateCompleteness);
+    window.addEventListener("profileUpdated", updateCompleteness);
+    return () => {
+      window.removeEventListener("storage", updateCompleteness);
+      window.removeEventListener("profileUpdated", updateCompleteness);
+    };
+  }, [profile]);
 
   // NavLink class factory
   const navCls = (isActive: boolean) =>

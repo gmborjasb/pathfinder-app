@@ -201,11 +201,9 @@ export function Sidebar() {
         width: 240,
         background: "#fff",
         borderRight: "1px solid #e2e8f0",
-        display: "flex",
-        flexDirection: "column",
         overflow: "hidden",
       }}
-      className="hidden lg:flex"
+      className="hidden lg:flex flex-col"
     >
       {/* Logo */}
       <div

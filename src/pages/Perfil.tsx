@@ -269,21 +269,21 @@ export default function Perfil() {
     <form onSubmit={handleSave} className="page animate-fade-in select-none" style={{ gap: 14 }}>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }} className="flex-wrap gap-3">
         <div>
           <p className="t4">Perfil del postulante</p>
           <p className="t1 muted" style={{ marginTop: 3 }}>
             Completa tu perfil para que Pathfinder calcule tu afinidad con cada beca y te recomiende las mejores oportunidades.
           </p>
         </div>
-        <button type="submit" style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "#1a3a7c", color: "#fff", border: "none", borderRadius: 9, fontSize: 12, fontWeight: 500, cursor: "pointer", flexShrink: 0 }}>
+        <button type="submit" className="flex-shrink-0" style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "#1a3a7c", color: "#fff", border: "none", borderRadius: 9, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
           <span className="material-symbols-outlined" style={{ fontSize: 14 }}>save</span>
           Guardar cambios
         </button>
       </div>
 
       {/* Progreso */}
-      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 16 }}>
+      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 16 }} className="flex-wrap">
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
             <span style={{ fontSize: 11, fontWeight: 500, color: "#0F2554" }}>Completitud del perfil</span>
@@ -298,7 +298,7 @@ export default function Perfil() {
             </p>
           )}
         </div>
-        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 6, flexShrink: 0 }} className="flex-wrap">
           {[
             { label: "Personal", done: personalDone },
             { label: "Académico", done: academicoDone },
@@ -502,7 +502,7 @@ export default function Perfil() {
           </div>
 
           <p style={S.sdiv}>Idiomas</p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, alignItems: "end" }}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-end">
             <div style={S.field}>
               <label style={S.label}>Idioma</label>
               <select style={S.input}><option>Inglés</option><option>Francés</option><option>Portugués</option></select>
@@ -546,11 +546,11 @@ export default function Perfil() {
       </div>
 
       {/* ── Botones bottom ──────────────────────────────────────────────── */}
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingBottom: 8 }}>
-        <button type="button" style={{ padding: "8px 16px", border: "1px solid #e2e8f0", borderRadius: 9, fontSize: 12, fontWeight: 500, color: "#64748b", background: "#fff", cursor: "pointer" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingBottom: 8 }} className="flex-wrap">
+        <button type="button" className="flex-1 sm:flex-none" style={{ padding: "8px 16px", border: "1px solid #e2e8f0", borderRadius: 9, fontSize: 12, fontWeight: 500, color: "#64748b", background: "#fff", cursor: "pointer" }}>
           Cancelar
         </button>
-        <button type="submit" style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "#1a3a7c", color: "#fff", border: "none", borderRadius: 9, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+        <button type="submit" className="flex-1 sm:flex-none" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 16px", background: "#1a3a7c", color: "#fff", border: "none", borderRadius: 9, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
           <span className="material-symbols-outlined" style={{ fontSize: 14 }}>save</span>
           Guardar cambios
         </button>

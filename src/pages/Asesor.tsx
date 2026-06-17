@@ -39,6 +39,7 @@ export default function Asesor() {
   const [renameValue, setRenameValue] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [ollamaUrl, setOllamaUrl] = useState(() => {
     return localStorage.getItem("pathfinder_ollama_url") || "";
@@ -598,10 +599,32 @@ Aquí tienes las 5 becas de la base de datos de Pathfinder más afines a su perf
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex gap-3 h-[calc(100vh-120px)] min-h-[560px] overflow-hidden">
+    <div className="flex gap-3 relative" style={{ height: 'calc(100dvh - 120px)', minHeight: 480, overflow: 'hidden' }}>
 
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside style={{ width: 220, display: "flex", flexDirection: "column", gap: 8, flexShrink: 0 }}>
+
+      {/* Mobile overlay backdrop */}
+      {showMobileSidebar && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/40 z-40"
+          style={{ backdropFilter: 'blur(2px)' }}
+          onClick={() => setShowMobileSidebar(false)}
+        />
+      )}
+
+      {/* Aside — hidden on mobile unless drawer open */}
+      <aside
+        className={`flex-col gap-2 flex-shrink-0 lg:flex
+          fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
+          w-[240px] lg:w-[220px]
+          bg-[#f8fafd] lg:bg-transparent
+          p-3 lg:p-0
+          overflow-y-auto lg:overflow-visible
+          transition-transform duration-300 ease-in-out
+          ${showMobileSidebar ? 'flex translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
+        `}
+        style={{ gap: 8 }}
+      >
 
         {/* Contexto activo */}
         <div className="card" style={{ padding: "12px" }}>
@@ -801,6 +824,15 @@ Aquí tienes las 5 becas de la base de datos de Pathfinder más afines a su perf
           padding: "10px 16px", borderBottom: "1px solid var(--border)", flexShrink: 0,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Hamburger — only on mobile */}
+            <button
+              className="lg:hidden"
+              onClick={() => setShowMobileSidebar(true)}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px", borderRadius: 8, color: "var(--slate-2)", display: "flex", alignItems: "center" }}
+              title="Historial"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>menu</span>
+            </button>
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />
             <div>
               <p style={{ fontSize: 15, fontWeight: 600, color: "var(--navy)" }}>Asesor IA Pathfinder</p>
@@ -833,7 +865,7 @@ Aquí tienes las 5 becas de la base de datos de Pathfinder más afines a su perf
                 </p>
                 <p style={{ fontSize: 12, color: "var(--slate)" }}>Tu asesor de postulaciones está listo.</p>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, width: "100%", maxWidth: 520 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, width: "100%", maxWidth: 520 }}>
                 {quickActions.map((a, i) => (
                   <button
                     key={i}
@@ -857,7 +889,7 @@ Aquí tienes las 5 becas de la base de datos de Pathfinder más afines a su perf
               {messages.map((msg) => (
                 <div
                   key={msg.id}
-                  style={{ display: "flex", gap: 8, maxWidth: "78%", alignSelf: msg.sender === "user" ? "flex-end" : "flex-start", flexDirection: msg.sender === "user" ? "row-reverse" : "row" }}
+                  style={{ display: "flex", gap: 8, maxWidth: "90%", alignSelf: msg.sender === "user" ? "flex-end" : "flex-start", flexDirection: msg.sender === "user" ? "row-reverse" : "row" }}
                 >
                   <div style={{
                     width: 28, height: 28, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600,

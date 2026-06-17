@@ -359,8 +359,8 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Beca selector */}
-      <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 14, padding: "14px 16px", marginBottom: 14, display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
-        <span style={{ fontSize: 10, fontWeight: 500, color: "var(--slate)", textTransform: "uppercase", letterSpacing: ".06em", whiteSpace: "nowrap" }}>Seguimiento de</span>
+      <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 14, padding: "14px 16px", marginBottom: 14, display: "flex", alignItems: "center", gap: 12, position: "relative" }} className="flex-wrap">
+        <span className="hidden sm:inline" style={{ fontSize: 10, fontWeight: 500, color: "var(--slate)", textTransform: "uppercase", letterSpacing: ".06em", whiteSpace: "nowrap" }}>Seguimiento de</span>
         <div style={{ flex: 1, position: "relative" }} ref={becaDDRef}>
           <button
             onClick={() => setShowBecaDD(!showBecaDD)}
@@ -453,7 +453,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Stats row */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,.1)" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: 8, marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,.1)" }}>
             <div>
               <p style={{ fontSize: 9, color: "rgba(255,255,255,.45)", textTransform: "uppercase", letterSpacing: ".05em" }}>Afinidad</p>
               <p style={{ fontSize: 12, fontWeight: 500, color: "#86efac" }}>

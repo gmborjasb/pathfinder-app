@@ -432,7 +432,7 @@ export default function MisPostulaciones() {
   if (loading) {
     return (
       <div className="grid grid-cols-12 gap-6 w-full font-['Plus_Jakarta_Sans'] pb-16">
-        <section className="col-span-12 lg:col-span-3 flex flex-col gap-4">
+      <section className="col-span-12 lg:col-span-3 flex flex-col gap-4 order-2 lg:order-1">
           <div className="grid grid-cols-3 gap-2">
             {[0,1,2].map(i => <Skeleton key={i} className="h-20" />)}
           </div>
@@ -441,14 +441,14 @@ export default function MisPostulaciones() {
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
         </section>
-        <section className="col-span-12 lg:col-span-6 flex flex-col gap-4 bg-white p-6 rounded-2xl border border-gray-100">
+        <section className="col-span-12 lg:col-span-6 flex flex-col gap-4 bg-white p-6 rounded-2xl border border-gray-100 order-1 lg:order-2">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-16" />
           <Skeleton className="h-20" />
           <Skeleton className="h-20" />
           <Skeleton className="h-20" />
         </section>
-        <section className="col-span-12 lg:col-span-3 flex flex-col gap-4">
+        <section className="col-span-12 lg:col-span-3 flex flex-col gap-4 order-3">
           <Skeleton className="h-48" />
           <Skeleton className="h-52" />
         </section>
@@ -503,7 +503,7 @@ export default function MisPostulaciones() {
       }}
     >
       {/* ── Column 1: Left sidebar (3 cols) ─────────────────────────────────── */}
-      <section className="col-span-12 lg:col-span-3 flex flex-col gap-6">
+      <section className="col-span-12 lg:col-span-3 flex flex-col gap-6 order-2 lg:order-1">
 
         {/* FIX #1: Contadores 100% dinámicos */}
         <div className="grid grid-cols-3 gap-sm mb-lg">
@@ -611,7 +611,7 @@ export default function MisPostulaciones() {
       </section>
 
       {/* ── Column 2: Main workspace (6 cols) ────────────────────────────────── */}
-      <section className="col-span-12 lg:col-span-6 flex flex-col gap-6 min-w-0 h-fit">
+      <section className="col-span-12 lg:col-span-6 flex flex-col gap-6 min-w-0 h-fit order-1 lg:order-2">
 
         {/* STANDALONE PIPELINE CARD - Matches the design template */}
         <div className="card p-6 flex flex-col gap-4 bg-white shadow-sm border border-[#e2e8f0]" style={{ borderRadius: "var(--r-lg)" }}>
@@ -776,7 +776,7 @@ export default function MisPostulaciones() {
       </section>
 
       {/* ── Column 3: Right sidebar (3 cols) ─────────────────────────────────── */}
-      <section className="col-span-12 lg:col-span-3 flex flex-col gap-6 pb-8">
+      <section className="col-span-12 lg:col-span-3 flex flex-col gap-6 pb-8 order-3">
 
         {/* Fechas Críticas */}
         <div className="card flex flex-col gap-3">
@@ -916,7 +916,7 @@ export default function MisPostulaciones() {
       {/* ── Modal: Selector de beca ──────────────────────────────────────────── */}
       {isBecaModalOpen && (
         <div className="fixed inset-0 bg-[#0F2554]/40 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
-          <div className="card max-w-md w-full shadow-2xl border border-[#e2e8f0] flex flex-col max-h-[85vh]">
+          <div className="card max-w-md w-full shadow-2xl border border-[#e2e8f0] flex flex-col max-h-[80vh] overflow-y-auto">
             <div className="row mb-3">
               <h3 className="t-md bold">Mis convocatorias guardadas</h3>
               <button

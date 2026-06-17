@@ -766,7 +766,7 @@ export default function Documentos() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="tbl-mochila" style={{ tableLayout: "fixed" }}>
+          <table className="tbl-mochila" style={{ tableLayout: "fixed", minWidth: 560 }}>
             <colgroup>
               <col style={{ width: "32%" }} />
               <col style={{ width: "34%" }} />
@@ -842,7 +842,7 @@ export default function Documentos() {
                         </td>
                         <td>
                           {doc.actionType === "options" || status === "En Revisión" ? (
-                            <div className="act-row">
+                            <div className="act-row min-w-[44px] min-h-[44px]">
                               <button
                                 className="ico-btn"
                                 title="Previsualizar"
@@ -917,7 +917,7 @@ export default function Documentos() {
                               </div>
                             </div>
                           ) : (
-                            <div className="act-row">
+                            <div className="act-row min-w-[44px] min-h-[44px]">
                               <button className="btn-up" onClick={() => startUploadSim(String(doc.id))}>
                                 {isItemRejected ? "Reemplazar" : "Subir"}
                               </button>
@@ -992,7 +992,7 @@ export default function Documentos() {
                         </td>
                         <td>
                           {doc.actionType === "options" || status === "En Revisión" ? (
-                            <div className="act-row">
+                            <div className="act-row min-w-[44px] min-h-[44px]">
                               <button
                                 className="ico-btn"
                                 title="Previsualizar"
@@ -1067,7 +1067,7 @@ export default function Documentos() {
                               </div>
                             </div>
                           ) : (
-                            <div className="act-row">
+                            <div className="act-row min-w-[44px] min-h-[44px]">
                               <button className="btn-up" onClick={() => startUploadSim(String(doc.id))}>
                                 {isItemRejected ? "Reemplazar" : "Subir"}
                               </button>

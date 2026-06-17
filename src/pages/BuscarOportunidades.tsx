@@ -1071,8 +1071,8 @@ export default function BuscarOportunidades() {
       {/* Common Overlay Backdrop */}
       {(isFiltersDrawerOpen || selectedOportunidad) && (
         <div
-          onClick={closeAllDrawers}
-          className="fixed inset-0 bg-on-surface/40 backdrop-blur-sm z-[55] transition-opacity duration-300 opacity-100 cursor-pointer"
+          onClick={() => setSelectedOportunidad(null)}
+          className="fixed inset-0 bg-black/50 z-[59] transition-opacity duration-300 opacity-100 cursor-pointer"
         />
       )}
 
@@ -1303,14 +1303,21 @@ export default function BuscarOportunidades() {
         </div>
       </div>
 
-      {/* Details Drawer (Slides from right, completely dynamic based on selected scholarship) */}
+      {/* Details Drawer — bottom-sheet on mobile, side drawer on desktop */}
       <div
-        className={`fixed top-0 right-0 h-screen w-full max-w-2xl bg-white z-[60] transition-transform duration-500 ease-out flex flex-col shadow-2xl border-l border-[#e2e8f0] ${
-          selectedOportunidad ? "translate-x-0" : "translate-x-full"
+        className={`fixed z-[60] bg-white shadow-2xl flex flex-col
+          bottom-0 left-0 right-0 h-[88vh] rounded-t-2xl
+          lg:bottom-auto lg:top-0 lg:right-0 lg:left-auto lg:w-full lg:max-w-2xl lg:h-screen lg:rounded-none lg:border-l lg:border-[#e2e8f0]
+          transition-transform duration-500 ease-out ${
+          selectedOportunidad
+            ? "translate-y-0 lg:translate-y-0 lg:translate-x-0"
+            : "translate-y-full lg:translate-y-0 lg:translate-x-full"
         }`}
       >
         {selectedOportunidad && (
           <>
+            {/* Grab handle for mobile */}
+            <div className="lg:hidden mx-auto mt-3 mb-2 w-10 h-1 bg-gray-300 rounded-full" />
             <div className="p-4 border-b border-[#e2e8f0] flex justify-between items-start bg-[#f1f5f9]">
               <div className="space-y-2 w-full">
                 <button
@@ -1421,7 +1428,8 @@ export default function BuscarOportunidades() {
                 )}
 
                 <div className="bg-white rounded-[12px] overflow-hidden border border-[#e2e8f0] p-3">
-                  <table className="tbl">
+                  <div className="overflow-x-auto -mx-3 px-3">
+                  <table className="tbl" style={{ minWidth: 480 }}>
                     <thead>
                       <tr>
                         <th style={{ width: "45%" }}>Requisito Beca</th>
@@ -1482,6 +1490,7 @@ export default function BuscarOportunidades() {
                       )}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </section>
             </div>

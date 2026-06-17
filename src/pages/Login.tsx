@@ -50,6 +50,21 @@ export default function Login() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      console.error("Google login error:", err);
+      setErrorMsg(err.message || "Error al iniciar sesión con Google.");
+    }
+  };
+
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
@@ -73,6 +88,7 @@ export default function Login() {
           data: {
             nombres: name,
           },
+          emailRedirectTo: `${window.location.origin}/dashboard`
         },
       });
 
@@ -183,6 +199,21 @@ export default function Login() {
                 >
                   Registrarse
                 </button>
+              </div>
+
+              <button
+                onClick={handleGoogleLogin}
+                type="button"
+                className="w-full flex items-center justify-center gap-2 bg-white border border-[#e2e8f0] text-[#0F2554] py-2 px-4 rounded-[8px] hover:bg-slate-50 transition-colors mb-4 shadow-sm cursor-pointer"
+              >
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google logo" className="w-4 h-4" />
+                <span className="t-xs bold">Continuar con Google</span>
+              </button>
+
+              <div className="flex items-center gap-3 mb-4 px-2">
+                <div className="flex-1 h-[1px] bg-[#e2e8f0]"></div>
+                <span className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold">O con correo</span>
+                <div className="flex-1 h-[1px] bg-[#e2e8f0]"></div>
               </div>
 
               {/* Form Content */}

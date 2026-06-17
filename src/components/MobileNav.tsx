@@ -15,12 +15,10 @@ export function MobileNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
+      className="flex items-center lg:hidden fixed bottom-0 left-0 right-0 z-50"
       style={{
         background: "#fff",
         borderTop: "1px solid #e2e8f0",
-        display: "flex",
-        alignItems: "center",
         height: 60,
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}

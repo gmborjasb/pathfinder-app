@@ -503,10 +503,10 @@ export default function MisPostulaciones() {
       }}
     >
       {/* ── Column 1: Left sidebar (3 cols) ─────────────────────────────────── */}
-      <section className="col-span-12 lg:col-span-3 flex flex-col gap-6 order-2 lg:order-1">
+      <section className="contents lg:col-span-3 lg:flex lg:flex-col lg:gap-6 lg:order-1">
 
         {/* FIX #1: Contadores 100% dinámicos */}
-        <div className="grid grid-cols-3 gap-sm mb-lg">
+        <div className="grid grid-cols-3 gap-sm col-span-12 order-2 lg:order-none lg:mb-lg">
           {[
             { icon: "edit_note",  value: dynamicSummaryStats.activas,  label: "Activas",   color: "text-secondary" },
             { icon: "send",       value: dynamicSummaryStats.enCurso,  label: "En curso",  color: "text-[#1a3a7c]" },
@@ -521,14 +521,19 @@ export default function MisPostulaciones() {
         </div>
 
         {/* Convocatorias activas */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 col-span-12 order-1 lg:order-none">
           <h3 className="t-sm bold px-1 mb-2 text-navy-2">Tus convocatorias activas</h3>
 
           <div className="flex flex-col gap-md">
-            {savedBecas.slice(0, 3).map((beca) => {
+            {savedBecas.map((beca, index) => {
               const isSelected = beca.id === selectedAppId;
               const details = getAppDetail(beca.id);
               const affinityClass = beca.affinity >= 85 ? "badge b-green" : "badge b-amber";
+              
+              const showOnMobile = isSelected;
+              const showOnDesktop = index < 3;
+
+              if (!showOnMobile && !showOnDesktop) return null;
 
               return (
                 <div
@@ -538,7 +543,7 @@ export default function MisPostulaciones() {
                     isSelected
                       ? "border-2 border-[#1a3a7c]"
                       : "border border-[#e2e8f0]"
-                  }`}
+                  } ${showOnMobile && showOnDesktop ? "" : showOnMobile ? "lg:hidden" : "hidden lg:block"}`}
                   style={{ borderRadius: "var(--r-md)" }}
                 >
                   {isSelected && (
@@ -578,7 +583,7 @@ export default function MisPostulaciones() {
         </div>
 
         {/* IA Banner */}
-        <div className="card flex flex-col gap-3 relative overflow-hidden mt-6 select-none border-none text-white" style={{ backgroundColor: "#0F2554" }}>
+        <div className="card flex flex-col gap-3 relative overflow-hidden select-none border-none text-white col-span-12 order-7 lg:order-none lg:mt-6" style={{ backgroundColor: "#0F2554" }}>
           <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
             <span className="material-symbols-outlined text-[100px] text-white">smart_toy</span>
           </div>
@@ -611,10 +616,10 @@ export default function MisPostulaciones() {
       </section>
 
       {/* ── Column 2: Main workspace (6 cols) ────────────────────────────────── */}
-      <section className="col-span-12 lg:col-span-6 flex flex-col gap-6 min-w-0 h-fit order-1 lg:order-2">
+      <section className="contents lg:col-span-6 lg:flex lg:flex-col lg:gap-6 lg:min-w-0 lg:h-fit lg:order-2">
 
         {/* STANDALONE PIPELINE CARD - Matches the design template */}
-        <div className="card p-6 flex flex-col gap-4 bg-white shadow-sm border border-[#e2e8f0]" style={{ borderRadius: "var(--r-lg)" }}>
+        <div className="card p-6 flex flex-col gap-4 bg-white shadow-sm border border-[#e2e8f0] col-span-12 order-3 lg:order-none" style={{ borderRadius: "var(--r-lg)" }}>
           <div className="flex justify-between items-start mb-2">
             <div>
               <h3 className="t-md bold text-navy" style={{ fontSize: "15px" }}>Pipeline de postulación</h3>
@@ -667,7 +672,7 @@ export default function MisPostulaciones() {
         </div>
 
         {/* STANDALONE CHECKLIST CARD */}
-        <div className="card p-6 flex flex-col gap-4 bg-white shadow-sm border border-[#e2e8f0]" style={{ borderRadius: "var(--r-lg)" }}>
+        <div className="card p-6 flex flex-col gap-4 bg-white shadow-sm border border-[#e2e8f0] col-span-12 order-4 lg:order-none" style={{ borderRadius: "var(--r-lg)" }}>
           {/* Header */}
           <div className="flex items-end justify-between mb-2 gap-md border-b border-[#e2e8f0] pb-3">
             <div className="min-w-0">
@@ -776,10 +781,10 @@ export default function MisPostulaciones() {
       </section>
 
       {/* ── Column 3: Right sidebar (3 cols) ─────────────────────────────────── */}
-      <section className="col-span-12 lg:col-span-3 flex flex-col gap-6 pb-8 order-3">
+      <section className="contents lg:col-span-3 lg:flex lg:flex-col lg:gap-6 lg:pb-8 lg:order-3">
 
         {/* Fechas Críticas */}
-        <div className="card flex flex-col gap-3">
+        <div className="card flex flex-col gap-3 col-span-12 order-5 lg:order-none">
           <h3 className="t-sm bold mb-2 flex items-center gap-sm text-navy-2">
             <span className="material-symbols-outlined text-lg">event</span>
             Fechas críticas
@@ -834,7 +839,7 @@ export default function MisPostulaciones() {
         </div>
 
         {/* FIX #8: Estado de la mochila — "X de Y listos" */}
-        <div className="card flex flex-col gap-3">
+        <div className="card flex flex-col gap-3 col-span-12 order-6 lg:order-none">
           <div className="flex flex-col gap-1 mb-2">
             <div className="flex items-center justify-between gap-2">
               <h3 className="t-sm bold text-navy-2 flex items-center gap-sm">
@@ -906,7 +911,7 @@ export default function MisPostulaciones() {
         </div>
 
         {/* Tip del día */}
-        <div className="bg-[#e8eef8] p-3 rounded-[8px] border border-dashed border-[#1a3a7c]/20">
+        <div className="bg-[#e8eef8] p-3 rounded-[8px] border border-dashed border-[#1a3a7c]/20 hidden lg:block">
           <p className="t-xs leading-relaxed">
             <span className="bold text-navy-2">Tip de hoy:</span> Asegúrate de que tus escaneos sean en PDF y no superen los 2 MB para evitar errores de carga en PRONABEC.
           </p>

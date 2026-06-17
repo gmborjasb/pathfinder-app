@@ -431,6 +431,67 @@
 .tbl-mochila tr:last-child td { border-bottom: none; }
 .tbl-mochila tr:hover td { background: #fafbfd; }
 
+/* ── MOBILE DESIGN DIFFERENTIATION (UI/UX) ─────────────────────── */
+@media (max-width: 768px) {
+  /* 2. Touch Targets (Áreas táctiles ergonómicas) */
+  .btn-ico, .ico-btn {
+    padding: 10px !important;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .btn-sub, .btn-up {
+    padding: 10px 16px !important;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  input, select, textarea {
+    font-size: 16px !important; /* Previene auto-zoom en iOS */
+    min-height: 44px;
+    appearance: none; /* Uniformidad nativa */
+  }
+
+  /* Fluid scrolling para elementos desbordados */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Evitar lupas y selección accidental en botones/pestañas */
+  .btn-ico, .ico-btn, .btn-sub, .tab, .cap-tab {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* 3. Hover vs Active (Dispositivos táctiles) */
+@media (hover: none) {
+  /* Desactivar hover atascado regresando al color base */
+  .btn-ico:hover { background: transparent; color: var(--slate); }
+  .btn-sub:hover { background: transparent; }
+  .match-item:hover, .saved-item:hover { border-color: var(--border); }
+  .pb:hover:not(:disabled) { background: var(--white); }
+  .pn:hover:not(.on) { background: var(--white); border-color: var(--border); }
+  .ico-btn:hover { background: none; color: var(--slate-2); }
+  .btn-up:hover { background: var(--white); }
+  .drop:hover { border-color: var(--border); background: transparent; }
+  .btn-dl:hover { background: var(--navy-2); }
+  .btn-ini:hover { background: var(--white); }
+
+  /* Aplicar estilos visuales solo en :active (al tocar) */
+  .btn-ico:active { background: var(--slate-3) !important; color: var(--navy-2) !important; }
+  .btn-sub:active, .btn-up:active { background: var(--navy-3) !important; }
+  .match-item:active, .saved-item:active { border-color: var(--navy-2) !important; background: var(--slate-3); }
+  .pb:active:not(:disabled) { background: var(--navy-3) !important; }
+  .pn:active:not(.on) { background: var(--slate-3) !important; border-color: var(--slate-2) !important; }
+  .ico-btn:active { background: var(--slate-3) !important; color: var(--navy-2) !important; }
+  .drop:active { border-color: var(--navy-2) !important; background: var(--navy-3) !important; }
+  .btn-dl:active { background: var(--navy) !important; }
+  .btn-ini:active { background: var(--navy-3) !important; }
+}
+
 /* ── MOBILE RESPONSIVENESS ─────────────────────────────────────── */
 html, body {
   overflow-x: hidden;

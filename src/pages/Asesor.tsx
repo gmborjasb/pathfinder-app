@@ -597,9 +597,23 @@ Aquí tienes las 5 becas de la base de datos de Pathfinder más afines a su perf
     return `Hace ${diff} días`;
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
+const renderMarkdown = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
   return (
-    <div className="flex gap-3 relative" style={{ height: 'calc(100dvh - 120px)', minHeight: 480, overflow: 'hidden' }}>
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={i} className="font-bold">{part.slice(2, -2)}</strong>;
+        }
+        return <span key={i} style={{ whiteSpace: "pre-line" }}>{part}</span>;
+      })}
+    </>
+  );
+};
+
+// ── Render ────────────────────────────────────────────────────────────────
+  return (
+    <div className="flex gap-3 relative -mt-3 -mx-3 lg:m-0 h-[calc(100dvh-60px)] lg:h-[calc(100dvh-120px)]" style={{ minHeight: 480, overflow: 'hidden' }}>
 
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
 
@@ -816,7 +830,7 @@ Aquí tienes las 5 becas de la base de datos de Pathfinder más afines a su perf
       </aside>
 
       {/* ── Chat area ────────────────────────────────────────────────────── */}
-      <section className="card" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: 0 }}>
+      <section className="card border-0 lg:border lg:border-[#e2e8f0] rounded-none lg:rounded-[16px]" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: 0 }}>
 
         {/* Header */}
         <header style={{
@@ -835,7 +849,7 @@ Aquí tienes las 5 becas de la base de datos de Pathfinder más afines a su perf
             </button>
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />
             <div>
-              <p style={{ fontSize: 15, fontWeight: 600, color: "var(--navy)" }}>Asesor IA Pathfinder</p>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "var(--navy)" }}>Motibot</p>
               <p style={{ fontSize: 10, color: "var(--slate)", marginTop: 1 }}>
                 Especializado en becas peruanas
                 {becaCtx ? ` · ${becaCtx.titulo} activa` : ""}
@@ -899,13 +913,13 @@ Aquí tienes las 5 becas de la base de datos de Pathfinder más afines a su perf
                     {msg.sender === "user" ? firstName[0].toUpperCase() : "IA"}
                   </div>
                   <div style={{
-                    padding: "10px 13px", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-line",
+                    padding: "10px 13px", fontSize: 13, lineHeight: 1.6,
                     borderRadius: msg.sender === "user" ? "12px 0 12px 12px" : "0 12px 12px 12px",
                     background: msg.sender === "user" ? "var(--navy)" : "var(--white)",
                     color: msg.sender === "user" ? "#fff" : "var(--navy)",
                     border: msg.sender === "user" ? "none" : "1px solid var(--border)",
                   }}>
-                    {msg.text}
+                    {renderMarkdown(msg.text)}
                   </div>
                 </div>
               ))}

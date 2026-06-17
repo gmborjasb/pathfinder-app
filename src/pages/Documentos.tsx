@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabaseClient";
 
@@ -113,8 +113,20 @@ export default function Documentos() {
   });
 
   const [appliedBecaIds, setAppliedBecaIds] = useState<string[]>([]);
+  const [showBecaDD, setShowBecaDD] = useState(false);
+  const becaDDRef = useRef<HTMLDivElement>(null);
 
-  const selectedBeca = becas.find((b) => b.id === selectedBecaId);
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (becaDDRef.current && !becaDDRef.current.contains(e.target as Node)) {
+        setShowBecaDD(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  const selectedBeca = becas.find((b) => String(b.id) === String(selectedBecaId));
 
   useEffect(() => {
     const fetchCatalogData = async () => {
@@ -601,24 +613,83 @@ export default function Documentos() {
 
       {/* Barra compacta de contexto */}
       <div className="bar">
-        <div className="bar-seg" style={{ paddingLeft: 0, flexShrink: 0 }}>
+        <div className="bar-seg relative" style={{ paddingLeft: 0, flexShrink: 0 }} ref={becaDDRef}>
           <span className="material-symbols-outlined text-[15px] shrink-0" style={{ color: "var(--navy-2)", fontVariationSettings: "'FILL' 1" }}>target</span>
-          <select
-            value={selectedBecaId}
-            onChange={(e) => handleBecaChange(e.target.value)}
-            className="bar-select"
+          <button
+            onClick={() => setShowBecaDD(!showBecaDD)}
+            style={{
+              background: "var(--white)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              padding: "4px 8px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              fontSize: "13px",
+              fontWeight: 500,
+              color: "var(--navy)",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+            }}
+            className="hover:border-[#1a3a7c]/40 transition-colors"
           >
-            <option value="">Ninguna (Mochila General)</option>
-            {appliedBecaIds.map((id) => {
-              const beca = becas.find((b) => b.id === id);
-              if (!beca) return null;
-              return (
-                <option key={beca.id} value={beca.id}>
-                  {beca.title}
-                </option>
-              );
-            })}
-          </select>
+            <span style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {selectedBeca ? selectedBeca.title : "Ninguna (Mochila General)"}
+            </span>
+            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--slate-2)", transition: "transform .2s", transform: showBecaDD ? "rotate(180deg)" : "none" }}>expand_more</span>
+          </button>
+
+          {showBecaDD && (
+            <div style={{
+              position: "absolute",
+              top: "calc(100% + 4px)",
+              left: "24px",
+              background: "var(--white)",
+              border: "1px solid var(--border)",
+              borderRadius: "10px",
+              boxShadow: "0 8px 24px rgba(15,37,84,.12)",
+              zIndex: 100,
+              minWidth: "240px",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column"
+            }}>
+              <div
+                onClick={() => { handleBecaChange(""); setShowBecaDD(false); }}
+                style={{
+                  padding: "10px 14px", cursor: "pointer", fontSize: "13px", color: "var(--navy)",
+                  borderBottom: "1px solid var(--border)", background: selectedBecaId === "" ? "#e8eef8" : "transparent"
+                }}
+                className="hover:bg-slate-50"
+              >
+                Ninguna (Mochila General)
+              </div>
+              {appliedBecaIds.map((id) => {
+                const beca = becas.find((b) => String(b.id) === String(id));
+                if (!beca) return null;
+                const isSelected = String(id) === String(selectedBecaId);
+                return (
+                  <div
+                    key={id}
+                    onClick={() => { handleBecaChange(String(id)); setShowBecaDD(false); }}
+                    style={{
+                      padding: "10px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px",
+                      borderBottom: "1px solid var(--border)", background: isSelected ? "#e8eef8" : "transparent"
+                    }}
+                    className="hover:bg-slate-50"
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: "12px", fontWeight: 500, color: "var(--navy)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{beca.title}</p>
+                      <p style={{ fontSize: "10px", color: "var(--slate)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{beca.sponsor}</p>
+                    </div>
+                    {isSelected && (
+                      <span className="material-symbols-outlined text-[16px] text-[#1a3a7c]">check</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
         {selectedBeca && (
           <>
@@ -766,12 +837,12 @@ export default function Documentos() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="tbl-mochila" style={{ tableLayout: "fixed", minWidth: 560 }}>
+          <table className="tbl-mochila tbl-mobile-cards lg:min-w-[560px]" style={{ tableLayout: "fixed" }}>
             <colgroup>
-              <col style={{ width: "32%" }} />
-              <col style={{ width: "34%" }} />
-              <col style={{ width: "20%" }} />
-              <col style={{ width: "14%" }} />
+              <col className="hidden lg:table-column" style={{ width: "32%" }} />
+              <col className="hidden lg:table-column" style={{ width: "34%" }} />
+              <col className="hidden lg:table-column" style={{ width: "20%" }} />
+              <col className="hidden lg:table-column" style={{ width: "14%" }} />
             </colgroup>
             <thead>
               <tr>
@@ -797,7 +868,7 @@ export default function Documentos() {
 
                     return (
                       <tr key={doc.id} style={isItemRejected ? { backgroundColor: "#fff8f8" } : {}}>
-                        <td>
+                        <td data-label="Documento">
                           <div className="row-c" style={{ gap: "8px" }}>
                             {isItemValid ? (
                               <span className="material-symbols-outlined text-[15px] shrink-0 text-green-600" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
@@ -814,10 +885,10 @@ export default function Documentos() {
                             </div>
                           </div>
                         </td>
-                        <td>
+                        <td data-label="Ayuda / descripción">
                           <p className="desc">{doc.description}</p>
                         </td>
-                        <td>
+                        <td data-label="Estado">
                           {isItemValid ? (
                             <span className="s-ok">
                               <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
@@ -840,7 +911,7 @@ export default function Documentos() {
                             </span>
                           )}
                         </td>
-                        <td>
+                        <td data-label="Acciones">
                           {doc.actionType === "options" || status === "En Revisión" ? (
                             <div className="act-row min-w-[44px] min-h-[44px]">
                               <button

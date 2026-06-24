@@ -15,9 +15,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   // If loading user session, show simple premium spinner
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F1F5F9] font-['Plus_Jakarta_Sans']">
-        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
-        <p className="text-sm font-semibold text-muted-slate animate-pulse">Cargando Pathfinder...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: "var(--background)", fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif' }}>
+        <div className="w-12 h-12 rounded-full border-4 border-[var(--brand-br)] border-t-[var(--brand)] animate-spin mb-4"></div>
+        <p className="text-[13px] font-semibold text-[var(--slate)] animate-pulse">Cargando Pathfinder...</p>
       </div>
     );
   }

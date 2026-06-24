@@ -8,16 +8,18 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: "var(--background)", fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif', color: "var(--navy)" }}
-    >
-      <div className="flex max-w-[1440px] mx-auto">
+    <div className="bg-background font-body-base text-on-background min-h-screen flex flex-col">
+      {/* Main Outer Wrapper */}
+      <div className="flex-1 flex max-w-[1440px] w-full mx-auto">
         <Sidebar />
-        <main className="flex-1 lg:ml-60 min-w-0 px-3 pt-3 pb-20 sm:px-4 sm:pt-4 md:px-8 md:pt-6 lg:pb-6 overflow-x-hidden">
+
+        {/* Main Content Area — pb-16 leaves space for mobile bottom nav */}
+        <main className="flex-1 lg:ml-64 p-3 sm:p-4 md:p-margin-desktop overflow-x-hidden pb-16 lg:pb-0">
           {children}
         </main>
       </div>
+
+      {/* Bottom Navigation — visible only on mobile */}
       <MobileNav />
     </div>
   );

@@ -49,6 +49,69 @@ export interface Curso {
   status: string;
 }
 
+export interface PostulacionRow {
+  id: string;
+  usuario_id: string;
+  beca_id: string;
+  paso_pipeline: number;
+  estado_general: string;
+  created_at: string;
+}
+
+export interface DocumentoRow {
+  id: string;
+  postulacion_id: string;
+  nombre_documento: string;
+  estado: string;
+  archivo_url: string | null;
+  texto_ayuda: string | null;
+  created_at: string;
+}
+
+export interface DocumentoRequerido {
+  id: number;
+  name: string;
+  description: string;
+  es_requerido: boolean;
+  category: string;
+  documentIcon: string;
+}
+
+export interface DocumentoDisplay {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  categoria: string;
+  estado: "validado" | "pendiente" | "rechazado" | "faltante";
+  archivo_url: string | null;
+  icon: string;
+  es_requerido: boolean;
+}
+
+export interface PipelineStep {
+  label: string;
+  icon: string;
+  status: "completed" | "active" | "pending";
+}
+
+export interface PostulacionConBeca {
+  postulacion: PostulacionRow;
+  beca_titulo: string;
+  beca_sponsor: string;
+  beca_afinidad: number;
+  beca_fecha_cierre: string;
+  documentos_requeridos: DocumentoRequerido[];
+}
+
+export interface CursoRow {
+  id: string;
+  titulo: string;
+  sponsor: string;
+  duracion: string | null;
+  requisitos: string | null;
+  estado: string | null;
+}
+
 export interface PerfilData {
   nivelPerfil: number;
   nombres: string;

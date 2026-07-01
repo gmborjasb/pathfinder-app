@@ -1,0 +1,1218 @@
+[
+  {
+    "id": "PAT-c99a2e",
+    "titulo": "Becas BCP - Convocatoria 2026",
+    "sponsor": "Patronato BCP",
+    "nivel": "Pregrado/Técnico",
+    "cobertura": "Beca Integral (100%)",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado/Técnico auspiciada por Patronato BCP.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "COM-de7366",
+    "titulo": "Beca Fulbright - Convocatoria 2026",
+    "sponsor": "Comisión Fulbright",
+    "nivel": "Postgrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Programa de Intercambio Educativo y Cultural entre Perú y Estados Unidos que fomenta futuros líderes en más de 140 países alrededor del mundo.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "PRO-0dd98d",
+    "titulo": "Beca 18 - Convocatoria 2026",
+    "sponsor": "PRONABEC",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Integral (100%)",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por PRONABEC.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "DAA-9a0b72",
+    "titulo": "Becas DAAD Alemania - Convocatoria 2026",
+    "sponsor": "DAAD",
+    "nivel": "Postgrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Postgrado auspiciada por DAAD.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "PRO-c499e5",
+    "titulo": "Beca Permanencia - Convocatoria 2026",
+    "sponsor": "PRONABEC",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Integral (100%)",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por PRONABEC.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "FUN-f96a5e",
+    "titulo": "Becas Fundación Carolina - Convocatoria 2026",
+    "sponsor": "Fundación Carolina",
+    "nivel": "Postgrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Postgrado auspiciada por Fundación Carolina.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "PRO-cca602",
+    "titulo": "Beca Inclusión - Convocatoria 2026",
+    "sponsor": "PRONABEC",
+    "nivel": "Técnico/Pregrado",
+    "cobertura": "Beca Integral (100%)",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Técnico/Pregrado auspiciada por PRONABEC.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "PRO-117848",
+    "titulo": "Beca Técnico Productiva - Convocatoria 2026",
+    "sponsor": "PRONABEC",
+    "nivel": "Técnico",
+    "cobertura": "Beca Integral (100%)",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Técnico auspiciada por PRONABEC.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "PRO-4ea5de",
+    "titulo": "Beca Generación del Bicentenario - Convocatoria 2026",
+    "sponsor": "PRONABEC",
+    "nivel": "Postgrado",
+    "cobertura": "Beca Integral (100%)",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Postgrado auspiciada por PRONABEC.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "PRO-141790",
+    "titulo": "Beca Hijos de Docentes - Convocatoria 2026",
+    "sponsor": "PRONABEC",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Integral (100%)",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por PRONABEC.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "UPC-dec840",
+    "titulo": "Beca de Honor UPC - Convocatoria 2026",
+    "sponsor": "UPC",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por UPC.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "OEA-95525e",
+    "titulo": "Becas OEA - Convocatoria 2026",
+    "sponsor": "OEA",
+    "nivel": "Postgrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "It looks like JavaScript is either disabled or turned off. Please enable JavaScript to correctly view this web site....",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "PUC-a272ca",
+    "titulo": "Beca Lucet - Convocatoria 2026",
+    "sponsor": "PUCP",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por PUCP.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "CAM-041270",
+    "titulo": "Beca Eiffel Francia - Convocatoria 2026",
+    "sponsor": "Campus France",
+    "nivel": "Postgrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Postgrado auspiciada por Campus France.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "GOB-473094",
+    "titulo": "Beca Vanier Canadá - Convocatoria 2026",
+    "sponsor": "Gobierno de Canadá",
+    "nivel": "Doctorado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "We are no longer accepting applications for the Vanier Canada Graduate Scholarships. Please refer to the Canada Graduate Research Scholarship - Doctoral program web page for information regarding the ...",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "UPC-0952ea",
+    "titulo": "Beca Excelencia UPCH - Convocatoria 2026",
+    "sponsor": "UPCH",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por UPCH.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "ALI-2fb8b4",
+    "titulo": "Becas Alianza del Pacífico - Convocatoria 2026",
+    "sponsor": "Alianza del Pacífico",
+    "nivel": "Intercambio",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "XVII Convocatoria de la Plataforma de MovilidadEstudiantil y Académica de la Alianza del Pacífico 2026...",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "UTE-2f9537",
+    "titulo": "Beca Mujeres en Ciencias - Convocatoria 2026",
+    "sponsor": "UTEC",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por UTEC.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "UTE-c0bfa8",
+    "titulo": "Beca Talento UTEC - Convocatoria 2026",
+    "sponsor": "UTEC",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por UTEC.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "UNI-93224d",
+    "titulo": "Beca Fe y Alegría - Convocatoria 2026",
+    "sponsor": "Universidad de Lima",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por Universidad de Lima.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "USI-f08637",
+    "titulo": "Beca Fundador USIL - Convocatoria 2026",
+    "sponsor": "USIL",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por USIL.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "EMB-7d9370",
+    "titulo": "Beca MEXT Japón - Convocatoria 2026",
+    "sponsor": "Embajada de Japón",
+    "nivel": "Pregrado/Postgrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado/Postgrado auspiciada por Embajada de Japón.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "TEC-687654",
+    "titulo": "Becas TECSUP - Convocatoria 2026",
+    "sponsor": "TECSUP",
+    "nivel": "Técnico",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Técnico auspiciada por TECSUP.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "UNI-18f827",
+    "titulo": "Beca Líderes con Propósito - Convocatoria 2026",
+    "sponsor": "Universidad del Pacífico",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por Universidad del Pacífico.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "UNI-5911f4",
+    "titulo": "Beca Alto Rendimiento ESAN - Convocatoria 2026",
+    "sponsor": "Universidad ESAN",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por Universidad ESAN.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "UNI-7f8e14",
+    "titulo": "Beca Talento UDEP - Convocatoria 2026",
+    "sponsor": "Universidad de Piura",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "© 2026 UDEP. Todos los Derechos Reservados....",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "FUN-16a89c",
+    "titulo": "Becas Campus Virtual Romero - Convocatoria 2026",
+    "sponsor": "Fundación Romero",
+    "nivel": "Cursos",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Cursos auspiciada por Fundación Romero.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "UCV-35b3be",
+    "titulo": "Beca Vallejiana - Convocatoria 2026",
+    "sponsor": "UCV",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por UCV.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "PRO-e6b5d0",
+    "titulo": "Beca Deporte Escolar - Convocatoria 2026",
+    "sponsor": "PRONABEC",
+    "nivel": "Pregrado",
+    "cobertura": "Beca Integral (100%)",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Pregrado auspiciada por PRONABEC.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "SEN-1b838d",
+    "titulo": "Becas SENATI - Convocatoria 2026",
+    "sponsor": "SENATI",
+    "nivel": "Técnico",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Beca de Técnico auspiciada por SENATI.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "GOB-8e91d3",
+    "titulo": "Beca Chevening Perú - Convocatoria 2026",
+    "sponsor": "Gobierno UK",
+    "nivel": "Postgrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "Chevening Scholarships for Peruvians looking to study in the UK",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  },
+  {
+    "id": "NII-882638",
+    "titulo": "Beca GKS Corea - Convocatoria 2026",
+    "sponsor": "NIIED",
+    "nivel": "Pregrado/Postgrado",
+    "cobertura": "Beca Parcial o Integral",
+    "fecha_cierre": "2026-11-30",
+    "situacion": "Vigente",
+    "sobre": "The official portal for studying in Korea, operated by the Korean government. Information on studying in Korea, universities (language institutes), immigration procedures, student life, employment, and consultation.",
+    "requisitos_estructurados": [
+      {
+        "campo": "Nacionalidad",
+        "valor": "Peruana"
+      },
+      {
+        "campo": "Rendimiento",
+        "valor": "Tercio o Quinto Superior"
+      },
+      {
+        "campo": "Condición",
+        "valor": "Evaluación socioeconómica o de excelencia"
+      }
+    ],
+    "beneficios": [
+      {
+        "nombre": "Cobertura de Pensión",
+        "icono": "school"
+      },
+      {
+        "nombre": "Manutención / Estipendio",
+        "icono": "payments"
+      },
+      {
+        "nombre": "Seguro de Salud",
+        "icono": "health_and_safety"
+      }
+    ]
+  }
+]

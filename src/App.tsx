@@ -6,6 +6,7 @@ import Documentos from "./pages/Documentos";
 import Perfil from "./pages/Perfil";
 import MisPostulaciones from "./pages/MisPostulaciones";
 import Asesor from "./pages/Asesor";
+import GenerarCV from "./pages/GenerarCV";
 import Login from "./pages/Login";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
@@ -15,9 +16,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   // If loading user session, show simple premium spinner
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F1F5F9] font-['Plus_Jakarta_Sans']">
-        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
-        <p className="text-sm font-semibold text-muted-slate animate-pulse">Cargando Pathfinder...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-bg-base">
+        <div className="w-12 h-12 border-4 border-brand-blue/20 border-t-brand-blue rounded-full animate-spin mb-4"></div>
+        <p className="text-sm font-bold text-text-secondary animate-pulse">Cargando Pathfinder...</p>
       </div>
     );
   }
@@ -94,6 +95,17 @@ function App() {
               <ProtectedRoute>
                 <MainLayout>
                   <Asesor />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/cv"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <GenerarCV />
                 </MainLayout>
               </ProtectedRoute>
             }

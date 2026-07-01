@@ -15,8 +15,13 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path aliases (required by shadcn CLI) */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Linting */
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true

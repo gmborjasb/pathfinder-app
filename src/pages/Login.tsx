@@ -112,17 +112,17 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative bg-[#F1F5F9] font-sans select-none">
+    <div className="min-h-screen flex flex-col relative bg-bg-base font-sans select-none">
       {/* Header Sticky Navbar */}
-      <header className="w-full py-3 px-6 bg-white/80 backdrop-blur-md border-b border-[#e2e8f0] sticky top-0 z-50">
+      <header className="w-full py-3 px-6 bg-white/80 backdrop-blur-md border-b-2 border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-[#e8eef8] rounded-[8px] flex items-center justify-center text-[#1a3a7c]">
+            <div className="w-7 h-7 bg-brand-yellow border-2 border-border rounded-[8px] flex items-center justify-center text-text-primary">
               <span className="material-symbols-outlined text-[18px]">school</span>
             </div>
-            <span className="t-base bold text-[#0F2554]">Pathfinder</span>
+            <span className="text-sm font-black text-brand-blue">Pathfinder</span>
           </div>
-          <div className="hidden md:flex gap-6 items-center t-xs bold text-[#64748b]">
+          <div className="hidden md:flex gap-6 items-center text-xs font-bold text-[#64748b]">
             <span>Convocatorias 2026</span>
             <span>Ayuda</span>
           </div>
@@ -138,18 +138,18 @@ export default function Login() {
             className="w-full h-full object-cover"
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVoEWQSYsQnLza8aR_U_smlTRziaaJ9Y1rBPEijlnNG-8tPUikh3jSw8iJIwhHhJghTOXC4xeaKKQyxzhcL4UXbHIQxC-jOHcSqjwsQ8adkLYdXZ3sEZM6IYBvmGMN3GTt45SQ_vKf4rjHZCq97Dkkk5TlPl8FZhOnLwJ8c2XT6r9jLl4IC8te-QjPr87svkCKBKQelelvqf7n4yPXA-ym2kXTgjaXTGeuItgia9Nope5v_f5wiltzX9SkbPvg4Jw1Qp0a9cAC3g"
           />
-          <div className="absolute inset-0 bg-[#0F2554]/90 mix-blend-multiply"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0F2554]/50 to-[#0F2554]"></div>
+          <div className="absolute inset-0 bg-brand-blue/90 mix-blend-multiply"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-blue/50 to-brand-blue"></div>
         </div>
 
         {/* Central visual wrapper */}
         <div className="relative z-10 w-full max-w-4xl flex flex-col lg:flex-row items-center gap-6 text-white">
           {/* Marketing Column */}
           <div className="flex-1 text-center lg:text-left max-w-xl">
-            <h1 className="t-lg bold text-white text-[24px] md:text-[28px] leading-tight mb-4">
+            <h1 className="font-black text-white text-[24px] md:text-[28px] leading-tight mb-4">
               Postular a una beca no tiene por qué ser un dolor de cabeza
             </h1>
-            <p className="t-sm text-white/95 mb-6 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+            <p className="text-sm font-semibold text-white/95 mb-6 max-w-lg mx-auto lg:mx-0 leading-relaxed">
               Olvídate de revisar cientos de páginas del gobierno o de las universidades a la vez. Aquí calculamos tus posibilidades reales y te decimos exactamente qué necesitas para ganar esa beca.
             </p>
             
@@ -159,8 +159,8 @@ export default function Login() {
                   <span className="material-symbols-outlined text-[#ffdf94] text-[18px]">verified</span>
                 </div>
                 <div>
-                  <h3 className="t-xs bold text-white">Todo centralizado</h3>
-                  <p className="t-xs text-white/70">Conectamos todas las convocatorias vigentes.</p>
+                  <h3 className="text-xs font-black text-white">Todo centralizado</h3>
+                  <p className="text-xs font-semibold text-white/70">Conectamos todas las convocatorias vigentes.</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 text-left max-w-xs mx-auto lg:mx-0">
@@ -168,34 +168,42 @@ export default function Login() {
                   <span className="material-symbols-outlined text-[#ffdf94] text-[18px]">query_stats</span>
                 </div>
                 <div>
-                  <h3 className="t-xs bold text-white">Tus tareas reales</h3>
-                  <p className="t-xs text-white/70">Te ayudamos a armar tu mochila de documentos.</p>
+                  <h3 className="text-xs font-black text-white">Tus tareas reales</h3>
+                  <p className="text-xs font-semibold text-white/70">Te ayudamos a armar tu mochila de documentos.</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Auth Card Column */}
-          <div className="w-full max-w-[400px] bg-white text-[#0F2554] rounded-[16px] shadow-2xl overflow-hidden border border-[#e2e8f0] shrink-0">
+          <div className="w-full max-w-[400px] bg-white text-brand-blue rounded-2xl shadow-light overflow-hidden border-2 border-border shrink-0">
             <div className="p-6 pb-2 text-center">
-              <h2 className="t-md bold text-[#0F2554] mb-1">Bienvenido de nuevo</h2>
-              <p className="t-xs text-[#64748b]">Tu camino hacia la excelencia académica comienza aquí</p>
+              <h2 className="text-lg font-black text-brand-blue mb-1">Bienvenido de nuevo</h2>
+              <p className="text-xs font-semibold text-[#64748b]">Tu camino hacia la excelencia académica comienza aquí</p>
             </div>
 
             <div className="p-4">
               {/* Tab Toggles */}
-              <div className="tabs mb-4 p-0.5">
+              <div className="flex gap-2 bg-slate-100 rounded-lg p-1 mb-4">
                 <button
                   type="button"
                   onClick={() => setActiveTab("login")}
-                  className={`tab ${activeTab === "login" ? "on" : ""}`}
+                  className={`flex-1 py-2 rounded-md text-xs font-black transition-all cursor-pointer ${
+                    activeTab === "login"
+                      ? "bg-white border-2 border-border shadow-[2px_2px_0_#1e293b] text-brand-blue"
+                      : "text-[#64748b] hover:bg-white/50 border-2 border-transparent"
+                  }`}
                 >
                   Iniciar Sesión
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab("register")}
-                  className={`tab ${activeTab === "register" ? "on" : ""}`}
+                  className={`flex-1 py-2 rounded-md text-xs font-black transition-all cursor-pointer ${
+                    activeTab === "register"
+                      ? "bg-white border-2 border-border shadow-[2px_2px_0_#1e293b] text-brand-blue"
+                      : "text-[#64748b] hover:bg-white/50 border-2 border-transparent"
+                  }`}
                 >
                   Registrarse
                 </button>
@@ -204,28 +212,28 @@ export default function Login() {
               <button
                 onClick={handleGoogleLogin}
                 type="button"
-                className="w-full flex items-center justify-center gap-2 bg-white border border-[#e2e8f0] text-[#0F2554] py-2 px-4 rounded-[8px] hover:bg-slate-50 transition-colors mb-4 shadow-sm cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-white border-2 border-border text-brand-blue py-2 px-4 rounded-[8px] shadow-[2px_2px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all mb-4 cursor-pointer"
               >
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google logo" className="w-4 h-4" />
-                <span className="t-xs bold">Continuar con Google</span>
+                <span className="text-xs font-bold">Continuar con Google</span>
               </button>
 
               <div className="flex items-center gap-3 mb-4 px-2">
-                <div className="flex-1 h-[1px] bg-[#e2e8f0]"></div>
+                <div className="flex-1 h-[1px] bg-slate-200"></div>
                 <span className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold">O con correo</span>
-                <div className="flex-1 h-[1px] bg-[#e2e8f0]"></div>
+                <div className="flex-1 h-[1px] bg-slate-200"></div>
               </div>
 
               {/* Form Content */}
               <div className="px-2 pb-2">
                 {errorMsg && (
-                  <div className="mb-3 p-2 bg-[#fee2e2] text-[#991b1b] t-xs rounded-[8px] border border-[#fee2e2] flex items-center gap-1.5">
+                  <div className="mb-3 p-2 bg-danger-bg text-danger-text text-xs font-semibold rounded-[8px] border border-danger-bg flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-sm">error</span>
                     <span>{errorMsg}</span>
                   </div>
                 )}
                 {successMsg && (
-                  <div className="mb-3 p-2 bg-[#dcfce7] text-[#166534] t-xs rounded-[8px] border border-[#dcfce7] flex items-center gap-1.5">
+                  <div className="mb-3 p-2 bg-success-bg text-success-text text-xs font-semibold rounded-[8px] border border-success-bg flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-sm">check_circle</span>
                     <span>{successMsg}</span>
                   </div>
@@ -235,7 +243,7 @@ export default function Login() {
                   <form onSubmit={handleLoginSubmit} className="space-y-3">
                     <div className="space-y-1">
                       <label
-                        className="t-label text-[#64748b] block mb-1"
+                        className="text-[11px] font-bold uppercase tracking-wide text-[#64748b] block mb-1"
                         htmlFor="login-email"
                       >
                         Correo Electrónico
@@ -247,19 +255,19 @@ export default function Login() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="nombre@ejemplo.com"
-                        className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-[8px] px-3 py-2 t-base focus:border-[#1a3a7c] outline-none transition-all text-[#0F2554]"
+                        className="w-full bg-slate-100 border-2 border-border rounded-[8px] px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
                         disabled={isLoading}
                       />
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
                         <label
-                          className="t-label text-[#64748b] block mb-1"
+                          className="text-[11px] font-bold uppercase tracking-wide text-[#64748b] block mb-1"
                           htmlFor="login-password"
                         >
                           Contraseña
                         </label>
-                        <a href="#" className="t-link bg-transparent border-none">
+                        <a href="#" className="text-xs font-bold text-brand-blue hover:underline bg-transparent border-none">
                           ¿Olvidaste tu contraseña?
                         </a>
                       </div>
@@ -270,14 +278,14 @@ export default function Login() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-[8px] px-3 py-2 t-base focus:border-[#1a3a7c] outline-none transition-all text-[#0F2554]"
+                        className="w-full bg-slate-100 border-2 border-border rounded-[8px] px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
                         disabled={isLoading}
                       />
                     </div>
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full bg-[#0F2554] text-white py-2.5 rounded-[8px] shadow-sm hover:bg-[#1a3a7c] hover:scale-[1.01] active:scale-95 transition-all cursor-pointer text-center t-xs bold mt-2 flex items-center justify-center gap-1.5 border-none"
+                      className="w-full bg-brand-blue text-white py-2.5 rounded-[8px] border-2 border-border shadow-[3px_3px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer text-center text-sm font-black mt-2 flex items-center justify-center gap-1.5"
                     >
                       {isLoading ? (
                         <>
@@ -293,7 +301,7 @@ export default function Login() {
                   <form onSubmit={handleRegisterSubmit} className="space-y-3">
                     <div className="space-y-1">
                       <label
-                        className="t-label text-[#64748b] block mb-1"
+                        className="text-[11px] font-bold uppercase tracking-wide text-[#64748b] block mb-1"
                         htmlFor="reg-name"
                       >
                         Nombre Completo
@@ -305,13 +313,13 @@ export default function Login() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Juan Pérez"
-                        className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-[8px] px-3 py-2 t-base focus:border-[#1a3a7c] outline-none transition-all text-[#0F2554]"
+                        className="w-full bg-slate-100 border-2 border-border rounded-[8px] px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
                         disabled={isLoading}
                       />
                     </div>
                     <div className="space-y-1">
                       <label
-                        className="t-label text-[#64748b] block mb-1"
+                        className="text-[11px] font-bold uppercase tracking-wide text-[#64748b] block mb-1"
                         htmlFor="reg-email"
                       >
                         Correo Electrónico
@@ -323,13 +331,13 @@ export default function Login() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="nombre@ejemplo.com"
-                        className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-[8px] px-3 py-2 t-base focus:border-[#1a3a7c] outline-none transition-all text-[#0F2554]"
+                        className="w-full bg-slate-100 border-2 border-border rounded-[8px] px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
                         disabled={isLoading}
                       />
                     </div>
                     <div className="space-y-1">
                       <label
-                        className="t-label text-[#64748b] block mb-1"
+                        className="text-[11px] font-bold uppercase tracking-wide text-[#64748b] block mb-1"
                         htmlFor="reg-password"
                       >
                         Contraseña para la cuenta
@@ -341,14 +349,14 @@ export default function Login() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-[8px] px-3 py-2 t-base focus:border-[#1a3a7c] outline-none transition-all text-[#0F2554]"
+                        className="w-full bg-slate-100 border-2 border-border rounded-[8px] px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
                         disabled={isLoading}
                       />
                     </div>
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full bg-[#0F2554] text-white py-2.5 rounded-[8px] shadow-sm hover:bg-[#1a3a7c] hover:scale-[1.01] active:scale-95 transition-all cursor-pointer text-center t-xs bold mt-2 flex items-center justify-center gap-1.5 border-none"
+                      className="w-full bg-brand-blue text-white py-2.5 rounded-[8px] border-2 border-border shadow-[3px_3px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer text-center text-sm font-black mt-2 flex items-center justify-center gap-1.5"
                     >
                       {isLoading ? (
                         <>
@@ -369,7 +377,7 @@ export default function Login() {
                   <span className="w-full border-t border-[#e2e8f0]"></span>
                 </div>
                 <div className="relative flex justify-center text-[10px]">
-                  <span className="bg-white px-3 t-xs uppercase tracking-[0.15em] text-[#64748b]">
+                  <span className="bg-white px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-[#64748b]">
                     O continuar con
                   </span>
                 </div>
@@ -379,7 +387,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => navigate("/dashboard")}
-                className="btn-sub w-full py-2 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 transition-all cursor-pointer border-[#e2e8f0] hover:bg-[#f1f5f9] text-[#0F2554]"
+                className="w-full py-2 flex items-center justify-center gap-2 bg-white border-2 border-border rounded-[8px] shadow-[2px_2px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer text-brand-blue"
               >
                 <svg className="w-4 h-4 transition-transform group-hover:scale-105" viewBox="0 0 24 24">
                   <path
@@ -399,7 +407,7 @@ export default function Login() {
                     fill="#EA4335"
                   ></path>
                 </svg>
-                <span className="t-xs bold text-[#0F2554]">Google</span>
+                <span className="text-xs font-bold text-brand-blue">Google</span>
               </button>
             </div>
           </div>

@@ -1,26 +1,89 @@
 import type { ReactNode } from "react";
-import { Sidebar } from "../components/Sidebar";
+import { useLocation } from "react-router-dom";
+import { AppSidebar } from "../components/AppSidebar";
 import { MobileNav } from "../components/MobileNav";
+
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const location = useLocation();
+
+  const getBreadcrumbName = (path: string) => {
+    switch (path) {
+      case "/dashboard":
+        return "Inicio";
+      case "/perfil":
+        return "Perfil del Postulante";
+      case "/buscar":
+        return "Buscar Becas";
+      case "/postulaciones":
+        return "Mis Postulaciones";
+      case "/documentos":
+        return "Mochila de Documentos";
+      case "/asesor":
+        return "Motibot";
+      case "/cv":
+        return "Generador de CV";
+      default:
+        return "Pathfinder";
+    }
+  };
+
   return (
-    <div className="bg-background font-body-base text-on-background min-h-screen flex flex-col">
-      {/* Main Outer Wrapper */}
-      <div className="flex-1 flex max-w-[1440px] w-full mx-auto">
-        <Sidebar />
+    <SidebarProvider>
+      <div className="bg-bg-base font-sans text-text-primary h-screen flex flex-col w-full relative overflow-hidden">
+        <div className="flex flex-1 w-full min-h-0">
+          <div className="hidden lg:block">
+            <AppSidebar />
+          </div>
 
-        {/* Main Content Area — pb-16 leaves space for mobile bottom nav */}
-        <main className="flex-1 lg:ml-64 p-3 sm:p-4 md:p-margin-desktop overflow-x-hidden pb-16 lg:pb-0">
-          {children}
-        </main>
+          <SidebarInset className="flex-1 flex flex-col w-full overflow-x-hidden bg-bg-base min-h-0">
+            <header className="flex h-14 shrink-0 items-center gap-1 border-b-2 border-border bg-white px-3 md:px-4">
+              <SidebarTrigger className="hidden md:flex bg-main text-main-foreground border-2 border-border shadow-light hover:bg-main hover:-translate-y-boxShadowY hover:-translate-x-boxShadowX" />
+              <div className="h-4 w-[2px] bg-border mx-1" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem className="hidden md:block">
+                    <BreadcrumbLink href="/dashboard" className="font-bold">
+                      Pathfinder
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className="hidden md:block" />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="font-black text-brand-blue">
+                      {getBreadcrumbName(location.pathname)}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </header>
+            
+            <main className="flex-1 min-h-0 p-2 md:p-4 mx-auto max-w-[1440px] w-full flex flex-col">
+              {children}
+            </main>
+          </SidebarInset>
+        </div>
+
+        {/* Bottom Navigation — visible only on mobile */}
+        <MobileNav />
       </div>
-
-      {/* Bottom Navigation — visible only on mobile */}
-      <MobileNav />
-    </div>
+    </SidebarProvider>
   );
 }

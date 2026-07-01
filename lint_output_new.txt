@@ -1,0 +1,207 @@
+
+> pathfinder-app@0.0.0 lint
+> eslint .
+
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/contexts/AuthContext.tsx
+  157:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Asesor.tsx
+  164:11  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  168:15  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  179:13  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  233:9   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  237:13  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  248:11  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/BuscarOportunidades.tsx
+  133:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  281:5  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/BuscarOportunidades.tsx:281:5
+  279 |   // Resetear a la página 1 cuando cambia algún filtro
+  280 |   useEffect(() => {
+> 281 |     setCurrentPage(1);
+      |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  282 |   }, [
+  283 |     searchQuery,
+  284 |  react-hooks/set-state-in-effect
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Dashboard.tsx
+  143:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Dashboard.tsx:143:7
+  141 |   useEffect(() => {
+  142 |     if (selectedPostId && postDocsMap[selectedPostId]) {
+> 143 |       setDbDocs(postDocsMap[selectedPostId]);
+      |       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  144 |     }
+  145 |   }, [selectedPostId, postDocsMap]);
+  146 |  react-hooks/set-state-in-effect
+  220:60  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Dashboard.tsx:220:60
+  218 |   const getDeadlineTextColorStyle = (dateStr: string) => {
+  219 |     if (!dateStr) return { color: "var(--slate)" };
+> 220 |     const days = Math.floor((new Date(dateStr).getTime() - Date.now()) / 86400000);
+      |                                                            ^^^^^^^^^^ Cannot call impure function
+  221 |     if (days <= 7) return { color: "var(--red)", fontWeight: "var(--fw-medium)" };
+  222 |     if (days <= 30) return { color: "var(--amber)", fontWeight: "var(--fw-medium)" };
+  223 |     return { color: "var(--green)", fontWeight: "var(--fw-medium)" };                                                                          react-hooks/purity
+  244:9   error  The value assigned to 'requiredDocs' is not used in subsequent statements                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-useless-assignment
+  336:65  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Dashboard.tsx:336:65
+  334 |   const docsTotal = selectedDocs.length;
+  335 |   const diasCierre = activeBeca?.fecha_cierre
+> 336 |     ? Math.floor((new Date(activeBeca.fecha_cierre).getTime() - Date.now()) / 86400000)
+      |                                                                 ^^^^^^^^^^ Cannot call impure function
+  337 |     : null;
+  338 |
+  339 |   const pasoLabels = ["", "Preparación", "Enviada", "Evaluación", "Resultados"];                                                                                                                                                                                                                                           react-hooks/purity
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Documentos.tsx
+  195:32  error    'postErr' is never reassigned. Use 'const' instead                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        prefer-const
+  233:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Documentos.tsx:233:5
+  231 |
+  232 |   useEffect(() => {
+> 233 |     fetchDbDocuments();
+      |     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  234 |   }, [user, selectedBecaId]);
+  235 |
+  236 |   useEffect(() => {       react-hooks/set-state-in-effect
+  234:6   warning  React Hook useEffect has a missing dependency: 'fetchDbDocuments'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+  237:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Documentos.tsx:237:5
+  235 |
+  236 |   useEffect(() => {
+> 237 |     setCoursesPage(1);
+      |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  238 |   }, [tab]);
+  239 |
+  240 |   const handleBecaChange = (id: string) => {  react-hooks/set-state-in-effect
+  350:74  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Documentos.tsx:350:74
+  348 |
+  349 |         const fileExt = selectedFile.name.split(".").pop();
+> 350 |         const filePath = `${user.id}/${post.id}/${selectedDocToUpload}_${Date.now()}.${fileExt}`;
+      |                                                                          ^^^^^^^^^^ Cannot call impure function
+  351 |
+  352 |         const { error: uploadErr } = await supabase.storage
+  353 |           .from("expedientes")                                                                                                                                                                                       react-hooks/purity
+  564:53  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Documentos.tsx:564:53
+  562 |   const fechaCierre = selectedBeca?.deadline;
+  563 |   const diasRestantes = fechaCierre
+> 564 |     ? Math.floor((new Date(fechaCierre).getTime() - Date.now()) / 86400000)
+      |                                                     ^^^^^^^^^^ Cannot call impure function
+  565 |     : null;
+  566 |   const colorReloj =
+  567 |     diasRestantes === null ? "text-muted-slate" :                                                                                                                                                                                                                    react-hooks/purity
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/MisPostulaciones.tsx
+  150:21  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/MisPostulaciones.tsx:150:21
+  148 |   }, [user, selectedAppId, dbPostulations]);
+  149 |
+> 150 |   useEffect(() => { fetchDbPostulations(); }, [fetchDbPostulations]);
+      |                     ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  151 |   useEffect(() => { fetchAppDocuments(); }, [fetchAppDocuments]);
+  152 |   useEffect(() => {
+  153 |     localStorage.removeItem("pathfinder_applied_becas");        react-hooks/set-state-in-effect
+  151:21  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/MisPostulaciones.tsx:151:21
+  149 |
+  150 |   useEffect(() => { fetchDbPostulations(); }, [fetchDbPostulations]);
+> 151 |   useEffect(() => { fetchAppDocuments(); }, [fetchAppDocuments]);
+      |                     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  152 |   useEffect(() => {
+  153 |     localStorage.removeItem("pathfinder_applied_becas");
+  154 |     setTimeout(() => setMounted(true), 50);           react-hooks/set-state-in-effect
+  408:39  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/MisPostulaciones.tsx:408:39
+  406 |     const computedStep = Math.min(count + 1, 4);
+  407 |
+> 408 |     if (currentPaso !== computedStep) handleUpdateStep(selectedAppId, computedStep);
+      |                                       ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  409 |   }, [identityStatus, academicStatus, socioStatus, selectedAppId, dbPostulations, user]);
+  410 |
+  411 |   // Mochila widget docs  react-hooks/set-state-in-effect
+  409:6   warning  React Hook useEffect has a missing dependency: 'handleUpdateStep'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+  425:30  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/MisPostulaciones.tsx:425:30
+  423 |   const lastSyncLabel = (() => {
+  424 |     if (!lastSync) return null;
+> 425 |     const mins = Math.floor((Date.now() - lastSync.getTime()) / 60000);
+      |                              ^^^^^^^^^^ Cannot call impure function
+  426 |     if (mins < 1) return "Sincronizado ahora";
+  427 |     return `Última sincronización: hace ${mins} min`;
+  428 |   })();                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/purity
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx
+  92:5  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+
+✖ 25 problems (15 errors, 10 warnings)
+  0 errors and 8 warnings potentially fixable with the `--fix` option.
+

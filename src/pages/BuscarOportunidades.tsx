@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
 import type { Oportunidad } from "../lib/types";
@@ -9,10 +9,25 @@ import {
   type BecaRecomendada,
   type BecaRaw,
 } from "../services/recomendaciones";
+import { ScholarshipCard } from "../components/catalogo/ScholarshipCard";
+import { FilterDrawer } from "../components/catalogo/FilterDrawer";
+import { DetailDrawer } from "../components/catalogo/DetailDrawer";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 export default function BuscarOportunidades() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [oportunidades, setOportunidades] = useState<Oportunidad[]>([]);
   const [isLoadingBecas, setIsLoadingBecas] = useState(false);
   // Controla caché: solo re-llama a la RPC cuando cambia user o se activa filtro
@@ -22,6 +37,19 @@ export default function BuscarOportunidades() {
   const [isFiltersDrawerOpen, setIsFiltersDrawerOpen] = useState(false);
   const [selectedOportunidad, setSelectedOportunidad] =
     useState<Oportunidad | null>(null);
+  // Retiene la última oportunidad seleccionada mientras el DetailDrawer se
+  // desliza hacia afuera, para que el contenido no desaparezca a mitad de la
+  // animación de cierre. Se ajusta durante el render (no en un efecto) según
+  // el patrón recomendado por React para derivar estado a partir de props/estado
+  // que cambian: https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  const [prevSelectedOportunidad, setPrevSelectedOportunidad] =
+    useState<Oportunidad | null>(null);
+  const [displayedOportunidad, setDisplayedOportunidad] =
+    useState<Oportunidad | null>(null);
+  if (selectedOportunidad !== prevSelectedOportunidad) {
+    setPrevSelectedOportunidad(selectedOportunidad);
+    if (selectedOportunidad) setDisplayedOportunidad(selectedOportunidad);
+  }
 
   // Estados para filtros avanzados y paginación
   const [selectedProgramTypes, setSelectedProgramTypes] = useState<string[]>(
@@ -130,7 +158,6 @@ export default function BuscarOportunidades() {
     };
 
     fetchBecas();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const [activeOportunidadesTab, setActiveOportunidadesTab] = useState<
@@ -189,6 +216,19 @@ export default function BuscarOportunidades() {
     loadSavedBecas();
   }, [user]);
 
+  // Open specific beca from navigation state (e.g., dashboard recommendation)
+  useEffect(() => {
+    const becaId = location.state?.openBecaId as string | undefined;
+    if (becaId && oportunidades.length > 0) {
+      const match = oportunidades.find((o) => o.id === becaId);
+      if (match) {
+        setSelectedOportunidad(match);
+        // Clean state so it doesn't re-open on re-render
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    }
+  }, [location.state?.openBecaId, oportunidades]);
+
   // Load applied becas from Supabase postulaciones table
   useEffect(() => {
     const loadAppliedBecas = async () => {
@@ -219,21 +259,22 @@ export default function BuscarOportunidades() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [accordionOpen, setAccordionOpen] = useState({
-    programa: true,
-    financiamiento: true,
-    gestion: true,
-    destino: true,
-  });
-
-  const toggleAccordion = (key: keyof typeof accordionOpen) => {
-    setAccordionOpen((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
   const closeAllDrawers = () => {
     setIsFiltersDrawerOpen(false);
     setSelectedOportunidad(null);
   };
+
+  // ── Auto-select beca from Dashboard recommendation ─────────────────────
+  useEffect(() => {
+    const becaId = (location.state as { becaId?: string } | null)?.becaId;
+    if (!becaId || oportunidades.length === 0 || selectedOportunidad) return;
+    const match = oportunidades.find((o) => o.id === becaId);
+    if (match) {
+      setSelectedOportunidad(match);
+      // Clean up location state so refreshing doesn't re-select
+      window.history.replaceState({}, document.title);
+    }
+  }, [oportunidades, location.state, selectedOportunidad]);
 
   // Determina si una beca es de patrocinador público o privado
   const isPublicSponsor = (sponsor: string) => {
@@ -278,10 +319,12 @@ export default function BuscarOportunidades() {
 
   // Resetear a la página 1 cuando cambia algún filtro
   useEffect(() => {
-    setCurrentPage(1);
+    const timer = setTimeout(() => {
+      setCurrentPage(1);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [
     searchQuery,
-
     selectedProgramTypes,
     selectedFinancing,
     selectedGestiones,
@@ -606,20 +649,6 @@ export default function BuscarOportunidades() {
     }
   };
 
-  // Helper: clase de color del badge de afinidad según score real
-  const getAffinityBadgeClass = (score: number): string => {
-    if (score >= 85) return "badge b-green";
-    if (score >= 60) return "badge b-blue";
-    return "badge b-slate";
-  };
-
-  // Helper: etiqueta textual de afinidad
-  const getAffinityLabel = (score: number): string => {
-    if (score >= 85) return `${score}% Alta Afinidad`;
-    if (score >= 60) return `${score}% Afinidad`;
-    return `${score}% Baja Afinidad`;
-  };
-
   // Filter and search logic
   const filteredOportunidades = oportunidades.filter((oportunidad) => {
     if (activeOportunidadesTab === "guardadas") {
@@ -691,940 +720,373 @@ export default function BuscarOportunidades() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
 
+  const activeFiltersCount = selectedProgramTypes.length + (selectedFinancing !== "todos" ? 1 : 0) + selectedGestiones.length + selectedDestinos.length;
+
   return (
-    <div className="flex flex-col min-h-screen relative">
-      {/* TopNavBar */}
-      <header className="sticky top-0 right-0 w-full z-40 bg-white border-b border-[#e2e8f0] h-14 flex justify-between items-center px-6">
-        <div className="flex items-center justify-between w-full gap-4">
-          {/* 1. Buscador (flex-1 hace que ocupe todo el espacio sobrante hasta max-w-3xl) */}
-          <div className="relative w-full md:flex-1 max-w-3xl flex items-center">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-2 text-[16px]">
-              search
-            </span>
-            <input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-[8px] pl-10 pr-4 py-1.5 t-xs outline-none focus:border-[#1a3a7c] transition-all"
-              placeholder="Buscar becas, universidades o convenios..."
-              type="text"
-            />
-          </div>
-
-          {/* 2. Grupo de Acciones (shrink-0 evita que se aplasten) */}
-          <div className="flex items-center gap-6 shrink-0">
-            {/* Botón de Filtros */}
-            <button
-              onClick={() => setIsFiltersDrawerOpen(true)}
-              className="btn-sub text-xs hover:scale-105 active:scale-95 transition-transform flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-sm">tune</span>
-              <span>Filtros</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <div className="flex flex-col flex-1 bg-bg-base">
       {/* Body Content */}
-      <div className="p-md md:p-margin-desktop max-w-7xl mx-auto space-y-lg w-full">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-sm border-b border-[#e2e8f0] pb-3">
-          <div>
-            <h2 className="t-lg bold leading-none">
-              {activeOportunidadesTab === "explorar" &&
-                "Oportunidades Disponibles"}
-              {activeOportunidadesTab === "guardadas" && "Mis Becas Guardadas"}
-              {activeOportunidadesTab === "postuladas" && "Mis Postulaciones"}
-            </h2>
-            <p className="t-sm mt-1.5">
-              {activeOportunidadesTab === "explorar" &&
-                `${filteredOportunidades.length} de ${oportunidades.length} resultados`}
-              {activeOportunidadesTab === "guardadas" &&
-                `${savedBecaIds.length} beca${savedBecaIds.length !== 1 ? "s" : ""} guardada${savedBecaIds.length !== 1 ? "s" : ""} — listas para postular`}
-              {activeOportunidadesTab === "postuladas" &&
-                `${appliedBecaIds.length} beca${appliedBecaIds.length !== 1 ? "s" : ""} con postulación activa`}
-            </p>
+      <div className="px-6 md:px-16 pb-8 w-full mx-auto flex flex-col gap-6">
+        
+        {/* Título */}
+        <h1 className="text-[32px] font-black text-brand-blue leading-none">
+          Explorar Becas
+        </h1>
+
+        {/* Buscador y Pestañas Wrapper */}
+        <div className="flex flex-col gap-6">
+          
+          {/* Fila de Búsqueda y Filtros */}
+          <div className="flex flex-col md:flex-row gap-4 items-center w-full">
+            <div className="relative w-full md:w-[400px]">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary font-black z-10">
+                search
+              </span>
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 h-14 bg-white"
+                placeholder="Buscar becas o programas..."
+                type="text"
+              />
+            </div>
+            
+            <Button
+              onClick={() => setIsFiltersDrawerOpen(true)}
+              variant="neutral"
+              className="w-full md:w-auto h-14"
+            >
+              <span className="material-symbols-outlined text-[18px]">list</span>
+              <span className="text-[14px] font-black">Filtros Avanzados</span>
+              {activeFiltersCount > 0 && (
+                <Badge className="ml-2 px-1.5 py-0.5 text-[10px] font-black bg-main text-main-foreground">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Button>
           </div>
 
-          <div className="flex gap-sm self-start shrink-0">
-            {/* 3-tab switcher */}
-            <div className="tabs">
-              <button
-                onClick={() => setActiveOportunidadesTab("explorar")}
-                className={`tab ${activeOportunidadesTab === "explorar" ? "on" : ""}`}
-              >
-                <span className="material-symbols-outlined text-[12px] mr-1">
-                  travel_explore
-                </span>
+          {/* Fila de Pestañas */}
+          <div className="grid grid-cols-3 w-full border-b-3 border-border">
+            <button
+              onClick={() => setActiveOportunidadesTab("explorar")}
+              className={`flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-3 pb-2 pt-2 border-b-3 transition-colors ${
+                activeOportunidadesTab === "explorar"
+                  ? "border-border"
+                  : "border-transparent"
+              }`}
+            >
+              <span className={`text-[12px] sm:text-[15px] font-black whitespace-nowrap ${
+                activeOportunidadesTab === "explorar" ? "text-text-primary" : "text-text-tertiary"
+              }`}>
                 Explorar
-              </button>
-              <button
-                onClick={() => setActiveOportunidadesTab("guardadas")}
-                className={`tab ${activeOportunidadesTab === "guardadas" ? "on" : ""}`}
-              >
-                <span className="material-symbols-outlined text-[12px] mr-1">
-                  favorite
-                </span>
+              </span>
+              <span className={`rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-[12px] font-black border-2 whitespace-nowrap ${
+                activeOportunidadesTab === "explorar" ? "bg-brand-yellow text-text-primary border-border" : "bg-muted text-muted-foreground"
+              }`}>
+                {oportunidades.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveOportunidadesTab("guardadas")}
+              className={`flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-3 pb-2 pt-2 border-b-3 transition-colors ${
+                activeOportunidadesTab === "guardadas"
+                  ? "border-border"
+                  : "border-transparent"
+              }`}
+            >
+              <span className={`text-[12px] sm:text-[15px] font-black whitespace-nowrap ${
+                activeOportunidadesTab === "guardadas" ? "text-text-primary" : "text-text-tertiary"
+              }`}>
                 Guardadas
-                {savedBecaIds.length > 0 && (
-                  <span className="badge b-red ml-1">
-                    {savedBecaIds.length}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setActiveOportunidadesTab("postuladas")}
-                className={`tab ${activeOportunidadesTab === "postuladas" ? "on" : ""}`}
-              >
-                <span className="material-symbols-outlined text-[12px] mr-1">
-                  task_alt
-                </span>
+              </span>
+              <span className={`rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-[12px] font-black border-2 whitespace-nowrap ${
+                activeOportunidadesTab === "guardadas" ? "bg-brand-yellow text-text-primary border-border" : "bg-muted text-muted-foreground"
+              }`}>
+                {savedBecaIds.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveOportunidadesTab("postuladas")}
+              className={`flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-3 pb-2 pt-2 border-b-3 transition-colors ${
+                activeOportunidadesTab === "postuladas"
+                  ? "border-border"
+                  : "border-transparent"
+              }`}
+            >
+              <span className={`text-[12px] sm:text-[15px] font-black whitespace-nowrap ${
+                activeOportunidadesTab === "postuladas" ? "text-text-primary" : "text-text-tertiary"
+              }`}>
                 Postuladas
-                {appliedBecaIds.length > 0 && (
-                  <span className="badge b-blue ml-1">
-                    {appliedBecaIds.length}
-                  </span>
-                )}
-              </button>
-            </div>
+              </span>
+              <span className={`rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-[12px] font-black border-2 whitespace-nowrap ${
+                activeOportunidadesTab === "postuladas" ? "bg-brand-yellow text-text-primary border-border" : "bg-muted text-muted-foreground"
+              }`}>
+                {appliedBecaIds.length}
+              </span>
+            </button>
           </div>
         </div>
 
         {/* Results Grid - Scrollable and highly responsive */}
         {/* Skeleton de carga — 6 tarjetas animadas */}
         {isLoadingBecas ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div
+              <Card
                 key={i}
-                className="card flex flex-col gap-3"
-                style={{ borderRadius: "var(--r-md)", minHeight: 200 }}
+                className="bg-white p-5 min-h-[200px]"
               >
-                <div className="flex justify-between items-start">
-                  <div className="w-10 h-10 rounded-[12px] bg-[#e2e8f0] animate-pulse" />
-                  <div className="w-6 h-6 rounded-full bg-[#e2e8f0] animate-pulse" />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-4 w-24 rounded bg-[#e2e8f0] animate-pulse" />
-                  <div className="h-5 w-4/5 rounded bg-[#e2e8f0] animate-pulse" />
-                  <div className="h-4 w-2/5 rounded bg-[#e2e8f0] animate-pulse" />
-                </div>
-                <div className="space-y-2 mt-2">
-                  <div className="h-3 w-full rounded bg-[#e2e8f0] animate-pulse" />
-                  <div className="h-3 w-full rounded bg-[#e2e8f0] animate-pulse" />
-                  <div className="h-3 w-3/5 rounded bg-[#e2e8f0] animate-pulse" />
-                </div>
-                <div className="mt-auto pt-2 border-t border-[#e2e8f0]">
-                  <div className="h-4 w-28 rounded bg-[#e2e8f0] animate-pulse" />
-                </div>
-              </div>
+                <CardContent className="flex flex-col gap-3 p-0">
+                  <div className="flex justify-between items-start">
+                    <div className="w-10 h-10 rounded-[12px] bg-secondary-background animate-pulse" />
+                    <div className="w-6 h-6 rounded-full bg-secondary-background animate-pulse" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-4 w-24 rounded bg-secondary-background animate-pulse" />
+                    <div className="h-5 w-4/5 rounded bg-secondary-background animate-pulse" />
+                    <div className="h-4 w-2/5 rounded bg-secondary-background animate-pulse" />
+                  </div>
+                  <div className="space-y-2 mt-2">
+                    <div className="h-3 w-full rounded bg-secondary-background animate-pulse" />
+                    <div className="h-3 w-full rounded bg-secondary-background animate-pulse" />
+                    <div className="h-3 w-3/5 rounded bg-secondary-background animate-pulse" />
+                  </div>
+                  <div className="mt-auto pt-2 border-t border-border">
+                    <div className="h-4 w-28 rounded bg-secondary-background animate-pulse" />
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : filteredOportunidades.length === 0 ? (
-          <div className="card text-center max-w-md mx-auto my-8 w-full">
+          <Card className="text-center max-w-md mx-auto my-8 w-full p-8 bg-white">
+            <CardContent className="flex flex-col items-center p-0">
             {activeOportunidadesTab === "guardadas" ? (
               <>
-                <span className="material-symbols-outlined text-slate text-5xl mb-3">
+                <span className="material-symbols-outlined text-text-tertiary text-5xl mb-3">
                   favorite_border
                 </span>
-                <h3 className="t-md bold mb-1">
+                <h3 className="text-lg font-black text-text-primary mb-1">
                   No tienes becas guardadas aún
                 </h3>
-                <p className="t-xs mb-4">
-                  Explora las oportunidades y haz clic en ❤️ para guardar las
+                <p className="text-xs font-bold text-text-tertiary mb-4">
+                  Explora las oportunidades y haz clic en <span className="material-symbols-outlined text-sm align-middle text-danger-text" style={{fontVariationSettings: "'FILL' 1"}}>favorite</span> para guardar las
                   que te interesen. Luego podrás postular con un solo clic.
                 </p>
-                <button
+                <Button
                   onClick={() => setActiveOportunidadesTab("explorar")}
-                  className="btn-sub text-xs hover:scale-105 active:scale-95 transition-transform"
+                  variant="neutral"
                 >
                   Explorar Becas
-                </button>
+                </Button>
               </>
             ) : activeOportunidadesTab === "postuladas" ? (
               <>
-                <span className="material-symbols-outlined text-slate text-5xl mb-3">
+                <span className="material-symbols-outlined text-text-tertiary text-5xl mb-3">
                   task_alt
                 </span>
-                <h3 className="t-md bold mb-1">
+                <h3 className="text-lg font-black text-text-primary mb-1">
                   Aún no has postulado a ninguna beca
                 </h3>
-                <p className="t-xs mb-4">
+                <p className="text-xs font-bold text-text-tertiary mb-4">
                   Guarda primero una beca y desde la pestaña "Guardadas" podrás
                   postular. Tu progreso aparecerá en Mis Postulaciones.
                 </p>
                 <div className="flex gap-2 justify-center">
-                  <button
+                  <Button
                     onClick={() => setActiveOportunidadesTab("guardadas")}
-                    className="btn-sub text-xs hover:scale-105 active:scale-95 transition-transform"
+                    variant="neutral"
                   >
                     Ver Guardadas
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => navigate("/postulaciones")}
-                    className="btn-sub text-xs hover:scale-105 active:scale-95 transition-transform"
+                    variant="neutral"
                   >
                     Mis Postulaciones
-                  </button>
+                  </Button>
                 </div>
               </>
             ) : (
               <>
-                <span className="material-symbols-outlined text-slate text-5xl mb-3">
+                <span className="material-symbols-outlined text-text-tertiary text-5xl mb-3">
                   search_off
                 </span>
-                <h3 className="t-md bold mb-1">Sin resultados</h3>
-                <p className="t-xs mb-4">
+                <h3 className="text-lg font-black text-text-primary mb-1">Sin resultados</h3>
+                <p className="text-xs font-bold text-text-tertiary mb-4">
                   Intenta con otros términos de búsqueda.
                 </p>
               </>
             )}
-          </div>
+            </CardContent>
+          </Card>
         ) : isLoadingBecas ? null : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedOportunidades.map((oportunidad) => {
-                const affinityClass = getAffinityBadgeClass(
-                  oportunidad.affinity,
-                );
-                const affinityLabel = getAffinityLabel(oportunidad.affinity);
-
-                const isSaved = savedBecaIds.includes(oportunidad.id);
-                const isApplied = appliedBecaIds.includes(oportunidad.id);
-
                 return (
-                  <article
+                  <ScholarshipCard
                     key={oportunidad.id}
+                    oportunidad={oportunidad}
+                    activeTab={activeOportunidadesTab}
                     onClick={() => setSelectedOportunidad(oportunidad)}
-                    className="card hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
-                    style={{ borderRadius: "var(--r-md)" }}
-                  >
-                    <div>
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="w-10 h-10 rounded-[12px] bg-[#e8eef8] flex items-center justify-center text-navy-2">
-                          <span className="material-symbols-outlined text-2xl font-fill">
-                            {oportunidad.icon}
-                          </span>
-                        </div>
-                        {activeOportunidadesTab === "postuladas" ? (
-                          <button
-                            className="btn-ico"
-                            title="Cancelar postulación"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPendingDeleteId(oportunidad.id);
-                              setShowDeleteModal(true);
-                            }}
-                          >
-                            <span
-                              className="material-symbols-outlined text-red"
-                              style={{ color: "var(--red)" }}
-                            >
-                              delete
-                            </span>
-                          </button>
-                        ) : (
-                          <button
-                            className="btn-ico"
-                            onClick={(e) => handleToggleSave(oportunidad.id, e)}
-                            title={
-                              isSaved ? "Quitar de guardadas" : "Guardar beca"
-                            }
-                          >
-                            <span
-                              className="material-symbols-outlined"
-                              style={isSaved ? { color: "var(--red)" } : {}}
-                            >
-                              favorite
-                            </span>
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="mb-3">
-                        <div className="flex items-center gap-xs mb-1 flex-wrap">
-                          <span
-                            className={`${affinityClass}`}
-                            title={`Afinidad calculada: Académico 40% + Socioeconómico 30% + Extracurricular 20% + Perfil 10%`}
-                          >
-                            {affinityLabel}
-                          </span>
-                          <span className="badge b-slate">
-                            {oportunidad.level}
-                          </span>
-                          {isApplied && (
-                            <span className="badge b-blue">Postulado</span>
-                          )}
-                        </div>
-                        <h3 className="t-base bold group-hover:text-[#1a3a7c] transition-colors leading-snug">
-                          {oportunidad.title}
-                        </h3>
-                        <p className="t-xs">{oportunidad.sponsor}</p>
-                      </div>
-
-                      <div className="space-y-sm text-body-sm mb-3">
-                        <div className="flex items-center gap-sm">
-                          <span className="material-symbols-outlined text-sm text-slate-2 shrink-0">
-                            payments
-                          </span>
-                          <span className="t-xs trunc">
-                            {oportunidad.coverage}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-sm">
-                          <span className="material-symbols-outlined text-sm text-slate-2 shrink-0">
-                            grade
-                          </span>
-                          <span className="t-xs trunc">
-                            {oportunidad.requirement}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-sm">
-                          <span
-                            className={`material-symbols-outlined text-sm shrink-0 ${
-                              oportunidad.id === "BEC-03"
-                                ? "text-red"
-                                : "text-slate-2"
-                            }`}
-                          >
-                            event
-                          </span>
-                          <span
-                            className={`t-xs ${oportunidad.id === "BEC-03" ? "text-red bold" : ""}`}
-                          >
-                            {oportunidad.deadline}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-[#e2e8f0]">
-                      {activeOportunidadesTab === "postuladas" ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate("/postulaciones", {
-                              state: { becaId: oportunidad.id },
-                            });
-                          }}
-                          className="text-[#166534] t-xs bold flex items-center gap-1 cursor-pointer hover:underline border-none bg-transparent"
-                        >
-                          <span
-                            className="material-symbols-outlined text-sm"
-                            style={{ fontVariationSettings: "'FILL' 1" }}
-                          >
-                            task_alt
-                          </span>
-                          Ver mi progreso
-                        </button>
-                      ) : (
-                        <button className="text-navy-2 t-xs bold flex items-center gap-1 cursor-pointer hover:underline border-none bg-transparent">
-                          Ver Detalles{" "}
-                          <span className="material-symbols-outlined text-sm">
-                            arrow_forward
-                          </span>
-                        </button>
-                      )}
-                    </div>
-                  </article>
+                    isSaved={savedBecaIds.includes(oportunidad.id)}
+                    onToggleSave={(id) => handleToggleSave(id)}
+                    onDeletePostulacion={(e) => {
+                      e.stopPropagation();
+                      setPendingDeleteId(oportunidad.id);
+                      setShowDeleteModal(true);
+                    }}
+                  />
                 );
               })}
             </div>
 
-            {/* Paginador (Controles) */}
+            {/* Paginador */}
             {totalPages > 1 && (
-              <div className="pg">
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={activePage === 1}
-                  className="pb"
+              <div className="flex items-center justify-between gap-2 sm:gap-4 py-6">
+                <Button
+                  variant="neutral"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
                 >
-                  ← Anterior
-                </button>
-                {Array.from({ length: totalPages }, (_, idx) => {
-                  const pNum = idx + 1;
-                  return (
-                    <button
-                      key={pNum}
-                      onClick={() => setCurrentPage(pNum)}
-                      className={`pn ${activePage === pNum ? "on" : ""}`}
-                    >
-                      {pNum}
-                    </button>
-                  );
-                })}
-                <button
+                  Anterior
+                </Button>
+
+                <span className="sm:hidden text-xs font-black text-text-tertiary shrink-0">
+                  {currentPage} / {totalPages}
+                </span>
+
+                <div className="hidden sm:flex items-center gap-2 overflow-x-auto px-2 no-scrollbar">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 shrink-0 rounded-lg shadow-shadow text-xs font-black hover:scale-105 active:scale-95 transition-transform ${
+                          currentPage === page
+                            ? "bg-text-primary text-white border-2 border-border"
+                            : "bg-white text-text-primary border-2 border-border"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ),
+                  )}
+                </div>
+
+                <Button
+                  variant="neutral"
                   onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
                   }
-                  disabled={activePage === totalPages}
-                  className="pb"
+                  disabled={currentPage === totalPages}
                 >
-                  Siguiente →
-                </button>
+                  Siguiente
+                </Button>
               </div>
             )}
           </>
         )}
       </div>
-
-      {/* Common Overlay Backdrop */}
-      {(isFiltersDrawerOpen || selectedOportunidad) && (
-        <div
-          onClick={() => setSelectedOportunidad(null)}
-          className="fixed inset-0 bg-black/50 z-[59] transition-opacity duration-300 opacity-100 cursor-pointer"
-        />
-      )}
 
       {/* Filters Drawer (Slides from right) */}
-      <div
-        className={`fixed top-0 right-0 h-screen w-[320px] bg-white z-[60] transition-transform duration-300 ease-out flex flex-col shadow-2xl border-l border-[#e2e8f0] ${
-          isFiltersDrawerOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        <div className="p-4 border-b border-[#e2e8f0] flex justify-between items-center bg-[#f1f5f9]">
-          <h2 className="t-md bold text-[#0F2554]">Filtros Avanzados</h2>
-          <button
-            onClick={handleLimpiarFiltros}
-            className="t-link bg-transparent border-none font-medium hover:underline cursor-pointer"
-          >
-            Limpiar todo
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Filter Group: Tipo de Programa */}
-          <div className="border-b border-[#e2e8f0] pb-4">
-            <button
-              onClick={() => toggleAccordion("programa")}
-              className="flex items-center justify-between w-full mb-3 group cursor-pointer bg-transparent border-none"
-            >
-              <span className="t-base bold text-[#0F2554]">
-                Tipo de Programa
-              </span>
-              <span
-                className={`material-symbols-outlined text-[18px] text-[#64748b] transition-transform duration-200 ${
-                  accordionOpen.programa ? "rotate-180" : ""
-                }`}
-              >
-                expand_more
-              </span>
-            </button>
-            {accordionOpen.programa && (
-              <div className="space-y-2">
-                {["Universitarias", "Técnicas", "Postgrado", "Idiomas"].map(
-                  (p, i) => (
-                    <label
-                      key={i}
-                      className="flex items-center gap-2 cursor-pointer group"
-                    >
-                      <input
-                        checked={selectedProgramTypes.includes(p)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedProgramTypes([
-                              ...selectedProgramTypes,
-                              p,
-                            ]);
-                          } else {
-                            setSelectedProgramTypes(
-                              selectedProgramTypes.filter((type) => type !== p),
-                            );
-                          }
-                        }}
-                        className="rounded border-[#e2e8f0] text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
-                        type="checkbox"
-                      />
-                      <span className="t-sm text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
-                        {p}
-                      </span>
-                    </label>
-                  ),
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Filter Group: Nivel de Financiamiento */}
-          <div className="border-b border-[#e2e8f0] pb-4">
-            <button
-              onClick={() => toggleAccordion("financiamiento")}
-              className="flex items-center justify-between w-full mb-3 group cursor-pointer bg-transparent border-none"
-            >
-              <span className="t-base bold text-[#0F2554]">Financiamiento</span>
-              <span
-                className={`material-symbols-outlined text-[18px] text-[#64748b] transition-transform duration-200 ${
-                  accordionOpen.financiamiento ? "rotate-180" : ""
-                }`}
-              >
-                expand_more
-              </span>
-            </button>
-            {accordionOpen.financiamiento && (
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    checked={selectedFinancing === "todos"}
-                    onChange={() => setSelectedFinancing("todos")}
-                    className="text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
-                    name="fin"
-                    type="radio"
-                  />
-                  <span className="t-sm text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
-                    Todos
-                  </span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    checked={selectedFinancing === "integral"}
-                    onChange={() => setSelectedFinancing("integral")}
-                    className="text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
-                    name="fin"
-                    type="radio"
-                  />
-                  <span className="t-sm text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
-                    Beca Integral (100%)
-                  </span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    checked={selectedFinancing === "parcial"}
-                    onChange={() => setSelectedFinancing("parcial")}
-                    className="text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
-                    name="fin"
-                    type="radio"
-                  />
-                  <span className="t-sm text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
-                    Beca Parcial
-                  </span>
-                </label>
-              </div>
-            )}
-          </div>
-
-          {/* Filter Group: Gestión */}
-          <div className="border-b border-[#e2e8f0] pb-4">
-            <button
-              onClick={() => toggleAccordion("gestion")}
-              className="flex items-center justify-between w-full mb-3 group cursor-pointer bg-transparent border-none"
-            >
-              <span className="t-base bold text-[#0F2554]">Gestión</span>
-              <span
-                className={`material-symbols-outlined text-[18px] text-[#64748b] transition-transform duration-200 ${
-                  accordionOpen.gestion ? "rotate-180" : ""
-                }`}
-              >
-                expand_more
-              </span>
-            </button>
-            {accordionOpen.gestion && (
-              <div className="space-y-2">
-                {["Pública", "Privada"].map((g, i) => (
-                  <label
-                    key={i}
-                    className="flex items-center gap-2 cursor-pointer group"
-                  >
-                    <input
-                      checked={selectedGestiones.includes(g)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedGestiones([...selectedGestiones, g]);
-                        } else {
-                          setSelectedGestiones(
-                            selectedGestiones.filter((type) => type !== g),
-                          );
-                        }
-                      }}
-                      className="rounded border-[#e2e8f0] text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
-                      type="checkbox"
-                    />
-                    <span className="t-sm text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
-                      {g}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Filter Group: Destino */}
-          <div>
-            <button
-              onClick={() => toggleAccordion("destino")}
-              className="flex items-center justify-between w-full mb-3 group cursor-pointer bg-transparent border-none"
-            >
-              <span className="t-base bold text-[#0F2554]">Destino</span>
-              <span
-                className={`material-symbols-outlined text-[18px] text-[#64748b] transition-transform duration-200 ${
-                  accordionOpen.destino ? "rotate-180" : ""
-                }`}
-              >
-                expand_more
-              </span>
-            </button>
-            {accordionOpen.destino && (
-              <div className="space-y-2">
-                {["Lima", "Provincias", "Extranjero"].map((d, i) => (
-                  <label
-                    key={i}
-                    className="flex items-center gap-2 cursor-pointer group"
-                  >
-                    <input
-                      checked={selectedDestinos.includes(d)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedDestinos([...selectedDestinos, d]);
-                        } else {
-                          setSelectedDestinos(
-                            selectedDestinos.filter((type) => type !== d),
-                          );
-                        }
-                      }}
-                      className="rounded border-[#e2e8f0] text-[#1a3a7c] focus:ring-[#1a3a7c] h-3.5 w-3.5"
-                      type="checkbox"
-                    />
-                    <span className="t-sm text-[#0F2554] group-hover:text-[#1a3a7c] transition-colors">
-                      {d}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="p-4 bg-white border-t border-[#e2e8f0] sticky bottom-0">
-          <button
-            onClick={() => setIsFiltersDrawerOpen(false)}
-            className="w-full py-2 bg-[#1a3a7c] text-white rounded-[8px] t-xs bold hover:bg-[#0F2554] transition-all cursor-pointer border-none"
-          >
-            Aplicar Filtros
-          </button>
-        </div>
-      </div>
+      <FilterDrawer
+        isOpen={isFiltersDrawerOpen}
+        onClose={() => setIsFiltersDrawerOpen(false)}
+        onClear={handleLimpiarFiltros}
+        selectedProgramTypes={selectedProgramTypes}
+        setSelectedProgramTypes={setSelectedProgramTypes}
+        selectedFinancing={selectedFinancing}
+        setSelectedFinancing={setSelectedFinancing}
+        selectedGestiones={selectedGestiones}
+        setSelectedGestiones={setSelectedGestiones}
+        selectedDestinos={selectedDestinos}
+        setSelectedDestinos={setSelectedDestinos}
+      />
 
       {/* Details Drawer — bottom-sheet on mobile, side drawer on desktop */}
-      <div
-        className={`fixed z-[60] bg-white shadow-2xl flex flex-col
-          bottom-0 left-0 right-0 h-[88vh] rounded-t-2xl
-          lg:bottom-auto lg:top-0 lg:right-0 lg:left-auto lg:w-full lg:max-w-2xl lg:h-screen lg:rounded-none lg:border-l lg:border-[#e2e8f0]
-          transition-transform duration-500 ease-out ${
-          selectedOportunidad
-            ? "translate-y-0 lg:translate-y-0 lg:translate-x-0"
-            : "translate-y-full lg:translate-y-0 lg:translate-x-full"
-        }`}
+      <DetailDrawer
+        oportunidad={displayedOportunidad}
+        isOpen={!!selectedOportunidad}
+        isSaved={displayedOportunidad ? savedBecaIds.includes(displayedOportunidad.id) : false}
+        isApplied={displayedOportunidad ? appliedBecaIds.includes(displayedOportunidad.id) : false}
+        hasProfile={!!profile}
+        requisitos={displayedOportunidad ? generateRequisitos(displayedOportunidad) : []}
+        onClose={() => setSelectedOportunidad(null)}
+        onToggleSave={(id) => handleToggleSave(id)}
+        onApply={(id) => {
+          if (appliedBecaIds.includes(id)) {
+            navigate("/postulaciones", { state: { becaId: id } });
+            closeAllDrawers();
+          } else {
+            handleApply(id);
+          }
+        }}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={showDeleteModal && !!pendingDeleteId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowDeleteModal(false);
+            setPendingDeleteId(null);
+          }
+        }}
       >
-        {selectedOportunidad && (
-          <>
-            {/* Grab handle for mobile */}
-            <div className="lg:hidden mx-auto mt-3 mb-2 w-10 h-1 bg-gray-300 rounded-full" />
-            <div className="p-4 border-b border-[#e2e8f0] flex justify-between items-start bg-[#f1f5f9]">
-              <div className="space-y-2 w-full">
-                <button
-                  onClick={() => setSelectedOportunidad(null)}
-                  className="material-symbols-outlined text-[#64748b] hover:text-[#0F2554] mb-2 cursor-pointer p-1 rounded-full hover:bg-[#e2e8f0] transition-colors bg-transparent border-none text-[18px]"
-                >
-                  close
-                </button>
-                <div className="flex gap-2 mb-1 flex-wrap">
-                  <span className="badge b-blue uppercase">
-                    {selectedOportunidad.level}
-                  </span>
-                  <span className="badge b-amber uppercase">
-                    {selectedOportunidad.affinity >= 90
-                      ? "Excelencia"
-                      : "Aptitud"}
-                  </span>
-                </div>
-                <h2 className="t-lg bold text-[#0F2554] leading-tight">
-                  {selectedOportunidad.title}
-                </h2>
-                <div className="flex items-center gap-1.5 text-[#166534] t-sm bold">
-                  <span className="material-symbols-outlined text-sm font-fill">
-                    verified
-                  </span>
-                  <span>
-                    {selectedOportunidad.affinity}% de afinidad con tu perfil
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-              {/* T-Shirt Stats Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="bg-[#f1f5f9] p-3 rounded-[12px] border border-[#e2e8f0]">
-                  <p className="t-xs bold uppercase mb-1">Cobertura</p>
-                  <p className="t-sm bold text-[#0F2554] leading-tight">
-                    {selectedOportunidad.coverage.replace("Cubre: ", "")}
-                  </p>
-                </div>
-                <div className="bg-[#f1f5f9] p-3 rounded-[12px] border border-[#e2e8f0]">
-                  <p className="t-xs bold uppercase mb-1">Cierre</p>
-                  <p className="t-sm bold text-[#991b1b] leading-tight">
-                    {selectedOportunidad.deadline.replace("Cierra en ", "")}
-                  </p>
-                </div>
-                <div className="bg-[#f1f5f9] p-3 rounded-[12px] border border-[#e2e8f0]">
-                  <p className="t-xs bold uppercase mb-1">Institución</p>
-                  <p className="t-sm bold text-[#0F2554] leading-tight">
-                    {selectedOportunidad.sponsor}
-                  </p>
-                </div>
-                <div className="bg-[#f1f5f9] p-3 rounded-[12px] border border-[#e2e8f0]">
-                  <p className="t-xs bold uppercase mb-1">Nivel</p>
-                  <p className="t-sm bold text-[#0F2554] leading-tight">
-                    {selectedOportunidad.level}
-                  </p>
-                </div>
-              </div>
-
-              {/* About section */}
-              <section className="space-y-2">
-                <h3 className="t-md bold border-l-4 border-[#1a3a7c] pl-2 text-[#0F2554]">
-                  Sobre la Convocatoria
-                </h3>
-                <p className="t-base text-[#0F2554] leading-relaxed">
-                  {selectedOportunidad.sobre}
-                </p>
-              </section>
-
-              {/* Benefits Section */}
-              <section className="space-y-2 border-t border-[#e2e8f0] pt-4">
-                <h3 className="t-md bold border-l-4 border-[#1a3a7c] pl-2 text-[#0F2554]">
-                  Beneficios Subvencionados
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-body-sm">
-                  {selectedOportunidad.beneficios.map((ben, idx) => (
-                    <div key={idx} className="flex gap-1.5 items-start">
-                      <span className="material-symbols-outlined text-[#166534] text-sm">
-                        check_circle
-                      </span>
-                      <span className="t-sm text-[#0F2554] leading-snug">
-                        {ben}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* Cross Match Requirements Section */}
-              <section className="space-y-2 border-t border-[#e2e8f0] pt-4 pb-4">
-                <h3 className="t-md bold border-l-4 border-[#1a3a7c] pl-2 text-[#0F2554]">
-                  Cruce de Requisitos
-                </h3>
-
-                {/* Banner si el perfil no está completo */}
-                {!profile && (
-                  <div className="flex items-center gap-2 bg-[#fef3c7] border border-[#d97706]/30 rounded-[8px] px-3 py-2 mb-2">
-                    <span className="material-symbols-outlined text-[#d97706] text-sm">
-                      info
-                    </span>
-                    <p className="t-xs text-[#92400e]">
-                      <span className="font-semibold">Completa tu perfil</span>{" "}
-                      para ver el cruce real de requisitos con tus datos.
-                    </p>
-                  </div>
-                )}
-
-                <div className="bg-white rounded-[12px] overflow-hidden border border-[#e2e8f0] p-3">
-                  <div className="overflow-x-auto -mx-3 px-3">
-                  <table className="tbl" style={{ minWidth: 480 }}>
-                    <thead>
-                      <tr>
-                        <th style={{ width: "45%" }}>Requisito Beca</th>
-                        <th style={{ width: "35%" }}>Tu Perfil</th>
-                        <th style={{ width: "20%" }}>Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {generateRequisitos(selectedOportunidad).map(
-                        (req, idx) => (
-                          <tr key={idx}>
-                            <td className="t-base text-[#0F2554]">
-                              {req.campo}
-                            </td>
-                            <td className="t-base bold text-[#0F2554] font-semibold">
-                              {req.perfil}
-                            </td>
-                            <td>
-                              {req.estado === "Cumple" ? (
-                                <span className="s-ok bold">
-                                  <span className="material-symbols-outlined text-xs">
-                                    check_circle
-                                  </span>{" "}
-                                  Cumple
-                                </span>
-                              ) : req.estado === "NoCumple" ? (
-                                <span
-                                  className="bold"
-                                  style={{
-                                    color: "#991b1b",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "3px",
-                                    fontSize: "11px",
-                                  }}
-                                >
-                                  <span
-                                    className="material-symbols-outlined text-xs"
-                                    style={{
-                                      fontVariationSettings: "'FILL' 1",
-                                    }}
-                                  >
-                                    cancel
-                                  </span>{" "}
-                                  No cumple
-                                </span>
-                              ) : (
-                                <span className="s-warn bold">
-                                  <span className="material-symbols-outlined text-xs">
-                                    pending
-                                  </span>{" "}
-                                  Pendiente
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ),
-                      )}
-                    </tbody>
-                  </table>
-                  </div>
-                </div>
-              </section>
-            </div>
-
-            <div className="p-4 bg-white border-t border-[#e2e8f0] flex gap-3 sticky bottom-0 z-10">
-              <button
-                onClick={() => handleToggleSave(selectedOportunidad.id)}
-                className={`btn-sub flex-1 py-2 flex items-center justify-center gap-1 cursor-pointer hover:scale-105 active:scale-95 transition-all ${
-                  savedBecaIds.includes(selectedOportunidad.id)
-                    ? "border-[#991b1b] text-[#991b1b] bg-[#fee2e2]"
-                    : "border-[#1a3a7c] text-[#1a3a7c]"
-                }`}
-              >
-                <span className="material-symbols-outlined text-sm">
-                  favorite
-                </span>{" "}
-                {savedBecaIds.includes(selectedOportunidad.id)
-                  ? "Guardado ✓"
-                  : "Guardar"}
-              </button>
-              {appliedBecaIds.includes(selectedOportunidad.id) ? (
-                <button
-                  onClick={() => {
-                    navigate("/postulaciones", {
-                      state: { becaId: selectedOportunidad.id },
-                    });
-                    closeAllDrawers();
-                  }}
-                  className="flex-[2] bg-[#e8eef8] text-[#1a3a7c] border border-[#1a3a7c]/30 py-2 rounded-[8px] flex items-center justify-center gap-1 cursor-pointer font-bold hover:bg-[#e2e8f0] transition-all hover:scale-[1.01] active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-sm font-fill">
-                    task_alt
-                  </span>
-                  Ver mi progreso
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleApply(selectedOportunidad.id)}
-                  className="flex-[2] bg-[#0F2554] text-white py-2 rounded-[8px] shadow-sm hover:bg-[#1a3a7c] hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-1 ml-auto cursor-pointer bold border-none"
-                >
-                  Postular ahora{" "}
-                  <span className="material-symbols-outlined text-sm">
-                    bolt
-                  </span>
-                </button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Light Delete Confirmation Modal */}
-      {showDeleteModal && pendingDeleteId && (
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-[#0F2554]/40 backdrop-blur-sm"
-            onClick={() => {
-              setShowDeleteModal(false);
-              setPendingDeleteId(null);
-            }}
-          />
-          {/* Modal */}
-          <div className="relative card max-w-sm w-full shadow-2xl border border-[#e2e8f0] p-6 animate-in slide-in-from-bottom-4 duration-300">
-            {/* Icon */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-[8px] bg-[#fee2e2] flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#991b1b] text-2xl">
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-base bg-danger-bg border-2 border-border flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-danger-text text-2xl">
                   delete_forever
                 </span>
               </div>
-              <div>
-                <h3 className="t-base bold text-navy">
-                  ¿Cancelar postulación?
-                </h3>
-                <p className="t-xs mt-0.5" style={{ color: "var(--slate)" }}>
+              <div className="text-left">
+                <DialogTitle className="text-base">¿Cancelar postulación?</DialogTitle>
+                <p className="text-xs font-bold text-text-tertiary mt-0.5">
                   {oportunidades.find((o) => o.id === pendingDeleteId)?.title ||
                     "Esta beca"}
                 </p>
               </div>
             </div>
-            <p
-              className="t-sm mb-6 leading-relaxed"
-              style={{ color: "var(--slate)" }}
+          </DialogHeader>
+          <p className="text-sm font-bold text-text-tertiary leading-relaxed">
+            Se eliminará tu postulación y todo el progreso guardado. Esta
+            acción no se puede deshacer.
+          </p>
+          <DialogFooter>
+            <Button
+              variant="neutral"
+              className="flex-1"
+              onClick={() => {
+                setShowDeleteModal(false);
+                setPendingDeleteId(null);
+              }}
             >
-              Se eliminará tu postulación y todo el progreso guardado. Esta
-              acción no se puede deshacer.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setPendingDeleteId(null);
-                }}
-                className="flex-1 py-2 rounded-[8px] border border-[#e2e8f0] bg-white t-xs bold hover:bg-[#f1f5f9] transition-all cursor-pointer"
-                style={{ color: "var(--slate)" }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleDeletePostulation(pendingDeleteId)}
-                className="flex-[1.5] py-2 rounded-[8px] bg-[#991b1b] hover:bg-[#7f1d1d] transition-all active:scale-95 shadow-lg shadow-red-600/20 cursor-pointer flex items-center justify-center gap-1.5 border-none"
-              >
-                <span
-                  className="material-symbols-outlined text-sm"
-                  style={{ color: "#ffffff" }}
-                >
-                  delete
-                </span>
-                <span
-                  className="bold"
-                  style={{
-                    fontSize: "10px",
-                    color: "#ffffff",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Sí, eliminar
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              Cancelar
+            </Button>
+            <Button
+              className="flex-[1.5] bg-danger-text text-white hover:bg-danger-text/90"
+              onClick={() => pendingDeleteId && handleDeletePostulation(pendingDeleteId)}
+            >
+              <span className="material-symbols-outlined text-sm">delete</span>
+              Sí, eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Floating Success Notification Toast */}
       {showSuccessToast && (
-        <div className="fixed top-20 right-6 z-[99] bg-[#0F2554] text-white p-4 rounded-[12px] shadow-2xl flex items-center gap-3 border border-white/10 animate-pulse">
+        <div className="fixed top-20 right-6 z-[99] bg-brand-blue text-white p-4 rounded-[12px] shadow-shadow flex items-center gap-3 border-2 border-white/20 animate-pulse">
           <span className="material-symbols-outlined text-[20px]">
             verified
           </span>
           <div>
-            <p className="t-sm bold text-white">Notificación de Pathfinder</p>
-            <p className="t-xs text-white/95">{toastMessage}</p>
+            <p className="text-sm font-black text-white">Notificación de Pathfinder</p>
+            <p className="text-xs font-semibold text-white/95">{toastMessage}</p>
           </div>
         </div>
       )}

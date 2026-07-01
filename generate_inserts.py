@@ -77,9 +77,9 @@ sql_output = []
 # Becas INSERTs
 sql_output.append("-- =========================================================================\n-- BECAS INSERTS\n-- =========================================================================\n")
 for b in becas:
-    # Handle array beneficios
     beneficios_json = json.dumps(b.get("beneficios", []), ensure_ascii=False)
-    # Escape quotes
+    docs_json = json.dumps(b.get("documentos_requeridos", []), ensure_ascii=False)
+    has_docs = bool(b.get("documentos_requeridos"))
     title = b.get("title", "").replace("'", "''")
     sponsor = b.get("sponsor", "").replace("'", "''")
     coverage = b.get("coverage", "").replace("'", "''")
@@ -89,7 +89,6 @@ for b in becas:
     icon = b.get("icon", "school")
     affinity = b.get("affinity", 85)
     
-    # Calculate closure date based on deadline or default
     deadline_str = b.get("deadline", "")
     days = 30
     match_days = re.search(r"(\d+)", deadline_str)
@@ -97,13 +96,23 @@ for b in becas:
         days = int(match_days.group(1))
     closure_date = f"CURRENT_DATE + INTERVAL '{days} days'"
     
-    sql_output.append(
-        f"INSERT INTO public.becas (id, titulo, sponsor, cobertura, requisitos, fecha_cierre, nivel, icono, sobre, beneficios, afinidad)\n"
-        f"VALUES ('{b['id']}', '{title}', '{sponsor}', '{coverage}', '{requirement}', {closure_date}, '{level}', '{icon}', '{sobre}', '{beneficios_json}'::jsonb, {affinity})\n"
-        f"ON CONFLICT (id) DO UPDATE SET\n"
-        f"  titulo = EXCLUDED.titulo, sponsor = EXCLUDED.sponsor, cobertura = EXCLUDED.cobertura, requisitos = EXCLUDED.requisitos,\n"
-        f"  nivel = EXCLUDED.nivel, icono = EXCLUDED.icono, sobre = EXCLUDED.sobre, beneficios = EXCLUDED.beneficios, afinidad = EXCLUDED.afinidad;\n"
-    )
+    if has_docs:
+        sql_output.append(
+            f"INSERT INTO public.becas (id, titulo, sponsor, cobertura, requisitos, fecha_cierre, nivel, icono, sobre, beneficios, afinidad, documentos_requeridos)\n"
+            f"VALUES ('{b['id']}', '{title}', '{sponsor}', '{coverage}', '{requirement}', {closure_date}, '{level}', '{icon}', '{sobre}', '{beneficios_json}'::jsonb, {affinity}, '{docs_json}'::jsonb)\n"
+            f"ON CONFLICT (id) DO UPDATE SET\n"
+            f"  titulo = EXCLUDED.titulo, sponsor = EXCLUDED.sponsor, cobertura = EXCLUDED.cobertura, requisitos = EXCLUDED.requisitos,\n"
+            f"  nivel = EXCLUDED.nivel, icono = EXCLUDED.icono, sobre = EXCLUDED.sobre, beneficios = EXCLUDED.beneficios,\n"
+            f"  afinidad = EXCLUDED.afinidad, documentos_requeridos = EXCLUDED.documentos_requeridos;\n"
+        )
+    else:
+        sql_output.append(
+            f"INSERT INTO public.becas (id, titulo, sponsor, cobertura, requisitos, fecha_cierre, nivel, icono, sobre, beneficios, afinidad)\n"
+            f"VALUES ('{b['id']}', '{title}', '{sponsor}', '{coverage}', '{requirement}', {closure_date}, '{level}', '{icon}', '{sobre}', '{beneficios_json}'::jsonb, {affinity})\n"
+            f"ON CONFLICT (id) DO UPDATE SET\n"
+            f"  titulo = EXCLUDED.titulo, sponsor = EXCLUDED.sponsor, cobertura = EXCLUDED.cobertura, requisitos = EXCLUDED.requisitos,\n"
+            f"  nivel = EXCLUDED.nivel, icono = EXCLUDED.icono, sobre = EXCLUDED.sobre, beneficios = EXCLUDED.beneficios, afinidad = EXCLUDED.afinidad;\n"
+        )
 
 # Charlas INSERTs
 sql_output.append("\n-- =========================================================================\n-- CHARLAS INSERTS\n-- =========================================================================\n")

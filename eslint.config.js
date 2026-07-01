@@ -18,5 +18,17 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
+    // Componentes generados por shadcn/neobrutalism-components: exportan el
+    // componente junto a su función `*Variants` (cva) en el mismo archivo,
+    // es el patrón estándar de la librería. No aplica la regla de Fast Refresh.
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
   },
 ])

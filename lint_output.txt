@@ -1,0 +1,1024 @@
+
+> pathfinder-app@0.0.0 lint
+> eslint .
+
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/components/Sidebar.tsx
+    6:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/contexts/AuthContext.tsx
+  157:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Asesor.tsx
+   31:44  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+  152:41  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+  155:36  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+  165:44  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+  217:37  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+  220:34  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+  230:42  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+  254:21  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Asesor.tsx:254:21
+  252 |   };
+  253 |
+> 254 |   useEffect(() => { loadChatSessions(); }, [user, profile]);
+      |                     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  255 |   useEffect(() => { scrollToBottom(); }, [messages, isTyping]);
+  256 |
+  257 |   const createNewSession = async () => {                                                                                                       react-hooks/set-state-in-effect
+  254:44  warning  React Hook useEffect has a missing dependency: 'loadChatSessions'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/exhaustive-deps
+  360:20  error    Error: Cannot reassign variables declared outside of the component/hook
+
+Variable `globalLocalFallback` is declared outside of the component/hook. Reassigning this value during render is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Asesor.tsx:360:20
+  358 |         .update({ titulo: newTitle, mensajes: updatedMessages, updated_at: new Date().toISOString() })
+  359 |         .eq("id", currentSessionId);
+> 360 |       if (error) { globalLocalFallback = true; setUseLocalFallback(true); localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated)); }
+      |                    ^^^^^^^^^^^^^^^^^^^ `globalLocalFallback` cannot be reassigned
+  361 |     } catch {
+  362 |       globalLocalFallback = true; setUseLocalFallback(true);
+  363 |       localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated));  react-hooks/globals
+  362:7   error    Error: Cannot reassign variables declared outside of the component/hook
+
+Variable `globalLocalFallback` is declared outside of the component/hook. Reassigning this value during render is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Asesor.tsx:362:7
+  360 |       if (error) { globalLocalFallback = true; setUseLocalFallback(true); localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated)); }
+  361 |     } catch {
+> 362 |       globalLocalFallback = true; setUseLocalFallback(true);
+      |       ^^^^^^^^^^^^^^^^^^^ `globalLocalFallback` cannot be reassigned
+  363 |       localStorage.setItem("pathfinder_chat_sessions", JSON.stringify(updated));
+  364 |     }
+  365 |   };                                                                                                                                                 react-hooks/globals
+  373:11  error    The value assigned to 'aiText' is not used in subsequent statements                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 no-useless-assignment
+  429:21  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Asesor.tsx:429:21
+  427 |       const nextMessages: Message[] = [
+  428 |         ...currentMessages,
+> 429 |         { id: `ai-${Date.now()}`, sender: "ai", text: aiText, timestamp: new Date() },
+      |                     ^^^^^^^^^^ Cannot call impure function
+  430 |       ];
+  431 |       setMessages(nextMessages);
+  432 |       setIsTyping(false);                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/purity
+  541:21  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Asesor.tsx:541:21
+  539 |       const nextMessages: Message[] = [
+  540 |         ...currentMessages,
+> 541 |         { id: `ai-${Date.now()}`, sender: "ai", text: textoRespuesta, timestamp: new Date() }
+      |                     ^^^^^^^^^^ Cannot call impure function
+  542 |       ];
+  543 |
+  544 |       setMessages(nextMessages);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/purity
+  557:25  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Asesor.tsx:557:25
+  555 |         setIsTyping(false);
+  556 |         const errorMsg: Message = {
+> 557 |           id: `ai-err-${Date.now()}`,
+      |                         ^^^^^^^^^^ Cannot call impure function
+  558 |           sender: "ai",
+  559 |           text: "Ups, tuve un problema técnico al conectarme con Motibot. ¿Podrías intentar enviar tu mensaje de nuevo? 🤖",
+  560 |           timestamp: new Date()                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/purity
+  569:43  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Asesor.tsx:569:43
+  567 |   const handleSend = (text: string) => {
+  568 |     if (!text.trim()) return;
+> 569 |     const newMsg: Message = { id: `user-${Date.now()}`, sender: "user", text, timestamp: new Date() };
+      |                                           ^^^^^^^^^^ Cannot call impure function
+  570 |     const updated = [...messages, newMsg];
+  571 |     setMessages(updated);
+  572 |     setInputValue("");                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/purity
+  594:30  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Asesor.tsx:594:30
+  592 |
+  593 |   const relativeDate = (date: Date) => {
+> 594 |     const diff = Math.floor((Date.now() - date.getTime()) / 86400000);
+      |                              ^^^^^^^^^^ Cannot call impure function
+  595 |     if (diff === 0) return "Hoy";
+  596 |     if (diff === 1) return "Ayer";
+  597 |     return `Hace ${diff} días`;                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/purity
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/BuscarOportunidades.tsx
+  133:5   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  181:36  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  207:42  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  281:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/BuscarOportunidades.tsx:281:5
+  279 |   // Resetear a la página 1 cuando cambia algún filtro
+  280 |   useEffect(() => {
+> 281 |     setCurrentPage(1);
+      |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  282 |   }, [
+  283 |     searchQuery,
+  284 |  react-hooks/set-state-in-effect
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Dashboard.tsx
+   10:38  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   11:42  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   12:44  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   13:40  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   14:50  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   33:54  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   35:65  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   80:39  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  143:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Dashboard.tsx:143:7
+  141 |   useEffect(() => {
+  142 |     if (selectedPostId && postDocsMap[selectedPostId]) {
+> 143 |       setDbDocs(postDocsMap[selectedPostId]);
+      |       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  144 |     }
+  145 |   }, [selectedPostId, postDocsMap]);
+  146 |  react-hooks/set-state-in-effect
+  220:60  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Dashboard.tsx:220:60
+  218 |   const getDeadlineTextColorStyle = (dateStr: string) => {
+  219 |     if (!dateStr) return { color: "var(--slate)" };
+> 220 |     const days = Math.floor((new Date(dateStr).getTime() - Date.now()) / 86400000);
+      |                                                            ^^^^^^^^^^ Cannot call impure function
+  221 |     if (days <= 7) return { color: "var(--red)", fontWeight: "var(--fw-medium)" };
+  222 |     if (days <= 30) return { color: "var(--amber)", fontWeight: "var(--fw-medium)" };
+  223 |     return { color: "var(--green)", fontWeight: "var(--fw-medium)" };                                                                          react-hooks/purity
+  244:9   error  The value assigned to 'requiredDocs' is not used in subsequent statements                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-useless-assignment
+  247:63  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  262:43  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  336:65  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Dashboard.tsx:336:65
+  334 |   const docsTotal = selectedDocs.length;
+  335 |   const diasCierre = activeBeca?.fecha_cierre
+> 336 |     ? Math.floor((new Date(activeBeca.fecha_cierre).getTime() - Date.now()) / 86400000)
+      |                                                                 ^^^^^^^^^^ Cannot call impure function
+  337 |     : null;
+  338 |
+  339 |   const pasoLabels = ["", "Preparación", "Enviada", "Evaluación", "Resultados"];                                                                                                                                                                                                                                           react-hooks/purity
+  567:45  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  568:55  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Documentos.tsx
+   46:41  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+   72:39  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  102:40  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  103:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  104:40  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  142:44  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  163:45  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  167:46  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  195:32  error    'postErr' is never reassigned. Use 'const' instead                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        prefer-const
+  233:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Documentos.tsx:233:5
+  231 |
+  232 |   useEffect(() => {
+> 233 |     fetchDbDocuments();
+      |     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  234 |   }, [user, selectedBecaId]);
+  235 |
+  236 |   useEffect(() => {       react-hooks/set-state-in-effect
+  234:6   warning  React Hook useEffect has a missing dependency: 'fetchDbDocuments'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+  237:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Documentos.tsx:237:5
+  235 |
+  236 |   useEffect(() => {
+> 237 |     setCoursesPage(1);
+      |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  238 |   }, [tab]);
+  239 |
+  240 |   const handleBecaChange = (id: string) => {  react-hooks/set-state-in-effect
+  350:74  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Documentos.tsx:350:74
+  348 |
+  349 |         const fileExt = selectedFile.name.split(".").pop();
+> 350 |         const filePath = `${user.id}/${post.id}/${selectedDocToUpload}_${Date.now()}.${fileExt}`;
+      |                                                                          ^^^^^^^^^^ Cannot call impure function
+  351 |
+  352 |         const { error: uploadErr } = await supabase.storage
+  353 |           .from("expedientes")                                                                                                                                                                                       react-hooks/purity
+  407:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  460:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  460:43  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  564:53  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Documentos.tsx:564:53
+  562 |   const fechaCierre = selectedBeca?.deadline;
+  563 |   const diasRestantes = fechaCierre
+> 564 |     ? Math.floor((new Date(fechaCierre).getTime() - Date.now()) / 86400000)
+      |                                                     ^^^^^^^^^^ Cannot call impure function
+  565 |     : null;
+  566 |   const colorReloj =
+  567 |     diasRestantes === null ? "text-muted-slate" :                                                                                                                                                                                                                    react-hooks/purity
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Login.tsx
+   45:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   62:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/MisPostulaciones.tsx
+   33:45  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   37:56  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   38:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   39:42  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   77:53  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   91:52  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  103:49  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  105:43  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  107:52  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  116:56  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  119:52  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  150:21  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/MisPostulaciones.tsx:150:21
+  148 |   }, [user, selectedAppId, dbPostulations]);
+  149 |
+> 150 |   useEffect(() => { fetchDbPostulations(); }, [fetchDbPostulations]);
+      |                     ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  151 |   useEffect(() => { fetchAppDocuments(); }, [fetchAppDocuments]);
+  152 |   useEffect(() => {
+  153 |     localStorage.removeItem("pathfinder_applied_becas");        react-hooks/set-state-in-effect
+  151:21  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/MisPostulaciones.tsx:151:21
+  149 |
+  150 |   useEffect(() => { fetchDbPostulations(); }, [fetchDbPostulations]);
+> 151 |   useEffect(() => { fetchAppDocuments(); }, [fetchAppDocuments]);
+      |                     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  152 |   useEffect(() => {
+  153 |     localStorage.removeItem("pathfinder_applied_becas");
+  154 |     setTimeout(() => setMounted(true), 50);           react-hooks/set-state-in-effect
+  408:39  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/MisPostulaciones.tsx:408:39
+  406 |     const computedStep = Math.min(count + 1, 4);
+  407 |
+> 408 |     if (currentPaso !== computedStep) handleUpdateStep(selectedAppId, computedStep);
+      |                                       ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  409 |   }, [identityStatus, academicStatus, socioStatus, selectedAppId, dbPostulations, user]);
+  410 |
+  411 |   // Mochila widget docs  react-hooks/set-state-in-effect
+  409:6   warning  React Hook useEffect has a missing dependency: 'handleUpdateStep'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+  425:30  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/MisPostulaciones.tsx:425:30
+  423 |   const lastSyncLabel = (() => {
+  424 |     if (!lastSync) return null;
+> 425 |     const mins = Math.floor((Date.now() - lastSync.getTime()) / 60000);
+      |                              ^^^^^^^^^^ Cannot call impure function
+  426 |     if (mins < 1) return "Sincronizado ahora";
+  427 |     return `Última sincronización: hace ${mins} min`;
+  428 |   })();                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/purity
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx
+   51:22  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+   51:32  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+   89:76  error    '_' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   89:79  error    Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-empty
+   91:6   warning  React Hook useEffect has a missing dependency: 'condiciones'. Either include it or remove the dependency array. You can also do a functional update 'setCondiciones(c => ...)' if you only need 'condiciones' in the 'setCondiciones' call                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+  123:57  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:123:57
+  121 |   // ── SISFOH alert ──────────────────────────────────────────────────────────
+  122 |   const diasSisfoh = sisfohFechaVenc
+> 123 |     ? Math.floor((new Date(sisfohFechaVenc).getTime() - Date.now()) / 86400000)
+      |                                                         ^^^^^^^^^^ Cannot call impure function
+  124 |     : null;
+  125 |   const sisfohAlert = diasSisfoh !== null && diasSisfoh <= 180;
+  126 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/purity
+  287:12  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:287:12
+  285 |       <div className="bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-xs mb-5">
+  286 |         <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border-subtle bg-slate-3/20">
+> 287 |           <CardIcon icon="person" />
+      |            ^^^^^^^^ This component is created during render
+  288 |           <span className="text-[13px] font-medium text-navy flex-1">Datos personales</span>
+  289 |           <Badge done={personalDone} />
+  290 |         </div>
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:220:20
+  218 |   );
+  219 |
+> 220 |   const CardIcon = ({ icon }: { icon: string }) => (
+      |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 221 |     <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0 shadow-sm">
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 222 |       <span className="material-symbols-outlined text-[15px]">{icon}</span>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 223 |     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 224 |   );
+      | ^^^^ The component is created during render here
+  225 |
+  226 |   const Badge = ({ done }: { done: boolean }) => (
+  227 |     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/static-components
+  289:12  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:289:12
+  287 |           <CardIcon icon="person" />
+  288 |           <span className="text-[13px] font-medium text-navy flex-1">Datos personales</span>
+> 289 |           <Badge done={personalDone} />
+      |            ^^^^^ This component is created during render
+  290 |         </div>
+  291 |         <div className="p-5">
+  292 |           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:226:17
+  224 |   );
+  225 |
+> 226 |   const Badge = ({ done }: { done: boolean }) => (
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 227 |     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 228 |       done ? "bg-emerald-50 text-emerald-700 border-emerald-100/50" : "bg-amber-50 text-amber-700 border-amber-100/50"
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 229 |     }`}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 230 |       {done ? "Completo" : "Incompleto"}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 231 |     </span>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 232 |   );
+      | ^^^^ The component is created during render here
+  233 |
+  234 |   // ── Render ────────────────────────────────────────────────────────────────
+  235 |   return (                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/static-components
+  336:12  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:336:12
+  334 |       <div className="bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-xs mb-5">
+  335 |         <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border-subtle bg-slate-3/20">
+> 336 |           <CardIcon icon="school" />
+      |            ^^^^^^^^ This component is created during render
+  337 |           <span className="text-[13px] font-medium text-navy flex-1">Perfil académico</span>
+  338 |           <Badge done={academicoDone} />
+  339 |         </div>
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:220:20
+  218 |   );
+  219 |
+> 220 |   const CardIcon = ({ icon }: { icon: string }) => (
+      |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 221 |     <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0 shadow-sm">
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 222 |       <span className="material-symbols-outlined text-[15px]">{icon}</span>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 223 |     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 224 |   );
+      | ^^^^ The component is created during render here
+  225 |
+  226 |   const Badge = ({ done }: { done: boolean }) => (
+  227 |     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/static-components
+  338:12  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:338:12
+  336 |           <CardIcon icon="school" />
+  337 |           <span className="text-[13px] font-medium text-navy flex-1">Perfil académico</span>
+> 338 |           <Badge done={academicoDone} />
+      |            ^^^^^ This component is created during render
+  339 |         </div>
+  340 |         <div className="p-5">
+  341 |
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:226:17
+  224 |   );
+  225 |
+> 226 |   const Badge = ({ done }: { done: boolean }) => (
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 227 |     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 228 |       done ? "bg-emerald-50 text-emerald-700 border-emerald-100/50" : "bg-amber-50 text-amber-700 border-amber-100/50"
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 229 |     }`}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 230 |       {done ? "Completo" : "Incompleto"}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 231 |     </span>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 232 |   );
+      | ^^^^ The component is created during render here
+  233 |
+  234 |   // ── Render ────────────────────────────────────────────────────────────────
+  235 |   return (                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/static-components
+  385:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:385:14
+  383 |           <p className="text-[10px] font-bold text-primary uppercase tracking-[0.07em] pb-1.5 border-b border-border-subtle mt-3.5 mb-3.5">Mérito académico</p>
+  384 |           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3.5">
+> 385 |             <MeritOpt value="quinto" icon="🥇" label="Quinto Superior" />
+      |              ^^^^^^^^ This component is created during render
+  386 |             <MeritOpt value="tercio" icon="🥈" label="Tercio Superior" />
+  387 |             <MeritOpt value="medio" icon="🥉" label="Medio Superior" />
+  388 |           </div>
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:211:20
+  209 |   );
+  210 |
+> 211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+      |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 213 |       meritoAcademico === value ? "border-primary text-on-primary-fixed bg-primary-fixed shadow-sm" : "border-border-subtle text-muted-slate bg-surface"
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 214 |     }`}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 215 |       <span className="text-lg block mb-1">{icon}</span>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 216 |       {label}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 217 |     </button>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 218 |   );
+      | ^^^^ The component is created during render here
+  219 |
+  220 |   const CardIcon = ({ icon }: { icon: string }) => (
+  221 |     <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0 shadow-sm">  react-hooks/static-components
+  386:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:386:14
+  384 |           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3.5">
+  385 |             <MeritOpt value="quinto" icon="🥇" label="Quinto Superior" />
+> 386 |             <MeritOpt value="tercio" icon="🥈" label="Tercio Superior" />
+      |              ^^^^^^^^ This component is created during render
+  387 |             <MeritOpt value="medio" icon="🥉" label="Medio Superior" />
+  388 |           </div>
+  389 |
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:211:20
+  209 |   );
+  210 |
+> 211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+      |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 213 |       meritoAcademico === value ? "border-primary text-on-primary-fixed bg-primary-fixed shadow-sm" : "border-border-subtle text-muted-slate bg-surface"
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 214 |     }`}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 215 |       <span className="text-lg block mb-1">{icon}</span>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 216 |       {label}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 217 |     </button>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 218 |   );
+      | ^^^^ The component is created during render here
+  219 |
+  220 |   const CardIcon = ({ icon }: { icon: string }) => (
+  221 |     <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0 shadow-sm">                                                                                                                                                                  react-hooks/static-components
+  387:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:387:14
+  385 |             <MeritOpt value="quinto" icon="🥇" label="Quinto Superior" />
+  386 |             <MeritOpt value="tercio" icon="🥈" label="Tercio Superior" />
+> 387 |             <MeritOpt value="medio" icon="🥉" label="Medio Superior" />
+      |              ^^^^^^^^ This component is created during render
+  388 |           </div>
+  389 |
+  390 |           <p className="text-[10px] font-bold text-primary uppercase tracking-[0.07em] pb-1.5 border-b border-border-subtle mt-3.5 mb-3.5">Área de interés vocacional</p>
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:211:20
+  209 |   );
+  210 |
+> 211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+      |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 213 |       meritoAcademico === value ? "border-primary text-on-primary-fixed bg-primary-fixed shadow-sm" : "border-border-subtle text-muted-slate bg-surface"
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 214 |     }`}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 215 |       <span className="text-lg block mb-1">{icon}</span>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 216 |       {label}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 217 |     </button>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 218 |   );
+      | ^^^^ The component is created during render here
+  219 |
+  220 |   const CardIcon = ({ icon }: { icon: string }) => (
+  221 |     <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0 shadow-sm">                                                                 react-hooks/static-components
+  411:12  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:411:12
+  409 |       <div className="bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-xs mb-5">
+  410 |         <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border-subtle bg-slate-3/20">
+> 411 |           <CardIcon icon="home" />
+      |            ^^^^^^^^ This component is created during render
+  412 |           <span className="text-[13px] font-medium text-navy flex-1">Perfil socioeconómico</span>
+  413 |           <Badge done={sisfoh !== "No Pobre"} />
+  414 |         </div>
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:220:20
+  218 |   );
+  219 |
+> 220 |   const CardIcon = ({ icon }: { icon: string }) => (
+      |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 221 |     <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0 shadow-sm">
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 222 |       <span className="material-symbols-outlined text-[15px]">{icon}</span>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 223 |     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 224 |   );
+      | ^^^^ The component is created during render here
+  225 |
+  226 |   const Badge = ({ done }: { done: boolean }) => (
+  227 |     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/static-components
+  413:12  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:413:12
+  411 |           <CardIcon icon="home" />
+  412 |           <span className="text-[13px] font-medium text-navy flex-1">Perfil socioeconómico</span>
+> 413 |           <Badge done={sisfoh !== "No Pobre"} />
+      |            ^^^^^ This component is created during render
+  414 |         </div>
+  415 |         <div className="p-5">
+  416 |
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:226:17
+  224 |   );
+  225 |
+> 226 |   const Badge = ({ done }: { done: boolean }) => (
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 227 |     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 228 |       done ? "bg-emerald-50 text-emerald-700 border-emerald-100/50" : "bg-amber-50 text-amber-700 border-amber-100/50"
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 229 |     }`}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 230 |       {done ? "Completo" : "Incompleto"}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 231 |     </span>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 232 |   );
+      | ^^^^ The component is created during render here
+  233 |
+  234 |   // ── Render ────────────────────────────────────────────────────────────────
+  235 |   return (                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/static-components
+  445:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:445:14
+  443 |           <p className="text-[10px] font-bold text-primary uppercase tracking-[0.07em] pb-1.5 border-b border-border-subtle mt-3.5 mb-3.5">Condiciones especiales</p>
+  444 |           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+> 445 |             <CheckItem checked={condiciones.redeped} onChange={() => setCondiciones(p => ({ ...p, redeped: !p.redeped }))} label="Afectado por violencia (REDEPED)" sub="Registro de DEVIDA" />
+      |              ^^^^^^^^^ This component is created during render
+  446 |             <CheckItem checked={condiciones.nativa} onChange={() => setCondiciones(p => ({ ...p, nativa: !p.nativa }))} label="Comunidad Nativa / Campesina" sub="Certificado de comunidad" />
+  447 |             <CheckItem checked={condiciones.vraem} onChange={() => setCondiciones(p => ({ ...p, vraem: !p.vraem }))} label="Residente en VRAEM / Huallaga" sub="Constancia de residencia" />
+  448 |             <CheckItem checked={condiciones.licenciado} onChange={() => setCondiciones(p => ({ ...p, licenciado: !p.licenciado }))} label="Licenciado FF.AA." sub="Certificado de licenciamiento" />
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:196:21
+  194 |
+  195 |   // ── Helpers ───────────────────────────────────────────────────────────────
+> 196 |   const CheckItem = ({
+      |                     ^^
+> 197 |     checked, onChange, label, sub,
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 198 |   }: { checked: boolean; onChange: () => void; label: string; sub?: string }) => (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 208 |     </label>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 209 |   );
+      | ^^^^ The component is created during render here
+  210 |
+  211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+  212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/static-components
+  446:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:446:14
+  444 |           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+  445 |             <CheckItem checked={condiciones.redeped} onChange={() => setCondiciones(p => ({ ...p, redeped: !p.redeped }))} label="Afectado por violencia (REDEPED)" sub="Registro de DEVIDA" />
+> 446 |             <CheckItem checked={condiciones.nativa} onChange={() => setCondiciones(p => ({ ...p, nativa: !p.nativa }))} label="Comunidad Nativa / Campesina" sub="Certificado de comunidad" />
+      |              ^^^^^^^^^ This component is created during render
+  447 |             <CheckItem checked={condiciones.vraem} onChange={() => setCondiciones(p => ({ ...p, vraem: !p.vraem }))} label="Residente en VRAEM / Huallaga" sub="Constancia de residencia" />
+  448 |             <CheckItem checked={condiciones.licenciado} onChange={() => setCondiciones(p => ({ ...p, licenciado: !p.licenciado }))} label="Licenciado FF.AA." sub="Certificado de licenciamiento" />
+  449 |             <CheckItem checked={tieneConadis} onChange={() => setTieneConadis(p => !p)} label="Discapacidad inscrita en CONADIS" sub="Certificado CONADIS vigente" />
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:196:21
+  194 |
+  195 |   // ── Helpers ───────────────────────────────────────────────────────────────
+> 196 |   const CheckItem = ({
+      |                     ^^
+> 197 |     checked, onChange, label, sub,
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 198 |   }: { checked: boolean; onChange: () => void; label: string; sub?: string }) => (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 208 |     </label>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 209 |   );
+      | ^^^^ The component is created during render here
+  210 |
+  211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+  212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/static-components
+  447:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:447:14
+  445 |             <CheckItem checked={condiciones.redeped} onChange={() => setCondiciones(p => ({ ...p, redeped: !p.redeped }))} label="Afectado por violencia (REDEPED)" sub="Registro de DEVIDA" />
+  446 |             <CheckItem checked={condiciones.nativa} onChange={() => setCondiciones(p => ({ ...p, nativa: !p.nativa }))} label="Comunidad Nativa / Campesina" sub="Certificado de comunidad" />
+> 447 |             <CheckItem checked={condiciones.vraem} onChange={() => setCondiciones(p => ({ ...p, vraem: !p.vraem }))} label="Residente en VRAEM / Huallaga" sub="Constancia de residencia" />
+      |              ^^^^^^^^^ This component is created during render
+  448 |             <CheckItem checked={condiciones.licenciado} onChange={() => setCondiciones(p => ({ ...p, licenciado: !p.licenciado }))} label="Licenciado FF.AA." sub="Certificado de licenciamiento" />
+  449 |             <CheckItem checked={tieneConadis} onChange={() => setTieneConadis(p => !p)} label="Discapacidad inscrita en CONADIS" sub="Certificado CONADIS vigente" />
+  450 |             <CheckItem checked={hijoDocente} onChange={() => setHijoDocente(p => !p)} label="Hijo/a de docente público" sub="Constancia MINEDU" />
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:196:21
+  194 |
+  195 |   // ── Helpers ───────────────────────────────────────────────────────────────
+> 196 |   const CheckItem = ({
+      |                     ^^
+> 197 |     checked, onChange, label, sub,
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 198 |   }: { checked: boolean; onChange: () => void; label: string; sub?: string }) => (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 208 |     </label>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 209 |   );
+      | ^^^^ The component is created during render here
+  210 |
+  211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+  212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/static-components
+  448:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:448:14
+  446 |             <CheckItem checked={condiciones.nativa} onChange={() => setCondiciones(p => ({ ...p, nativa: !p.nativa }))} label="Comunidad Nativa / Campesina" sub="Certificado de comunidad" />
+  447 |             <CheckItem checked={condiciones.vraem} onChange={() => setCondiciones(p => ({ ...p, vraem: !p.vraem }))} label="Residente en VRAEM / Huallaga" sub="Constancia de residencia" />
+> 448 |             <CheckItem checked={condiciones.licenciado} onChange={() => setCondiciones(p => ({ ...p, licenciado: !p.licenciado }))} label="Licenciado FF.AA." sub="Certificado de licenciamiento" />
+      |              ^^^^^^^^^ This component is created during render
+  449 |             <CheckItem checked={tieneConadis} onChange={() => setTieneConadis(p => !p)} label="Discapacidad inscrita en CONADIS" sub="Certificado CONADIS vigente" />
+  450 |             <CheckItem checked={hijoDocente} onChange={() => setHijoDocente(p => !p)} label="Hijo/a de docente público" sub="Constancia MINEDU" />
+  451 |           </div>
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:196:21
+  194 |
+  195 |   // ── Helpers ───────────────────────────────────────────────────────────────
+> 196 |   const CheckItem = ({
+      |                     ^^
+> 197 |     checked, onChange, label, sub,
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 198 |   }: { checked: boolean; onChange: () => void; label: string; sub?: string }) => (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 208 |     </label>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 209 |   );
+      | ^^^^ The component is created during render here
+  210 |
+  211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+  212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/static-components
+  449:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:449:14
+  447 |             <CheckItem checked={condiciones.vraem} onChange={() => setCondiciones(p => ({ ...p, vraem: !p.vraem }))} label="Residente en VRAEM / Huallaga" sub="Constancia de residencia" />
+  448 |             <CheckItem checked={condiciones.licenciado} onChange={() => setCondiciones(p => ({ ...p, licenciado: !p.licenciado }))} label="Licenciado FF.AA." sub="Certificado de licenciamiento" />
+> 449 |             <CheckItem checked={tieneConadis} onChange={() => setTieneConadis(p => !p)} label="Discapacidad inscrita en CONADIS" sub="Certificado CONADIS vigente" />
+      |              ^^^^^^^^^ This component is created during render
+  450 |             <CheckItem checked={hijoDocente} onChange={() => setHijoDocente(p => !p)} label="Hijo/a de docente público" sub="Constancia MINEDU" />
+  451 |           </div>
+  452 |         </div>
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:196:21
+  194 |
+  195 |   // ── Helpers ───────────────────────────────────────────────────────────────
+> 196 |   const CheckItem = ({
+      |                     ^^
+> 197 |     checked, onChange, label, sub,
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 198 |   }: { checked: boolean; onChange: () => void; label: string; sub?: string }) => (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 208 |     </label>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 209 |   );
+      | ^^^^ The component is created during render here
+  210 |
+  211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+  212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/static-components
+  450:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:450:14
+  448 |             <CheckItem checked={condiciones.licenciado} onChange={() => setCondiciones(p => ({ ...p, licenciado: !p.licenciado }))} label="Licenciado FF.AA." sub="Certificado de licenciamiento" />
+  449 |             <CheckItem checked={tieneConadis} onChange={() => setTieneConadis(p => !p)} label="Discapacidad inscrita en CONADIS" sub="Certificado CONADIS vigente" />
+> 450 |             <CheckItem checked={hijoDocente} onChange={() => setHijoDocente(p => !p)} label="Hijo/a de docente público" sub="Constancia MINEDU" />
+      |              ^^^^^^^^^ This component is created during render
+  451 |           </div>
+  452 |         </div>
+  453 |       </div>
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:196:21
+  194 |
+  195 |   // ── Helpers ───────────────────────────────────────────────────────────────
+> 196 |   const CheckItem = ({
+      |                     ^^
+> 197 |     checked, onChange, label, sub,
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 198 |   }: { checked: boolean; onChange: () => void; label: string; sub?: string }) => (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 208 |     </label>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 209 |   );
+      | ^^^^ The component is created during render here
+  210 |
+  211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+  212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/static-components
+  458:12  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:458:12
+  456 |       <div className="bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-xs mb-5">
+  457 |         <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border-subtle bg-slate-3/20">
+> 458 |           <CardIcon icon="emoji_events" />
+      |            ^^^^^^^^ This component is created during render
+  459 |           <span className="text-[13px] font-medium text-navy flex-1">Extracurriculares y aptitudes</span>
+  460 |           <Badge done={haceVoluntariado || esDeportista || tieneLiderazgo || tieneEmprendimiento} />
+  461 |         </div>
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:220:20
+  218 |   );
+  219 |
+> 220 |   const CardIcon = ({ icon }: { icon: string }) => (
+      |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 221 |     <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0 shadow-sm">
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 222 |       <span className="material-symbols-outlined text-[15px]">{icon}</span>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 223 |     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 224 |   );
+      | ^^^^ The component is created during render here
+  225 |
+  226 |   const Badge = ({ done }: { done: boolean }) => (
+  227 |     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/static-components
+  460:12  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:460:12
+  458 |           <CardIcon icon="emoji_events" />
+  459 |           <span className="text-[13px] font-medium text-navy flex-1">Extracurriculares y aptitudes</span>
+> 460 |           <Badge done={haceVoluntariado || esDeportista || tieneLiderazgo || tieneEmprendimiento} />
+      |            ^^^^^ This component is created during render
+  461 |         </div>
+  462 |         <div className="p-5">
+  463 |           <p className="text-[11px] text-muted-slate mb-3 leading-relaxed">
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:226:17
+  224 |   );
+  225 |
+> 226 |   const Badge = ({ done }: { done: boolean }) => (
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 227 |     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 228 |       done ? "bg-emerald-50 text-emerald-700 border-emerald-100/50" : "bg-amber-50 text-amber-700 border-amber-100/50"
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 229 |     }`}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 230 |       {done ? "Completo" : "Incompleto"}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 231 |     </span>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 232 |   );
+      | ^^^^ The component is created during render here
+  233 |
+  234 |   // ── Render ────────────────────────────────────────────────────────────────
+  235 |   return (                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/static-components
+  467:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:467:14
+  465 |           </p>
+  466 |           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3.5">
+> 467 |             <CheckItem checked={haceVoluntariado} onChange={() => setHaceVoluntariado(p => !p)} label="Participo en voluntariados" sub="Ej. Techo, AIESEC, ONG local" />
+      |              ^^^^^^^^^ This component is created during render
+  468 |             <CheckItem checked={esDeportista} onChange={() => setEsDeportista(p => !p)} label="Deportista calificado (IPD)" sub="Con acreditación oficial del IPD" />
+  469 |             <CheckItem checked={tieneLiderazgo} onChange={() => setTieneLiderazgo(p => !p)} label="Liderazgo / Municipio Escolar" sub="Presidente, alcalde escolar, etc." />
+  470 |             <CheckItem checked={tieneEmprendimiento} onChange={() => setTieneEmprendimiento(p => !p)} label="Proyecto o emprendimiento" sub="Concurso, feria de ciencias, etc." />
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:196:21
+  194 |
+  195 |   // ── Helpers ───────────────────────────────────────────────────────────────
+> 196 |   const CheckItem = ({
+      |                     ^^
+> 197 |     checked, onChange, label, sub,
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 198 |   }: { checked: boolean; onChange: () => void; label: string; sub?: string }) => (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 208 |     </label>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 209 |   );
+      | ^^^^ The component is created during render here
+  210 |
+  211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+  212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/static-components
+  468:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:468:14
+  466 |           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3.5">
+  467 |             <CheckItem checked={haceVoluntariado} onChange={() => setHaceVoluntariado(p => !p)} label="Participo en voluntariados" sub="Ej. Techo, AIESEC, ONG local" />
+> 468 |             <CheckItem checked={esDeportista} onChange={() => setEsDeportista(p => !p)} label="Deportista calificado (IPD)" sub="Con acreditación oficial del IPD" />
+      |              ^^^^^^^^^ This component is created during render
+  469 |             <CheckItem checked={tieneLiderazgo} onChange={() => setTieneLiderazgo(p => !p)} label="Liderazgo / Municipio Escolar" sub="Presidente, alcalde escolar, etc." />
+  470 |             <CheckItem checked={tieneEmprendimiento} onChange={() => setTieneEmprendimiento(p => !p)} label="Proyecto o emprendimiento" sub="Concurso, feria de ciencias, etc." />
+  471 |           </div>
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:196:21
+  194 |
+  195 |   // ── Helpers ───────────────────────────────────────────────────────────────
+> 196 |   const CheckItem = ({
+      |                     ^^
+> 197 |     checked, onChange, label, sub,
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 198 |   }: { checked: boolean; onChange: () => void; label: string; sub?: string }) => (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 208 |     </label>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 209 |   );
+      | ^^^^ The component is created during render here
+  210 |
+  211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+  212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/static-components
+  469:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:469:14
+  467 |             <CheckItem checked={haceVoluntariado} onChange={() => setHaceVoluntariado(p => !p)} label="Participo en voluntariados" sub="Ej. Techo, AIESEC, ONG local" />
+  468 |             <CheckItem checked={esDeportista} onChange={() => setEsDeportista(p => !p)} label="Deportista calificado (IPD)" sub="Con acreditación oficial del IPD" />
+> 469 |             <CheckItem checked={tieneLiderazgo} onChange={() => setTieneLiderazgo(p => !p)} label="Liderazgo / Municipio Escolar" sub="Presidente, alcalde escolar, etc." />
+      |              ^^^^^^^^^ This component is created during render
+  470 |             <CheckItem checked={tieneEmprendimiento} onChange={() => setTieneEmprendimiento(p => !p)} label="Proyecto o emprendimiento" sub="Concurso, feria de ciencias, etc." />
+  471 |           </div>
+  472 |
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:196:21
+  194 |
+  195 |   // ── Helpers ───────────────────────────────────────────────────────────────
+> 196 |   const CheckItem = ({
+      |                     ^^
+> 197 |     checked, onChange, label, sub,
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 198 |   }: { checked: boolean; onChange: () => void; label: string; sub?: string }) => (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 208 |     </label>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 209 |   );
+      | ^^^^ The component is created during render here
+  210 |
+  211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+  212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/static-components
+  470:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:470:14
+  468 |             <CheckItem checked={esDeportista} onChange={() => setEsDeportista(p => !p)} label="Deportista calificado (IPD)" sub="Con acreditación oficial del IPD" />
+  469 |             <CheckItem checked={tieneLiderazgo} onChange={() => setTieneLiderazgo(p => !p)} label="Liderazgo / Municipio Escolar" sub="Presidente, alcalde escolar, etc." />
+> 470 |             <CheckItem checked={tieneEmprendimiento} onChange={() => setTieneEmprendimiento(p => !p)} label="Proyecto o emprendimiento" sub="Concurso, feria de ciencias, etc." />
+      |              ^^^^^^^^^ This component is created during render
+  471 |           </div>
+  472 |
+  473 |           <p className="text-[10px] font-bold text-primary uppercase tracking-[0.07em] pb-1.5 border-b border-border-subtle mt-3.5 mb-3.5">Idiomas</p>
+
+/Users/gmborjasb/Desktop/VScode/FrontEnd/Proyecto V2/pathfinder-app/src/pages/Perfil.tsx:196:21
+  194 |
+  195 |   // ── Helpers ───────────────────────────────────────────────────────────────
+> 196 |   const CheckItem = ({
+      |                     ^^
+> 197 |     checked, onChange, label, sub,
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 198 |   }: { checked: boolean; onChange: () => void; label: string; sub?: string }) => (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 208 |     </label>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 209 |   );
+      | ^^^^ The component is created during render here
+  210 |
+  211 |   const MeritOpt = ({ value, icon, label }: { value: string; icon: string; label: string }) => (
+  212 |     <button type="button" onClick={() => setMeritoAcademico(value)} className={`border rounded-xl p-2.5 text-center cursor-pointer text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 ${                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/static-components
+
+✖ 103 problems (98 errors, 5 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

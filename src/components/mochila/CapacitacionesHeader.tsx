@@ -18,7 +18,7 @@ export function CapacitacionesHeader({
   return (
     <div className="w-full flex items-center justify-between">
       <h3 className="text-2xl font-black text-text-primary">{title}</h3>
-      <div className="flex gap-2 p-1 bg-slate-200 rounded-[10px]">
+      <div className="flex gap-2 p-1 bg-slate-200 rounded-none">
         <Button
           variant="noShadow"
           onClick={() => onTabChange("disponibles")}

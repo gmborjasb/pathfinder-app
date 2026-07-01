@@ -28,7 +28,7 @@ export function CourseCard({
       <p className="text-xs font-bold text-text-tertiary">{duration}</p>
       <Button
         onClick={onClick}
-        className={`w-fit px-4 py-3 h-auto border-2 border-border rounded-[10px] shadow-light hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer ${
+        className={`w-fit px-4 py-3 h-auto border-2 border-border rounded-none shadow-light hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer ${
           isEnrolled
             ? "bg-success-bg text-success-text hover:bg-success-bg"
             : "bg-main text-main-foreground hover:bg-main"

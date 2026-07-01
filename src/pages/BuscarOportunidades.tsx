@@ -838,7 +838,7 @@ export default function BuscarOportunidades() {
               >
                 <CardContent className="flex flex-col gap-3 p-0">
                   <div className="flex justify-between items-start">
-                    <div className="w-10 h-10 rounded-[12px] bg-secondary-background animate-pulse" />
+                    <div className="w-10 h-10 rounded-none bg-secondary-background animate-pulse" />
                     <div className="w-6 h-6 rounded-full bg-secondary-background animate-pulse" />
                   </div>
                   <div className="space-y-2">
@@ -1080,7 +1080,7 @@ export default function BuscarOportunidades() {
 
       {/* Floating Success Notification Toast */}
       {showSuccessToast && (
-        <div className="fixed top-20 right-6 z-[99] bg-brand-blue text-white p-4 rounded-[12px] shadow-shadow flex items-center gap-3 border-2 border-white/20 animate-pulse">
+        <div className="fixed top-20 right-6 z-[99] bg-brand-blue text-white p-4 rounded-none shadow-shadow flex items-center gap-3 border-2 border-white/20 animate-pulse">
           <span className="material-symbols-outlined text-[20px]">
             verified
           </span>

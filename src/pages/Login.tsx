@@ -117,7 +117,7 @@ export default function Login() {
       <header className="w-full py-3 px-6 bg-white/80 backdrop-blur-md border-b-2 border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-brand-yellow border-2 border-border rounded-[8px] flex items-center justify-center text-text-primary">
+            <div className="w-7 h-7 bg-brand-yellow border-2 border-border rounded-none flex items-center justify-center text-text-primary">
               <span className="material-symbols-outlined text-[18px]">school</span>
             </div>
             <span className="text-sm font-black text-brand-blue">Pathfinder</span>
@@ -155,7 +155,7 @@ export default function Login() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <div className="flex items-center gap-3 text-left max-w-xs mx-auto lg:mx-0">
-                <div className="p-2 bg-white/10 rounded-[8px] border border-white/20">
+                <div className="p-2 bg-white/10 rounded-none border border-white/20">
                   <span className="material-symbols-outlined text-[#ffdf94] text-[18px]">verified</span>
                 </div>
                 <div>
@@ -164,7 +164,7 @@ export default function Login() {
                 </div>
               </div>
               <div className="flex items-center gap-3 text-left max-w-xs mx-auto lg:mx-0">
-                <div className="p-2 bg-white/10 rounded-[8px] border border-white/20">
+                <div className="p-2 bg-white/10 rounded-none border border-white/20">
                   <span className="material-symbols-outlined text-[#ffdf94] text-[18px]">query_stats</span>
                 </div>
                 <div>
@@ -212,7 +212,7 @@ export default function Login() {
               <button
                 onClick={handleGoogleLogin}
                 type="button"
-                className="w-full flex items-center justify-center gap-2 bg-white border-2 border-border text-brand-blue py-2 px-4 rounded-[8px] shadow-[2px_2px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all mb-4 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-white border-2 border-border text-brand-blue py-2 px-4 rounded-none shadow-[2px_2px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all mb-4 cursor-pointer"
               >
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google logo" className="w-4 h-4" />
                 <span className="text-xs font-bold">Continuar con Google</span>
@@ -227,13 +227,13 @@ export default function Login() {
               {/* Form Content */}
               <div className="px-2 pb-2">
                 {errorMsg && (
-                  <div className="mb-3 p-2 bg-danger-bg text-danger-text text-xs font-semibold rounded-[8px] border border-danger-bg flex items-center gap-1.5">
+                  <div className="mb-3 p-2 bg-danger-bg text-danger-text text-xs font-semibold rounded-none border border-danger-bg flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-sm">error</span>
                     <span>{errorMsg}</span>
                   </div>
                 )}
                 {successMsg && (
-                  <div className="mb-3 p-2 bg-success-bg text-success-text text-xs font-semibold rounded-[8px] border border-success-bg flex items-center gap-1.5">
+                  <div className="mb-3 p-2 bg-success-bg text-success-text text-xs font-semibold rounded-none border border-success-bg flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-sm">check_circle</span>
                     <span>{successMsg}</span>
                   </div>
@@ -255,7 +255,7 @@ export default function Login() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="nombre@ejemplo.com"
-                        className="w-full bg-slate-100 border-2 border-border rounded-[8px] px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
+                        className="w-full bg-slate-100 border-2 border-border rounded-none px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
                         disabled={isLoading}
                       />
                     </div>
@@ -278,14 +278,14 @@ export default function Login() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-slate-100 border-2 border-border rounded-[8px] px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
+                        className="w-full bg-slate-100 border-2 border-border rounded-none px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
                         disabled={isLoading}
                       />
                     </div>
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full bg-brand-blue text-white py-2.5 rounded-[8px] border-2 border-border shadow-[3px_3px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer text-center text-sm font-black mt-2 flex items-center justify-center gap-1.5"
+                      className="w-full bg-brand-blue text-white py-2.5 rounded-none border-2 border-border shadow-[3px_3px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer text-center text-sm font-black mt-2 flex items-center justify-center gap-1.5"
                     >
                       {isLoading ? (
                         <>
@@ -313,7 +313,7 @@ export default function Login() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Juan Pérez"
-                        className="w-full bg-slate-100 border-2 border-border rounded-[8px] px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
+                        className="w-full bg-slate-100 border-2 border-border rounded-none px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
                         disabled={isLoading}
                       />
                     </div>
@@ -331,7 +331,7 @@ export default function Login() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="nombre@ejemplo.com"
-                        className="w-full bg-slate-100 border-2 border-border rounded-[8px] px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
+                        className="w-full bg-slate-100 border-2 border-border rounded-none px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
                         disabled={isLoading}
                       />
                     </div>
@@ -349,14 +349,14 @@ export default function Login() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-slate-100 border-2 border-border rounded-[8px] px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
+                        className="w-full bg-slate-100 border-2 border-border rounded-none px-3 py-2 text-sm font-medium focus:border-brand-blue outline-none transition-all text-brand-blue"
                         disabled={isLoading}
                       />
                     </div>
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full bg-brand-blue text-white py-2.5 rounded-[8px] border-2 border-border shadow-[3px_3px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer text-center text-sm font-black mt-2 flex items-center justify-center gap-1.5"
+                      className="w-full bg-brand-blue text-white py-2.5 rounded-none border-2 border-border shadow-[3px_3px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer text-center text-sm font-black mt-2 flex items-center justify-center gap-1.5"
                     >
                       {isLoading ? (
                         <>
@@ -387,7 +387,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => navigate("/dashboard")}
-                className="w-full py-2 flex items-center justify-center gap-2 bg-white border-2 border-border rounded-[8px] shadow-[2px_2px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer text-brand-blue"
+                className="w-full py-2 flex items-center justify-center gap-2 bg-white border-2 border-border rounded-none shadow-[2px_2px_0_#1e293b] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer text-brand-blue"
               >
                 <svg className="w-4 h-4 transition-transform group-hover:scale-105" viewBox="0 0 24 24">
                   <path

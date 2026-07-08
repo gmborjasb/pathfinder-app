@@ -52,7 +52,7 @@ RESUMEN_PROFESIONAL
 \section{Experiencia Laboral}
 EXPERIENCIA_BLOQUES
 
-\section{Proyectos}
+\section{Proyectos y Reconocimientos}
 PROYECTOS_BLOQUES
 
 \section{Educación}
@@ -146,7 +146,7 @@ Debe seguir esta estructura con estilos inline:
   </div>
 
   <div style="margin-bottom:1.5rem;">
-    <h2 style="font-size:0.9rem;font-weight:bold;text-transform:uppercase;letter-spacing:2px;margin:0 0 0.75rem;padding-bottom:3px;border-bottom:1px solid #1e293b;">Proyectos</h2>
+    <h2 style="font-size:0.9rem;font-weight:bold;text-transform:uppercase;letter-spacing:2px;margin:0 0 0.75rem;padding-bottom:3px;border-bottom:1px solid #1e293b;">Proyectos y Reconocimientos</h2>
     (repetir por cada proyecto)
     <div style="margin-bottom:0.75rem;">
       <div style="display:flex;justify-content:space-between;align-items:baseline;">

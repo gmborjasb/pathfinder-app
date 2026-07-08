@@ -339,6 +339,24 @@ export async function uploadDocumento(
   }
 
   try {
+    // 1. Verificar si ya existe un documento previo para reemplazarlo
+    const { data: existingDocs } = await supabase
+      .from("documentos")
+      .select("id, archivo_url")
+      .eq("postulacion_id", postulacionId)
+      .eq("nombre_documento", nombreDocumento);
+
+    const existingDoc = existingDocs && existingDocs.length > 0 ? existingDocs[0] : null;
+
+    // 2. Si existía, limpiar el archivo viejo del Storage
+    if (existingDoc && existingDoc.archivo_url) {
+      const oldPath = existingDoc.archivo_url.split(`${STORAGE_BUCKET}/`)[1];
+      if (oldPath) {
+        await supabase.storage.from(STORAGE_BUCKET).remove([oldPath]);
+      }
+    }
+
+    // 3. Subir el nuevo archivo
     const filePath = `${postulacionId}/${generateId()}-${file.name}`;
 
     const { error: uploadError } = await supabase.storage
@@ -351,14 +369,29 @@ export async function uploadDocumento(
       .from(STORAGE_BUCKET)
       .getPublicUrl(filePath);
 
-    const { error: insertError } = await supabase.from("documentos").insert({
-      postulacion_id: postulacionId,
-      nombre_documento: nombreDocumento,
-      estado: "En Revisión",
-      archivo_url: urlData?.publicUrl ?? null,
-    });
+    // 4. Actualizar o Insertar el registro en la base de datos
+    if (existingDoc) {
+      const { error: updateError } = await supabase
+        .from("documentos")
+        .update({
+          estado: "En Revisión",
+          archivo_url: urlData?.publicUrl ?? null,
+          texto_ayuda: null, // Limpiamos el motivo de rechazo si lo hubiera
+        })
+        .eq("id", existingDoc.id);
 
-    if (insertError) throw insertError;
+      if (updateError) throw updateError;
+    } else {
+      const { error: insertError } = await supabase.from("documentos").insert({
+        postulacion_id: postulacionId,
+        nombre_documento: nombreDocumento,
+        estado: "En Revisión",
+        archivo_url: urlData?.publicUrl ?? null,
+      });
+
+      if (insertError) throw insertError;
+    }
+
     return true;
   } catch (err) {
     console.error("[Documentos] Upload error:", err);

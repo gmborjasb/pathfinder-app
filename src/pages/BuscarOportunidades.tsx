@@ -64,9 +64,12 @@ export default function BuscarOportunidades() {
   const mapRPCToOportunidad = (rows: BecaRecomendada[]): Oportunidad[] =>
     rows.map((row) => {
       let days = 30;
+      let fechaCierreStr = "Fecha no disponible";
       if (row.fecha_cierre) {
         const diffTime = new Date(row.fecha_cierre).getTime() - Date.now();
         days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        const dateObj = new Date(row.fecha_cierre);
+        fechaCierreStr = dateObj.toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
       }
       return {
         id: row.beca_id,
@@ -88,15 +91,20 @@ export default function BuscarOportunidades() {
         requiereMujeres: row.requiere_mujeres ?? false,
         priorizaVoluntariado: row.prioriza_voluntariado ?? false,
         priorizaDeportista: row.prioriza_deportista ?? false,
+        url_oficial: row.url_oficial ?? undefined,
+        fechaCierreStr: fechaCierreStr,
       };
     });
 
   const mapFallbackToOportunidad = (rows: BecaRaw[]): Oportunidad[] =>
     rows.map((row) => {
       let days = 30;
+      let fechaCierreStr = "Fecha no disponible";
       if (row.fecha_cierre) {
         const diffTime = new Date(row.fecha_cierre).getTime() - Date.now();
         days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        const dateObj = new Date(row.fecha_cierre);
+        fechaCierreStr = dateObj.toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
       }
       return {
         id: row.id,
@@ -110,6 +118,8 @@ export default function BuscarOportunidades() {
         icon: row.icono || "school",
         sobre: row.sobre || "",
         beneficios: Array.isArray(row.beneficios) ? row.beneficios : [],
+        url_oficial: row.url_oficial ?? undefined,
+        fechaCierreStr: fechaCierreStr,
       };
     });
 

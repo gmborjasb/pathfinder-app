@@ -34,6 +34,7 @@ export interface BecaRecomendada {
   requiere_mujeres: boolean;
   prioriza_voluntariado: boolean;
   prioriza_deportista: boolean;
+  url_oficial: string | null;
 }
 
 /** Resultado de un SELECT simple a la tabla becas (fallback sin sesión) */
@@ -50,6 +51,7 @@ export interface BecaRaw {
   beneficios: string[] | null;
   documentos_requeridos: Record<string, unknown> | null;
   afinidad: number | null;
+  url_oficial: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,7 +102,7 @@ export async function getBecasFallback(): Promise<BecaRaw[]> {
   const { data, error } = await supabase
     .from('becas')
     .select(
-      'id, titulo, sponsor, nivel, icono, cobertura, requisitos, fecha_cierre, sobre, beneficios, documentos_requeridos, afinidad'
+      'id, titulo, sponsor, nivel, icono, cobertura, requisitos, fecha_cierre, sobre, beneficios, documentos_requeridos, afinidad, url_oficial'
     )
     .order('id', { ascending: true });
 

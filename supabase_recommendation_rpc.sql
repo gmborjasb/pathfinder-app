@@ -37,7 +37,8 @@ RETURNS TABLE (
   req_tipo_colegio      VARCHAR,
   requiere_mujeres      BOOLEAN,
   prioriza_voluntariado BOOLEAN,
-  prioriza_deportista   BOOLEAN
+  prioriza_deportista   BOOLEAN,
+  url_oficial           TEXT
 ) AS $$
 DECLARE
   u_nota         NUMERIC(4,2);
@@ -105,7 +106,8 @@ BEGIN
     b.req_tipo_colegio,
     b.requiere_mujeres,
     b.prioriza_voluntariado,
-    b.prioriza_deportista
+    b.prioriza_deportista,
+    b.url_oficial
 
   FROM public.becas b
   ORDER BY afinidad_calculada DESC;

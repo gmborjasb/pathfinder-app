@@ -18,6 +18,8 @@ export interface Beca {
   requiereMujeres?: boolean;
   priorizaVoluntariado?: boolean;
   priorizaDeportista?: boolean;
+  url_oficial?: string;
+  fechaCierreStr?: string;
 }
 
 export type Oportunidad = Beca;

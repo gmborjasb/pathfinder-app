@@ -14,7 +14,7 @@ WHERE id NOT IN (
 );
 
 -- 2. INSERTAR NUEVAS BECAS (REALES)
-INSERT INTO public.becas (id, titulo, sponsor, cobertura, requisitos, fecha_cierre, nivel, icono, sobre, beneficios, afinidad) VALUES
+INSERT INTO public.becas (id, titulo, sponsor, cobertura, requisitos, fecha_cierre, nivel, icono, sobre, beneficios, afinidad, url_oficial) VALUES
 `;
 
 const values = becas.map(b => {
@@ -26,12 +26,14 @@ const values = becas.map(b => {
     const nivel = b.nivel.replace(/'/g, "''");
     const sobre = b.sobre.replace(/'/g, "''");
     const benStr = JSON.stringify(b.beneficios).replace(/'/g, "''");
+    const url_oficial = b.url_oficial ? b.url_oficial.replace(/'/g, "''") : null;
+    const urlValue = url_oficial ? `'${url_oficial}'` : 'NULL';
     
-    return `('${b.id}', '${title}', '${sponsor}', '${cobertura}', '${reqStr}', '${fecha}', '${nivel}', 'school', '${sobre}', '${benStr}'::jsonb, 85)`;
+    return `('${b.id}', '${title}', '${sponsor}', '${cobertura}', '${reqStr}', '${fecha}', '${nivel}', 'school', '${sobre}', '${benStr}'::jsonb, 85, ${urlValue})`;
 });
 
 sql += values.join(',\n') + '\n';
-sql += "ON CONFLICT (id) DO UPDATE SET titulo = EXCLUDED.titulo, sponsor = EXCLUDED.sponsor, cobertura = EXCLUDED.cobertura, requisitos = EXCLUDED.requisitos, fecha_cierre = EXCLUDED.fecha_cierre, nivel = EXCLUDED.nivel, icono = EXCLUDED.icono, sobre = EXCLUDED.sobre, beneficios = EXCLUDED.beneficios, afinidad = EXCLUDED.afinidad;\n";
+sql += "ON CONFLICT (id) DO UPDATE SET titulo = EXCLUDED.titulo, sponsor = EXCLUDED.sponsor, cobertura = EXCLUDED.cobertura, requisitos = EXCLUDED.requisitos, fecha_cierre = EXCLUDED.fecha_cierre, nivel = EXCLUDED.nivel, icono = EXCLUDED.icono, sobre = EXCLUDED.sobre, beneficios = EXCLUDED.beneficios, afinidad = EXCLUDED.afinidad, url_oficial = EXCLUDED.url_oficial;\n";
 
 fs.writeFileSync('update_becas.sql', sql);
 console.log("✅ Archivo update_becas.sql generado exitosamente.");

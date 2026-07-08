@@ -110,41 +110,41 @@ export default function GenerarCV() {
       email: (profile.correo as string) || 'm.fernanda.torres@email.com',
       telefono: '987 654 321',
       linkedinUsuario: 'mariafernanda-t',
-      resumen: prev.resumen || 'Estudiante de Ingeniería de Sistemas en el quinto superior, con gran interés en el desarrollo de software, inteligencia artificial y gestión de proyectos. Destacada por mi liderazgo en el tercio superior y mi nivel avanzado de inglés. Busco oportunidades para aplicar mis conocimientos técnicos y habilidades blandas en un entorno desafiante.',
+      resumen: prev.resumen || 'Estudiante de educación básica regular con alto rendimiento académico. Destacado por mi participación activa en actividades extracurriculares, voluntariado y liderazgo estudiantil. Busco obtener una beca universitaria para continuar mi formación profesional y contribuir al desarrollo de mi comunidad.',
       educacion: [
         {
-          grado: institucion ? `Estudiante de ${institucion}` : 'Ingeniería de Sistemas',
-          institucion: institucion || 'Universidad Nacional de Ingeniería (UNI)',
+          grado: institucion ? `Estudiante de ${institucion}` : 'Educación Secundaria (5to año)',
+          institucion: institucion || 'Colegio de Educación Básica Regular',
           periodo: `${anoEgreso ? `${anoEgreso} – ` : ''}Presente`,
-          nota: notaStr || 'Tercio Superior',
+          nota: notaStr || 'Tercio / Quinto Superior',
         },
       ],
       experiencias: expExtras.length > 0 ? expExtras : [
         {
-          cargo: 'Desarrolladora Frontend Junior',
-          empresa: 'Tech Solutions Perú',
-          periodo: 'Ene 2024 - Presente',
-          descripcion: 'Desarrollo de interfaces de usuario interactivas con React y TypeScript.\\nColaboración con el equipo de diseño para implementar sistemas de diseño.\\nOptimización del rendimiento web logrando una reducción del 30% en el tiempo de carga.',
+          cargo: 'Presidente del Municipio Escolar',
+          empresa: 'Colegio de Educación Básica Regular',
+          periodo: 'Mar 2023 - Dic 2023',
+          descripcion: 'Liderazgo en la organización de eventos escolares y representación estudiantil.\nGestión de campañas de reciclaje y mejora de la infraestructura escolar.',
           esMúltiples: true,
         },
         {
-          cargo: 'Voluntaria en Tecnología',
-          empresa: 'Comunidad STEM',
-          periodo: 'Mar 2023 - Dic 2023',
-          descripcion: 'Enseñanza de fundamentos de programación a niños de secundaria.\\nOrganización de hackathones y talleres educativos.',
+          cargo: 'Voluntario Activo',
+          empresa: 'Organización Comunitaria',
+          periodo: 'Ene 2024 - Presente',
+          descripcion: 'Apoyo en la recolección de donaciones y distribución de víveres en zonas vulnerables. Coordinación de talleres recreativos para niños.',
           esMúltiples: false,
         }
       ],
       habilidades: [
-        { categoria: 'Idiomas', items: idiomasArr.length > 1 ? idiomasArr.join(', ') : 'Español (Nativo), Inglés (Avanzado - C1 Cambridge)' },
-        { categoria: 'Tecnologías', items: 'React, TypeScript, Node.js, Python, PostgreSQL, Git' },
-        { categoria: 'Soft Skills', items: 'Liderazgo, Trabajo en equipo, Comunicación asertiva, Resolución de problemas' }
+        { categoria: 'Idiomas', items: idiomasArr.length > 1 ? idiomasArr.join(', ') : 'Español (Nativo), Inglés (Intermedio B1)' },
+        { categoria: 'Tecnologías', items: 'Microsoft Office (Word, Excel, PowerPoint), Canva, Google Workspace' },
+        { categoria: 'Blandas (Soft Skills)', items: 'Liderazgo, Trabajo en equipo, Oratoria, Resolución de problemas, Empatía' }
       ],
       proyectos: [
         {
-          nombre: 'Pathfinder: Portal de Becas',
-          descripcion: 'Desarrollo de una plataforma web para facilitar la búsqueda de becas a estudiantes peruanos. Integración con Supabase y diseño de interfaz intuitiva.',
-          link: 'github.com/maria/pathfinder'
+          nombre: 'Feria de Ciencias: Purificador de Agua Ecológico',
+          descripcion: 'Primer puesto a nivel regional en la feria de ciencias. Proyecto enfocado en resolver la escasez de agua potable utilizando materiales reciclables.',
+          link: ''
         }
       ]
     }));
@@ -467,8 +467,8 @@ export default function GenerarCV() {
                     <div className="flex items-center gap-3 text-left w-full pr-4">
                       <span className="material-symbols-outlined text-[20px] text-brand-blue">rocket_launch</span>
                       <div className="flex-1">
-                        <div className="text-[14px] font-black text-text-primary">Proyectos</div>
-                        <div className="text-[11px] text-text-secondary font-bold mt-0.5">Proyectos personales, universitarios o de código abierto</div>
+                        <div className="text-[14px] font-black text-text-primary">Proyectos y Reconocimientos</div>
+                        <div className="text-[11px] text-text-secondary font-bold mt-0.5">Ferias de ciencias, olimpiadas, concursos, etc.</div>
                       </div>
                       <Button variant="neutral" size="sm" onClick={(e) => { e.stopPropagation(); addArrayItem('proyectos', EMPTY_PROYECTO); }} className="h-8 shadow-none border-2">
                         <span className="material-symbols-outlined text-[14px]">add</span> Añadir

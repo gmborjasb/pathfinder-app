@@ -60,7 +60,7 @@ DROP TABLE IF EXISTS public.becas CASCADE;
 
 -- Tabla: Becas
 CREATE TABLE IF NOT EXISTS public.becas (
-  id VARCHAR(15) PRIMARY KEY,
+  id VARCHAR(50) PRIMARY KEY,
   titulo VARCHAR(255) NOT NULL,
   sponsor VARCHAR(255) NOT NULL,
   cobertura TEXT,
@@ -71,7 +71,8 @@ CREATE TABLE IF NOT EXISTS public.becas (
   sobre TEXT,
   beneficios JSONB DEFAULT '[]'::jsonb,
   afinidad INT DEFAULT 85,
-  documentos_requeridos JSONB DEFAULT '[]'::jsonb
+  documentos_requeridos JSONB DEFAULT '[]'::jsonb,
+  url_oficial TEXT
 );
 
 -- Tabla: Cursos / Capacitaciones

@@ -74,7 +74,10 @@ export function DetailDrawer({
             )}
             <Badge variant="info">{displayed.level}</Badge>
             <Badge variant="danger">Nacional</Badge>
-            <Badge variant="warning">{displayed.deadline}</Badge>
+            <Badge variant="warning" className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+              {displayed.fechaCierreStr} ({displayed.deadline.toLowerCase()})
+            </Badge>
           </div>
 
           <div className="flex flex-col gap-2 mt-4">
@@ -156,20 +159,25 @@ export function DetailDrawer({
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {displayed.beneficios.map((ben, idx) => {
-                let icon = "school";
-                if (ben.toLowerCase().includes("manutención") || ben.toLowerCase().includes("estipendio")) icon = "payments";
-                if (ben.toLowerCase().includes("transporte") || ben.toLowerCase().includes("pasaje")) icon = "flight";
-                if (ben.toLowerCase().includes("seguro") || ben.toLowerCase().includes("salud")) icon = "health_and_safety";
-                if (ben.toLowerCase().includes("matrícula") || ben.toLowerCase().includes("pensiones")) icon = "account_balance";
-                if (ben.toLowerCase().includes("materiales") || ben.toLowerCase().includes("laptop") || ben.toLowerCase().includes("equipo")) icon = "laptop_mac";
-                if (ben.toLowerCase().includes("alojamiento") || ben.toLowerCase().includes("vivienda")) icon = "home";
-                if (ben.toLowerCase().includes("alimentación") || ben.toLowerCase().includes("comida")) icon = "restaurant";
+              {displayed.beneficios.map((ben: any, idx) => {
+                const textValue = typeof ben === 'string' ? ben : (ben.nombre || '');
+                let icon = (typeof ben === 'object' && ben.icono) ? ben.icono : "school";
+                
+                if (typeof ben === 'string') {
+                  const lowerBen = ben.toLowerCase();
+                  if (lowerBen.includes("manutención") || lowerBen.includes("estipendio")) icon = "payments";
+                  if (lowerBen.includes("transporte") || lowerBen.includes("pasaje")) icon = "flight";
+                  if (lowerBen.includes("seguro") || lowerBen.includes("salud")) icon = "health_and_safety";
+                  if (lowerBen.includes("matrícula") || lowerBen.includes("pensiones")) icon = "account_balance";
+                  if (lowerBen.includes("materiales") || lowerBen.includes("laptop") || lowerBen.includes("equipo")) icon = "laptop_mac";
+                  if (lowerBen.includes("alojamiento") || lowerBen.includes("vivienda")) icon = "home";
+                  if (lowerBen.includes("alimentación") || lowerBen.includes("comida")) icon = "restaurant";
+                }
 
                 return (
                   <div key={idx} className="flex flex-col items-center justify-center gap-2 p-3 bg-white border-2 border-border rounded-xl shadow-shadow text-center">
                     <span className="material-symbols-outlined text-[24px] text-brand-blue">{icon}</span>
-                    <span className="text-[12px] font-bold text-text-primary leading-tight">{ben}</span>
+                    <span className="text-[12px] font-bold text-text-primary leading-tight">{textValue}</span>
                   </div>
                 );
               })}
@@ -177,7 +185,17 @@ export function DetailDrawer({
           </section>
         </div>
 
-        <SheetFooter className="border-t-2 border-border p-6">
+        <SheetFooter className="border-t-2 border-border p-6 flex flex-col gap-3 sm:flex-col sm:space-x-0">
+          {displayed.url_oficial && (
+            <Button
+              onClick={() => window.open(displayed.url_oficial, '_blank')}
+              variant="neutral"
+              className="w-full py-6 text-[16px] bg-brand-yellow hover:bg-[#facc15] text-text-primary"
+            >
+              Visitar Plataforma Oficial
+              <span className="material-symbols-outlined text-[20px] ml-2">open_in_new</span>
+            </Button>
+          )}
           <Button
             onClick={() => onApply(displayed.id)}
             disabled={isApplied}
@@ -186,7 +204,7 @@ export function DetailDrawer({
           >
             {isApplied ? "Ya Postulaste" : "Postular Ahora"}
             {!isApplied && (
-              <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+              <span className="material-symbols-outlined text-[20px] ml-2">arrow_forward</span>
             )}
           </Button>
         </SheetFooter>

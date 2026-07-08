@@ -56,7 +56,7 @@ interface UseChatReturn {
 
 export function useChat(
   profile: Record<string, unknown> | null,
-  topBecas: { titulo?: string; title?: string; sponsor: string }[],
+  topBecas: { titulo?: string; title?: string; sponsor: string; afinidad_calculada?: number; affinity?: number; afinidad?: number }[],
 ): UseChatReturn {
   const [conversations, setConversations] = useState<ChatSession[]>(() => loadSessions());
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);

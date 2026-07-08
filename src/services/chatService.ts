@@ -13,7 +13,7 @@ export interface ChatSession {
 
 function buildSystemPrompt(
   profile: Record<string, unknown> | null,
-  topBecas: { titulo?: string; title?: string; sponsor: string }[],
+  topBecas: { titulo?: string; title?: string; sponsor: string; afinidad_calculada?: number; affinity?: number; afinidad?: number }[],
 ): string {
   const pd = (profile?.perfil_detalles as Record<string, unknown>) || {};
   const name =
@@ -34,18 +34,23 @@ function buildSystemPrompt(
   const ingles =
     ((pd?.idiomas as Record<string, unknown>)?.nivelIngles as string) ||
     "no especificado";
+
   const becasText =
     topBecas
       ?.slice(0, 5)
-      .map((b) => `- ${b.titulo || b.title} (${b.sponsor})`)
-      .join("\n") || "No hay becas destacadas";
+      .map((b) => {
+        const title = b.titulo || b.title;
+        const affinity = b.afinidad_calculada ?? b.affinity ?? b.afinidad ?? 0;
+        return `- ${title} (${b.sponsor}) - ${Math.round(Number(affinity))}% de afinidad`;
+      })
+      .join("\n") || "No hay becas destacadas disponibles en la base de datos.";
 
   return (
-    `Eres Motibot, un asistente experto en becas peruanas, especializado en ayudar a estudiantes peruanos a encontrar y postular a becas. Tu tono es amigable, motivador y práctico.` +
+    `Eres Motibot, un asistente experto en becas peruanas, especializado en ayudar a estudiantes peruanos a encontrar y postular a becas de nuestra base de datos. Tu tono es amigable, motivador y práctico.` +
     `\n\n## Datos del estudiante\n` +
     `- Nombre: ${name}\n- GPA/Promedio: ${gpa}\n- Tipo de colegio: ${colegio}\n- SISFOH: ${sisfoh}\n- Mérito académico: ${merito}\n- Voluntariado: ${voluntariado}\n- Deportista: ${deporte}\n- Nivel de inglés: ${ingles}` +
-    `\n\n## Becas recomendadas para este perfil\n${becasText}` +
-    `\n\n## Instrucciones\n1. Responde en español, usando **negritas** para resaltar información importante.\n2. Sé breve y práctico: máximo 3-4 párrafos.\n3. Usa emojis ocasionalmente para hacer la conversación amigable.\n4. Si te preguntan por requisitos, usa la información del perfil para personalizar la respuesta.\n5. NO inventes fechas o montos específicos. Sugiere siempre verificar en la web oficial de PRONABEC.`
+    `\n\n## Becas recomendadas (Base de datos oficial)\n${becasText}` +
+    `\n\n## Instrucciones Estrictas\n1. RESPONDE ÚNICAMENTE sobre las becas listadas arriba en "Becas recomendadas". NO inventes, no alucines, y no sugieras becas, entidades o fundaciones que no se encuentren en la lista de arriba.\n2. Sé breve y práctico: máximo 2-3 párrafos. Resalta la afinidad con la beca si es relevante.\n3. Si te preguntan por requisitos, usa la información del perfil para personalizar la respuesta.\n4. Usa **negritas** para resaltar información clave y algún emoji para ser amigable.\n5. NO inventes fechas, montos ni procesos que no conozcas con certeza.`
   );
 }
 
@@ -189,7 +194,7 @@ function localFallback(text: string): string {
 export async function sendMessage(
   history: ChatMessage[],
   profile: Record<string, unknown> | null,
-  topBecas: { titulo?: string; title?: string; sponsor: string }[],
+  topBecas: { titulo?: string; title?: string; sponsor: string; afinidad_calculada?: number; affinity?: number; afinidad?: number }[],
 ): Promise<string> {
   const systemMsg = {
     role: "system",

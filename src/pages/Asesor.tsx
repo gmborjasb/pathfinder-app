@@ -13,7 +13,26 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 export default function Asesor() {
   const { profile } = useAuth();
 
-  const topBecas = useMemo(() => [], []);
+  const [topBecas, setTopBecas] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTopBecas = async () => {
+      try {
+        if (profile?.id) {
+          const { getBecasRecomendadas } = await import("../services/recomendaciones");
+          const data = await getBecasRecomendadas(profile.id as string);
+          setTopBecas(data.slice(0, 5));
+        } else {
+          const { getBecasFallback } = await import("../services/recomendaciones");
+          const data = await getBecasFallback();
+          setTopBecas(data.slice(0, 5));
+        }
+      } catch (err) {
+        console.error("Error cargando becas para el asesor:", err);
+      }
+    };
+    fetchTopBecas();
+  }, [profile?.id]);
 
   const {
     conversations,
